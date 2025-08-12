@@ -11,47 +11,45 @@ __global__ void find_path_matches_kernel(float *previous_paths, float *result_te
                                          float *result_values, float *output_paths,
                                          float *output_values, int *match_count,
                                          int num_prev_paths, int num_current_tensor,
-                                         int prev_cols, int current_cols, int order)
+                                         int prev_cols, int current_cols, int iteration)
 {
     int prev_idx = blockIdx.x * blockDim.x + threadIdx.x;
     int curr_idx = blockIdx.y * blockDim.y + threadIdx.y;
 
     if (prev_idx < num_prev_paths && curr_idx < num_current_tensor)
     {
-        // Extraer las primeras 3 columnas de previous_paths [batch, M, K]
-        int prev_batch = (int)previous_paths[prev_idx * prev_cols + 0];
-        int prev_m = (int)previous_paths[prev_idx * prev_cols + 1];
-        int prev_k = (int)previous_paths[prev_idx * prev_cols + 2 + order];
+        // Extraer coordenadas del camino previo
+        // prev_paths[x] = [batch, start_M, intermediate_K, end_N] para i=1
+        // prev_paths[x] = [batch, start_M, intermediate_K, intermediate_N, end_K] para i=2, etc.
+        int p0 = (int)previous_paths[prev_idx * prev_cols];
+        int p1 = (int)previous_paths[prev_idx * prev_cols + 1];                           
+        int pi_2 = (int)previous_paths[prev_idx * prev_cols + prev_cols + iteration + 2]; 
 
-        // Extraer las primeras 3 columnas de result_tensor [batch, M, K]
-        int curr_batch = (int)result_tensor[curr_idx * current_cols + 0];
-        int curr_m = (int)result_tensor[curr_idx * current_cols + 1];
-        int curr_k = (int)result_tensor[curr_idx * current_cols + 2];
+        // Extraer coordenadas del resultado actual [batch, M, K, N]
+        int c0 = (int)result_tensor[curr_idx * current_cols];
+        int c1 = (int)result_tensor[curr_idx * current_cols + 1];
+        int c2 = (int)result_tensor[curr_idx * current_cols + 2];
+        int c3 = (int)result_tensor[curr_idx * current_cols + 3];
 
-        // Verificar si hay match en las primeras 3 columnas
-        if (prev_batch == curr_batch && prev_m == curr_m && prev_k == curr_k)
+        // Condición de match: el último nodo del camino previo debe coincidir
+        // con el nodo inicial M del resultado actual
+        if (p0 == c0 && p1 == c1 && pi_2 == c2)
         {
             // Found a match - usar atomic add para obtener posición de salida
             int output_idx = atomicAdd(match_count, 1);
 
-            // Construir el nuevo camino combinando previous_path + columna 4 de result_tensor
-            int output_base = output_idx * (prev_cols + 1);
+            // El nuevo camino tendrá prev_cols + 1 columnas (4 + iteration)
+            int new_cols = 4 + iteration;
+            int output_base = output_idx * new_cols;
 
-            // Copiar todas las columnas de previous_paths
+            // Copiar todas las columnas del camino previo
             for (int col = 0; col < prev_cols; col++)
             {
                 output_paths[output_base + col] = previous_paths[prev_idx * prev_cols + col];
             }
 
-            // Agregar la columna 4 (índice 3) de result_tensor al final
-            if (current_cols > 3)
-            {
-                output_paths[output_base + prev_cols] = result_tensor[curr_idx * current_cols + 3];
-            }
-            else
-            {
-                output_paths[output_base + prev_cols] = 0.0f; // Valor por defecto si no existe columna 4
-            }
+            // Agregar el siguiente nodo del camino (K del resultado actual)
+            output_paths[output_base + prev_cols] = (float)c3;
 
             // Guardar el valor correspondiente
             output_values[output_idx] = result_values[curr_idx];
@@ -61,22 +59,36 @@ __global__ void find_path_matches_kernel(float *previous_paths, float *result_te
 
 void armar_caminos(const TensorResult &previous_paths, const TensorResult &result_tensor,
                    const TensorResult &result_values, TensorResult &paths,
-                   TensorResult &matched_values, int order)
+                   TensorResult &matched_values, int iteration)
 {
-
     // Validaciones
-    if (previous_paths.data == nullptr || result_tensor.data == nullptr || result_values.data == nullptr)
+    if (previous_paths.data == nullptr){
+        printf("Error: previous_paths es nulo\n");
+        return;
+
+    } 
+    if (result_tensor.data == nullptr){
+        printf("Error: result_tensor es nulo\n");
+        return;
+    } 
+    if (result_values.data == nullptr)
     {
-        printf("Error: Punteros nulos en entrada\n");
+        printf("Error: result_values es nulo\n");
         return;
     }
 
     // Extraer dimensiones
-    int num_prev_paths = previous_paths.batch;
-    int prev_cols = previous_paths.M;
-    int num_current_tensor = result_tensor.batch;
-    int current_cols = result_tensor.M;
-    int num_values = result_values.batch;
+    int num_prev_paths = previous_paths.M;
+    int prev_cols = previous_paths.N; // Debe ser 4 + (iteration - 1)
+    int num_current_tensor = result_tensor.M;
+    int current_cols = result_tensor.N; // Debe ser 4
+    int num_values = result_values.N;
+
+    // El nuevo camino tendrá 4 + iteration columnas
+    int new_cols = 4 + iteration;
+
+    printf("armar_caminos: iteration=%d, prev_cols=%d, new_cols=%d\n", iteration, prev_cols, new_cols);
+
 
     if (num_current_tensor != num_values)
     {
@@ -90,7 +102,7 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
     size_t prev_size = num_prev_paths * prev_cols * sizeof(float);
     size_t curr_size = num_current_tensor * current_cols * sizeof(float);
     size_t values_size = num_values * sizeof(float);
-    size_t output_paths_size = max_output_size * (prev_cols + 1) * sizeof(float);
+    size_t output_paths_size = max_output_size * new_cols * sizeof(float);
     size_t output_values_size = max_output_size * sizeof(float);
 
     // Alocar memoria en device
@@ -143,7 +155,7 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
     find_path_matches_kernel<<<grid_size, block_size>>>(
         d_previous_paths, d_result_tensor, d_result_values,
         d_output_paths, d_output_values, d_match_count,
-        num_prev_paths, num_current_tensor, prev_cols, current_cols, order);
+        num_prev_paths, num_current_tensor, prev_cols, current_cols, iteration);
 
     CHECK_CUDA(cudaDeviceSynchronize());
 
@@ -151,10 +163,13 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
     int match_count;
     CHECK_CUDA(cudaMemcpy(&match_count, d_match_count, sizeof(int), cudaMemcpyDeviceToHost));
 
+    printf("armar_caminos: %d matches encontrados\n", match_count);
+
     if (match_count > 0)
     {
+        printf("Nuevas columnas: %d\n", new_cols);
         // Alocar memoria host para resultados
-        size_t final_paths_size = match_count * (prev_cols + 1) * sizeof(float);
+        size_t final_paths_size = match_count * new_cols * sizeof(float);
         size_t final_values_size = match_count * sizeof(float);
 
         float *h_output_paths = (float *)malloc(final_paths_size);
@@ -167,18 +182,19 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
         // Configurar TensorResult de salida
         paths.data = h_output_paths;
         paths.is_device_ptr = false;
-        paths.batch = match_count;
-        paths.M = prev_cols + 1;
-        paths.N = 1;
+        paths.owns_memory = true;
+        paths.batch = previous_paths.batch; // Mantener el batch de previous_paths
+        paths.M = match_count; // 4 + iteration columnas
+        paths.N = new_cols;
         paths.K = 1;
 
         matched_values.data = h_output_values;
         matched_values.is_device_ptr = false;
-        matched_values.batch = match_count;
+        matched_values.owns_memory = true;
+        matched_values.batch = previous_paths.batch; // Mantener el batch de previous_paths
         matched_values.M = 1;
-        matched_values.N = 1;
+        matched_values.N = match_count;
         matched_values.K = 1;
-
     }
     else
     {

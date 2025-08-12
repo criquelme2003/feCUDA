@@ -61,7 +61,7 @@ void imprimir_tensor(const TensorResult &tensor, int max_rows, int max_cols,
     int print_batches = (tensor.batch < 3) ? tensor.batch : 3;
     int print_M = (tensor.M < max_rows) ? tensor.M : max_rows;
     int print_N = (tensor.N < max_cols) ? tensor.N : max_cols;
-    int print_K = es_4d ? ((tensor.K < 5) ? tensor.K : 5) : 1;
+    int print_K = es_4d ? ((tensor.K < 6) ? tensor.K : 6) : 1;
 
     // Variables para estadísticas
     float min_val = datos_host[0];
@@ -84,40 +84,33 @@ void imprimir_tensor(const TensorResult &tensor, int max_rows, int max_cols,
 
         if (es_4d)
         {
-            // Tensor 4D: Mostrar cada K como una matriz separada
-            for (int k = 0; k < print_K; ++k)
+            // Nueva lógica: Para cada M mostrar una matriz N x K (filas=N, columnas=K)
+            for (int i = 0; i < print_M; ++i)
             {
-                if (tensor.K > 1)
-                {
-                    printf("\n--- K[%d/%d] ---\n", k + 1, tensor.K);
-                }
+                printf("\n=== M[%d/%d] -> Matriz (N x K) ===\n", i + 1, tensor.M);
 
-                // Imprimir encabezados de columnas
-                printf("     ");
-                for (int j = 0; j < print_N; ++j)
+                // Encabezados de columnas (K)
+                printf("      ");
+                int print_K_cols = (tensor.K < 10) ? tensor.K : 10; // limitar columnas K impresas
+                for (int k = 0; k < print_K_cols; ++k)
                 {
-                    printf("%8d ", j);
+                    printf("   K%-3d ", k);
                 }
-                if (print_N < tensor.N)
+                if (print_K_cols < tensor.K)
                     printf("  ...");
                 printf("\n");
 
-                // Imprimir matriz
-                for (int i = 0; i < print_M; ++i)
+                for (int n = 0; n < print_N; ++n)
                 {
-                    printf("%2d:  ", i); // Índice de fila
-
-                    for (int j = 0; j < print_N; ++j)
+                    printf("N%2d:  ", n); // índice de fila N
+                    for (int k = 0; k < print_K_cols; ++k)
                     {
-                        // Índice: batch * (M * N * K) + i * (N * K) + j * K + k
+                        // idx = b*(M*N*K) + i*(N*K) + n*(K) + k
                         int idx = b * (tensor.M * tensor.N * tensor.K) +
                                   i * (tensor.N * tensor.K) +
-                                  j * tensor.K + k;
-
+                                  n * tensor.K + k;
                         float val = datos_host[idx];
                         printf("%8.4f ", val);
-
-                        // Actualizar estadísticas
                         if (mostrar_estadisticas)
                         {
                             min_val = (val < min_val) ? val : min_val;
@@ -126,18 +119,15 @@ void imprimir_tensor(const TensorResult &tensor, int max_rows, int max_cols,
                             elementos_procesados++;
                         }
                     }
-
-                    if (print_N < tensor.N)
+                    if (print_K_cols < tensor.K)
                         printf("  ...");
                     printf("\n");
                 }
-
-                if (print_M < tensor.M)
-                    printf("     ... (%d filas más)\n", tensor.M - print_M);
+                if (print_N < tensor.N)
+                    printf("      ... (%d filas N más)\n", tensor.N - print_N);
             }
-
-            if (print_K < tensor.K)
-                printf("\n... (%d matrices K más)\n", tensor.K - print_K);
+            if (print_M < tensor.M)
+                printf("\n... (%d bloques M más)\n", tensor.M - print_M);
         }
         else
         {

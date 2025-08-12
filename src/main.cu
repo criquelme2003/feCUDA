@@ -7,20 +7,13 @@
 
 int main()
 {
-    // === Probando función de lectura de archivos ===
-    printf("\n=== Probando función leer_matriz_3d_desde_archivo ===\n");
 
     TensorResult tensor_desde_archivo;
-    bool exito = leer_matriz_3d_desde_archivo("../datasets_txt/reflexive.txt", tensor_desde_archivo, 1, 6, 6, 1);
+    bool exito = leer_matriz_3d_desde_archivo("../datasets_txt/CC.txt", tensor_desde_archivo, 10, 16, 16, 1);
 
-    if (exito)
+    if (!exito)
     {
-        printf("\nTensor cargado desde archivo:\n");
-        imprimir_tensor(tensor_desde_archivo, 10, 10, "Tensor desde archivo", true);
-    }
-    else
-    {
-        printf("Error: No se pudo cargar el tensor desde archivo\n");
+        printf("\nError: No se pudo cargar el tensor desde archivo\n");
     }
 
     // === Probando función iterative_maxmin_cuadrado ===
@@ -29,47 +22,45 @@ int main()
     // Usar el tensor cargado desde archivo si está disponible, sino usar datos hardcodeados
     TensorResult test_tensor;
     bool usar_archivo = exito;
+    test_tensor = tensor_desde_archivo;
 
-    if (usar_archivo)
-    {
-        test_tensor = tensor_desde_archivo;
-        printf("Usando tensor cargado desde archivo\n");
-    }
-    else
-    {
-        printf("Error: Tensor no encontrado \n");
-        return 0;
-    }
+    std::vector<TensorResult> result_tensor_paths;
+    std::vector<TensorResult> result_values_paths;
+    std::vector<TensorResult> pure_tensor_paths;
+    std::vector<TensorResult> pure_values_paths;
 
-    std::vector<TensorResult> result_paths_matrix;
-    std::vector<TensorResult> result_values_list;
+    float test_threshold = 0.4f;
+    int test_order = 4;
 
-    float test_threshold = 0.3f;
-    int test_order = 3;
-
-    printf("Tensor de prueba (2x2x2x1):\n");
-    imprimir_tensor(test_tensor, 10, 10, "Test Tensor", true);
-
-    printf("\nLlamando iterative_maxmin_cuadrado con threshold=%.2f, order=%d...\n",
-           test_threshold, test_order);
-
-    iterative_maxmin_cuadrado(test_tensor, test_threshold, test_order, result_paths_matrix, result_values_list);
+    iterative_maxmin_cuadrado(test_tensor, test_threshold, test_order, result_tensor_paths, result_values_paths, pure_tensor_paths, pure_values_paths);
 
     printf("\nResultados de iterative_maxmin_cuadrado:\n");
-    printf("Número de paths encontrados: %zu\n", result_paths_matrix.size());
-    printf("Número de valores encontrados: %zu\n", result_values_list.size());
 
-    
-    printf("Paths:\n");
-    for (const auto &path : result_paths_matrix)
+    int counter = 0;
+    for (const auto &path : result_tensor_paths)
     {
-        imprimir_tensor(path, 10, 10, "Path", true);
+        // Verificar si el tensor es válido antes de imprimir
+        if (path.data)
+        {
+            char path_name[20];
+            snprintf(path_name, sizeof(path_name), "Path %d", counter);
+            imprimir_tensor(path, 10, 10, path_name, false);
+            counter++;
+        }
     }
 
-    printf("Valores:\n");
-    for (const auto &value : result_values_list)
+    counter = 0;
+
+    for (const auto &value : result_values_paths)
     {
-        imprimir_tensor(value, 10, 1, "Value", true);
+        // Verificar si el tensor es válido antes de imprimir
+        if (value.data)
+        {
+            char value_name[20];
+            snprintf(value_name, sizeof(value_name), "Value %d", counter);
+            imprimir_tensor(value, 10, 10, value_name, false);
+            counter++;
+        }
     }
 
     // Liberar memoria del tensor de prueba

@@ -31,6 +31,16 @@ struct TensorResult
         // Por defecto, las copias NO poseen la memoria para evitar double free
     }
 
+    // Move constructor (transferir ownership y puntero)
+    TensorResult(TensorResult &&other) noexcept
+        : data(other.data), is_device_ptr(other.is_device_ptr), owns_memory(other.owns_memory),
+          batch(other.batch), M(other.M), N(other.N), K(other.K)
+    {
+        other.data = nullptr;
+        other.owns_memory = false;
+        other.batch = other.M = other.N = other.K = 0;
+    }
+
     // Operador de asignación
     TensorResult &operator=(const TensorResult &other)
     {
@@ -47,6 +57,27 @@ struct TensorResult
             M = other.M;
             N = other.N;
             K = other.K;
+        }
+        return *this;
+    }
+
+    // Move assignment
+    TensorResult &operator=(TensorResult &&other) noexcept
+    {
+        if (this != &other)
+        {
+            cleanup();
+            data = other.data;
+            is_device_ptr = other.is_device_ptr;
+            owns_memory = other.owns_memory;
+            batch = other.batch;
+            M = other.M;
+            N = other.N;
+            K = other.K;
+
+            other.data = nullptr;
+            other.owns_memory = false;
+            other.batch = other.M = other.N = other.K = 0;
         }
         return *this;
     }

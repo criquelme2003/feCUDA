@@ -22,5 +22,7 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
 // Función iterative_maxmin_cuadrado
 void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                                std::vector<TensorResult> &result_tensor_paths,
-                               std::vector<TensorResult> &result_values_paths);
+                               std::vector<TensorResult> &result_values_paths,
+                               std::vector<TensorResult> &pure_tensor_paths,
+                               std::vector<TensorResult> &pure_values_paths);
 #endif

@@ -29,11 +29,21 @@ __global__ void strainer(float *min_res, float *maxmin_prima, float *values, flo
             // Buscar en min_res en la misma posición (b, m, n) pero en todas las K
             // min_res tiene dimensiones [batch, M, N, K]
 
-            // Encontrar el máximo en la dimensión K para esta posición (b, m, n)
-            float max_val = maxmin_value; // Iniciar con el valor de maxmin_prima
-            // Inicializar base_idx para acceder a min_res
             int base_idx = b * (M * N * K) + m * (N * K) + n * K;
 
+
+            // Buscar maximo en min_res
+            float max_val = -FLT_MAX;
+            for (int k = 0; k < K; k++)
+            {
+                float current_val = min_res[base_idx + k];
+                if (current_val > max_val)
+                {
+                    max_val = current_val;
+                }
+            }
+
+            // Inicializar base_idx para acceder a min_res
             // Contar cuántas veces se repite este máximo y guardar índices
             for (int k = 0; k < K; k++)
             {
@@ -51,7 +61,7 @@ __global__ void strainer(float *min_res, float *maxmin_prima, float *values, flo
                     indices[output_pos * 4 + 3] = (float)n; // N
 
                     // Guardar el valor máximo en values
-                    values[output_pos] = max_val;
+                    values[output_pos] = maxmin_value;
                 }
             }
         }
@@ -256,17 +266,17 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
                 result_tensor_filtered.data = h_indices;
                 result_tensor_filtered.is_device_ptr = false;
                 result_tensor_filtered.owns_memory = true;
-                result_tensor_filtered.batch = output_count;
-                result_tensor_filtered.M = 4;
-                result_tensor_filtered.N = 1;
+                result_tensor_filtered.batch = 1;
+                result_tensor_filtered.M = output_count;
+                result_tensor_filtered.N = 4;
                 result_tensor_filtered.K = 1;
 
                 result_tensor_values.data = h_values;
                 result_tensor_values.is_device_ptr = false;
                 result_tensor_values.owns_memory = true;
-                result_tensor_values.batch = output_count;
+                result_tensor_values.batch = 1;
                 result_tensor_values.M = 1;
-                result_tensor_values.N = 1;
+                result_tensor_values.N = output_count;
                 result_tensor_values.K = 1;
             }
             else
