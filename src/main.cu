@@ -34,34 +34,7 @@ int main()
 
     iterative_maxmin_cuadrado(test_tensor, test_threshold, test_order, result_tensor_paths, result_values_paths, pure_tensor_paths, pure_values_paths);
 
-    printf("\nResultados de iterative_maxmin_cuadrado:\n");
 
-    int counter = 0;
-    for (const auto &path : result_tensor_paths)
-    {
-        // Verificar si el tensor es válido antes de imprimir
-        if (path.data)
-        {
-            char path_name[20];
-            snprintf(path_name, sizeof(path_name), "Path %d", counter);
-            imprimir_tensor(path, 10, 10, path_name, false);
-            counter++;
-        }
-    }
-
-    counter = 0;
-
-    for (const auto &value : result_values_paths)
-    {
-        // Verificar si el tensor es válido antes de imprimir
-        if (value.data)
-        {
-            char value_name[20];
-            snprintf(value_name, sizeof(value_name), "Value %d", counter);
-            imprimir_tensor(value, 10, 10, value_name, false);
-            counter++;
-        }
-    }
 
     // Liberar memoria del tensor de prueba
     if (usar_archivo)

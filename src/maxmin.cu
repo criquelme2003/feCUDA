@@ -55,6 +55,7 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
         return;
     }
 
+
     // Extraer dimensiones del tensor
     int batch = tensor1.batch;
     int M = tensor1.M;

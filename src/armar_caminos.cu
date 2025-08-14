@@ -6,7 +6,6 @@
 #include "utils.cuh"
 #include "types.cuh"
 
-// Kernel para encontrar matches entre previous_paths y result_tensor
 __global__ void find_path_matches_kernel(float *previous_paths, float *result_tensor,
                                          float *result_values, float *output_paths,
                                          float *output_values, int *match_count,
@@ -19,27 +18,25 @@ __global__ void find_path_matches_kernel(float *previous_paths, float *result_te
     if (prev_idx < num_prev_paths && curr_idx < num_current_tensor)
     {
         // Extraer coordenadas del camino previo
-        // prev_paths[x] = [batch, start_M, intermediate_K, end_N] para i=1
-        // prev_paths[x] = [batch, start_M, intermediate_K, intermediate_N, end_K] para i=2, etc.
-        int p0 = (int)previous_paths[prev_idx * prev_cols];
-        int p1 = (int)previous_paths[prev_idx * prev_cols + 1];                           
-        int pi_2 = (int)previous_paths[prev_idx * prev_cols + prev_cols + iteration + 2]; 
+        // previous_paths formato: [batch, start_fila, intermedio1, intermedio2, ..., end_columna]
+        int p_batch = (int)previous_paths[prev_idx * prev_cols];                      // batch
+        int p_fila = (int)previous_paths[prev_idx * prev_cols + 1];                   // fila inicial
+        int p_intermedio = (int)previous_paths[prev_idx * prev_cols + iteration + 2]; // intermedio en posición i+1
 
-        // Extraer coordenadas del resultado actual [batch, M, K, N]
-        int c0 = (int)result_tensor[curr_idx * current_cols];
-        int c1 = (int)result_tensor[curr_idx * current_cols + 1];
-        int c2 = (int)result_tensor[curr_idx * current_cols + 2];
-        int c3 = (int)result_tensor[curr_idx * current_cols + 3];
+        // Extraer coordenadas del resultado actual [batch, fila, intermedio, columna]
+        int c_batch = (int)result_tensor[curr_idx * current_cols];          // batch
+        int c_fila = (int)result_tensor[curr_idx * current_cols + 1];       // fila
+        int c_intermedio = (int)result_tensor[curr_idx * current_cols + 2]; // intermedio
+        int c_columna = (int)result_tensor[curr_idx * current_cols + 3];    // nueva columna
 
-        // Condición de match: el último nodo del camino previo debe coincidir
-        // con el nodo inicial M del resultado actual
-        if (p0 == c0 && p1 == c1 && pi_2 == c2)
+        // Condición de match: batch, fila e intermedio deben coincidir
+        if (p_batch == c_batch && p_fila == c_fila && p_intermedio == c_intermedio)
         {
             // Found a match - usar atomic add para obtener posición de salida
             int output_idx = atomicAdd(match_count, 1);
 
-            // El nuevo camino tendrá prev_cols + 1 columnas (4 + iteration)
-            int new_cols = 4 + iteration;
+            // El nuevo camino tendrá prev_cols + 1 columnas
+            int new_cols = prev_cols + 1;
             int output_base = output_idx * new_cols;
 
             // Copiar todas las columnas del camino previo
@@ -48,8 +45,8 @@ __global__ void find_path_matches_kernel(float *previous_paths, float *result_te
                 output_paths[output_base + col] = previous_paths[prev_idx * prev_cols + col];
             }
 
-            // Agregar el siguiente nodo del camino (K del resultado actual)
-            output_paths[output_base + prev_cols] = (float)c3;
+            // Agregar la nueva columna (destino del resultado actual)
+            output_paths[output_base + prev_cols] = (float)c_columna;
 
             // Guardar el valor correspondiente
             output_values[output_idx] = result_values[curr_idx];
@@ -62,20 +59,22 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
                    TensorResult &matched_values, int iteration)
 {
     // Validaciones
-    if (previous_paths.data == nullptr){
+    if (previous_paths.data == nullptr)
+    {
         printf("Error: previous_paths es nulo\n");
         return;
-
-    } 
-    if (result_tensor.data == nullptr){
+    }
+    if (result_tensor.data == nullptr)
+    {
         printf("Error: result_tensor es nulo\n");
         return;
-    } 
+    }
     if (result_values.data == nullptr)
     {
         printf("Error: result_values es nulo\n");
         return;
-    }
+    };
+
 
     // Extraer dimensiones
     int num_prev_paths = previous_paths.M;
@@ -86,8 +85,6 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
 
     // El nuevo camino tendrá 4 + iteration columnas
     int new_cols = 4 + iteration;
-
-    printf("armar_caminos: iteration=%d, prev_cols=%d, new_cols=%d\n", iteration, prev_cols, new_cols);
 
 
     if (num_current_tensor != num_values)
@@ -163,11 +160,9 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
     int match_count;
     CHECK_CUDA(cudaMemcpy(&match_count, d_match_count, sizeof(int), cudaMemcpyDeviceToHost));
 
-    printf("armar_caminos: %d matches encontrados\n", match_count);
 
     if (match_count > 0)
     {
-        printf("Nuevas columnas: %d\n", new_cols);
         // Alocar memoria host para resultados
         size_t final_paths_size = match_count * new_cols * sizeof(float);
         size_t final_values_size = match_count * sizeof(float);
@@ -184,7 +179,7 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
         paths.is_device_ptr = false;
         paths.owns_memory = true;
         paths.batch = previous_paths.batch; // Mantener el batch de previous_paths
-        paths.M = match_count; // 4 + iteration columnas
+        paths.M = match_count;              // 4 + iteration columnas
         paths.N = new_cols;
         paths.K = 1;
 

@@ -44,4 +44,7 @@ void cuda_cleanup_and_check();
 // Función para limpiar memoria de TensorResult de forma segura
 void safe_tensor_cleanup(TensorResult &tensor);
 
+// Función para crear una copia del tensor en memoria host
+TensorResult copy_tensor(const TensorResult &src);
+
 #endif

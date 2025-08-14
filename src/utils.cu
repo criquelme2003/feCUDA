@@ -356,3 +356,19 @@ void safe_tensor_cleanup(TensorResult &tensor)
     tensor.owns_memory = false;
     tensor.batch = tensor.M = tensor.N = tensor.K = 0;
 }
+
+// Función para crear una copia del tensor en memoria host
+TensorResult copy_tensor(const TensorResult &src)
+{
+    TensorResult dst;
+    size_t size = src.batch * src.M * src.N * src.K * sizeof(float);
+    dst.data = (float *)malloc(size);
+    memcpy(dst.data, src.data, size);
+    dst.is_device_ptr = false;
+    dst.batch = src.batch;
+    dst.M = src.M;
+    dst.N = src.N;
+    dst.K = src.K;
+    dst.owns_memory = true;
+    return dst;
+}
