@@ -19,6 +19,10 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
                    const TensorResult &result_values, TensorResult &paths,
                    TensorResult &matched_values, int order);
 
+// Función calculate_prima
+void calculate_prima(const TensorResult &maxmin_conjugado, const TensorResult &gen_tensor,
+                     TensorResult &prima);
+
 // Función iterative_maxmin_cuadrado
 void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                                std::vector<TensorResult> &result_tensor_paths,
