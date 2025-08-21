@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <types.cuh>
+#include "headers.cuh"
 
 // Función para imprimir TensorResult
 void imprimir_tensor(const TensorResult &tensor, int max_rows, int max_cols,
@@ -371,4 +372,62 @@ TensorResult copy_tensor(const TensorResult &src)
     dst.K = src.K;
     dst.owns_memory = true;
     return dst;
+}
+
+// Función para calentar el sistema CUDA
+void cuda_warmup()
+{
+    printf("Calentando sistema CUDA...\n");
+
+    // Crear un tensor pequeño para warm-up
+    int warmup_size = 16;
+    size_t data_size = warmup_size * warmup_size * sizeof(float);
+
+    float *h_data = (float *)malloc(data_size);
+    if (h_data == nullptr)
+    {
+        printf("Error: No se pudo asignar memoria para warm-up\n");
+        return;
+    }
+
+    // Llenar con datos dummy
+    for (int i = 0; i < warmup_size * warmup_size; i++)
+    {
+        h_data[i] = 1.0f + (i % 10) * 0.1f;
+    }
+
+    TensorResult warm_tensor(h_data, false, 1, warmup_size, warmup_size, 1, true);
+
+    // Ejecutar varias operaciones para inicializar CUDA completamente
+    TensorResult max_result, min_result;
+
+    // Primera operación maxmin para inicializar contexto y kernels
+    maxmin(warm_tensor, warm_tensor, max_result, min_result, false);
+
+    // Segunda operación para estabilizar el sistema
+    TensorResult max_result2, min_result2;
+    maxmin(warm_tensor, warm_tensor, max_result2, min_result2, false);
+
+    // Sincronizar para asegurar que todo esté completado
+    cudaDeviceSynchronize();
+
+    // Limpiar memoria del warm-up
+    safe_tensor_cleanup(max_result);
+    safe_tensor_cleanup(min_result);
+    safe_tensor_cleanup(max_result2);
+    safe_tensor_cleanup(min_result2);
+    safe_tensor_cleanup(warm_tensor);
+
+    // Mostrar información de memoria después del warm-up
+    size_t free_memory, total_memory;
+    cudaError_t memError = cudaMemGetInfo(&free_memory, &total_memory);
+    if (memError == cudaSuccess)
+    {
+        printf("Warm-up completado. Memoria GPU libre: %.1f MB\n",
+               free_memory / (1024.0 * 1024.0));
+    }
+    else
+    {
+        printf("Warm-up completado.\n");
+    }
 }

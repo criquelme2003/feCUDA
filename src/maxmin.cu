@@ -4,84 +4,13 @@
 #include <float.h>
 #include <chrono>
 #include "utils.cuh"
+#include "maxmin_kernels.cuh"
 #include <device_launch_parameters.h>
 #include <cub/cub.cuh>
 #include "types.cuh"
 
-__global__ void min_kernel(
-    const float *__restrict__ A, // [batch, M, K]
-    const float *__restrict__ B, // [batch, K, N]
-    float *__restrict__ C_min,   // [batch, M, K, N]
-    const int M, const int K, const int N, const int batch_size)
-{
-    // Configuración 1D simple
-    int global_id = blockIdx.x * blockDim.x + threadIdx.x;
-    int total_elements = batch_size * M * K * N;
-    
-    if (global_id >= total_elements) return;
-    
-    // Descomponer el índice global en coordenadas
-    int batch = global_id / (M * K * N);
-    int tmp = global_id % (M * K * N);
-    int row = tmp / (K * N);
-    int tmp2 = tmp % (K * N);
-    int k = tmp2 / N;
-    int col = tmp2 % N;
-    
-    // Calcular índices para acceso directo
-    const int a_idx = batch * M * K + row * K + k;        // A[batch, row, k]
-    const int b_idx = batch * K * N + k * N + col;        // B[batch, k, col]
-    
-    // Una sola operación por thread
-    const float a_val = A[a_idx];
-    const float b_val = B[b_idx];
-    C_min[global_id] = fminf(a_val, b_val);
-}
 
-template <int BLOCK_SIZE = 256>
-__global__ void max_reduction_kernel(
-    const float *__restrict__ C_min, // [batch, M, K, N]
-    float *__restrict__ C_max,       // [batch, M, N]
-    const int M, const int K, const int N, const int batch_size)
-{
-    // Configuración 1D - cada bloque procesa una posición (batch, row, col)
-    int block_id = blockIdx.x;
-    int total_output_elements = batch_size * M * N;
-    
-    if (block_id >= total_output_elements) return;
-    
-    // Descomponer block_id en coordenadas de salida
-    int batch = block_id / (M * N);
-    int tmp = block_id % (M * N);
-    int row = tmp / N;
-    int col = tmp % N;
-    
-    int tid = threadIdx.x;
-    
-    // Setup para reducción CUB
-    typedef cub::BlockReduce<float, BLOCK_SIZE> BlockReduce;
-    __shared__ typename BlockReduce::TempStorage temp_storage;
-    
-    // Calcular índice base en C_min para esta posición (batch, row, col)
-    const int base_idx = batch * M * K * N + row * K * N + col;
-    
-    float thread_max = -FLT_MAX;
-    
-    // Cada thread procesa múltiples elementos de K si es necesario
-    for (int k = tid; k < K; k += BLOCK_SIZE) {
-        const int idx = base_idx + k * N; // C_min[batch, row, k, col]
-        thread_max = fmaxf(thread_max, C_min[idx]);
-    }
-    
-    // Reducción paralela usando CUB
-    float block_max = BlockReduce(temp_storage).Reduce(thread_max, cub::Max());
-    
-    // Solo el primer thread escribe el resultado
-    if (tid == 0) {
-        const int out_idx = batch * M * N + row * N + col;
-        C_max[out_idx] = block_max;
-    }
-}
+
 // Versión mejorada de maxmin que usa TensorResult y retorna tanto max como min
 void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
             TensorResult &max_result, TensorResult &min_result,
@@ -102,10 +31,10 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
     }
 
     // Extraer dimensiones del tensor
-    int batch = tensor1.batch;
-    int M = tensor1.M;
-    int K = tensor1.N;
-    int N = tensor2.N;
+    const int batch = tensor1.batch;
+    const int M = tensor1.M;
+    const int K = tensor1.N;
+    const int N = tensor2.N;
 
     // Calcular tamaños de memoria
     size_t size_A = batch * M * K * sizeof(float);
@@ -198,33 +127,17 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
         d_B = tensor2.data;
     }
 
-    // Configuración 1D para min_kernel
-    const int BLOCK_SIZE = 256;
-    int total_min_elements = batch * M * K * N;
-    int num_blocks_min = (total_min_elements + BLOCK_SIZE - 1) / BLOCK_SIZE;
+    dim3 blockSize(K);
+    dim3 gridSize(N, M, batch);
 
-    // Configuración 1D para max_reduction_kernel
-    int total_max_blocks = batch * M * N; // Un bloque por cada elemento de salida
+    int mins_size = K + K % 2;
 
-    // Ejecutar kernel que calcula mínimos - configuración 1D
-    min_kernel<<<num_blocks_min, BLOCK_SIZE>>>(d_A, d_B, d_C_min, M, K, N, batch);
+    max_min_kernel<<<gridSize, blockSize, mins_size * sizeof(float)>>>(
+        d_A, d_B, d_C_min, d_C_max, M, K, N, batch);
+
     cudaDeviceSynchronize();
 
-    // Verificar errores de lanzamiento
     cudaError_t kernelError = cudaGetLastError();
-    if (kernelError != cudaSuccess)
-    {
-        fprintf(stderr, "Error en la ejecución del min_kernel: %s\n",
-                cudaGetErrorString(kernelError));
-        // ...existing error handling...
-        return;
-    }
-
-    // Ejecutar kernel de reducción máxima - configuración 1D
-    max_reduction_kernel<BLOCK_SIZE><<<total_max_blocks, BLOCK_SIZE>>>(d_C_min, d_C_max, M, K, N, batch);
-    cudaDeviceSynchronize();
-
-    kernelError = cudaGetLastError();
     if (kernelError != cudaSuccess)
     {
         fprintf(stderr, "Error en la ejecución del max_reduction_kernel: %s\n",

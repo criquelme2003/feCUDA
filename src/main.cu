@@ -8,17 +8,32 @@
 #include "types.cuh"
 #include <chrono>
 
+// Declaraciones de funciones
+void ejecutar_benchmark_original();
+
 // Estructura para almacenar tiempos de cada función
 struct FunctionTimes
 {
-    std::vector<double> maxmin_times;
-    std::vector<double> indices_times;
-    std::vector<double> armar_caminos_times;
-    std::vector<double> total_times;
+    float maxmin_accomulative = 0;
+    float indices_accomulative = 0;
+    float armar_caminos_accomulative = 0;
+    float total_accomulative = 0;
 };
 
 int main()
 {
+    printf("=== SISTEMA DE PRUEBAS FECUDA ===\n");
+
+    ejecutar_benchmark_original();
+
+    return 0;
+}
+
+void ejecutar_benchmark_original()
+{
+    cuda_warmup();
+
+    printf("\n=== BENCHMARK ORIGINAL (iterative_maxmin_cuadrado) ===\n");
 
     TensorResult tensor_desde_archivo;
     bool exito = leer_matriz_3d_desde_archivo("../datasets_txt/CC.txt", tensor_desde_archivo, 10, 16, 16, 1);
@@ -44,7 +59,7 @@ int main()
     float test_threshold = 0.4f;
     int test_order = 4;
 
-    int iterations = 100;
+    int iterations = 1000;
     FunctionTimes function_times; // Estructura para almacenar todos los tiempos
 
     printf("Ejecutando %d iteraciones...\n", iterations);
@@ -175,10 +190,10 @@ int main()
         double time_total_ms = duration_total.count() / 1000.0;
 
         // Almacenar tiempos
-        function_times.maxmin_times.push_back(total_maxmin_time);
-        function_times.indices_times.push_back(total_indices_time);
-        function_times.armar_caminos_times.push_back(total_armar_caminos_time);
-        function_times.total_times.push_back(time_total_ms);
+        function_times.maxmin_accomulative += total_maxmin_time;
+        function_times.indices_accomulative += total_indices_time;
+        function_times.armar_caminos_accomulative += total_armar_caminos_time;
+        function_times.total_accomulative += time_total_ms;
 
         printf("Iteración %d - Total: %.3f ms, Maxmin: %.3f ms, Indices: %.3f ms, Armar_caminos: %.3f ms\n",
                i + 1, time_total_ms, total_maxmin_time, total_indices_time, total_armar_caminos_time);
@@ -202,115 +217,16 @@ int main()
         }
     }
 
-    // Guardar los tiempos en archivo CSV con detalles por función
-    std::ofstream csv_file("execution_times.csv");
-    if (csv_file.is_open())
-    {
-        // Escribir header detallado
-        csv_file << "iteracion,tiempo_total_ms,tiempo_maxmin_ms,tiempo_indices_ms,tiempo_armar_caminos_ms\n";
+    function_times.maxmin_accomulative = function_times.maxmin_accomulative / iterations;
+    function_times.indices_accomulative = function_times.indices_accomulative / iterations;
+    function_times.armar_caminos_accomulative = function_times.armar_caminos_accomulative / iterations;
+    function_times.total_accomulative = function_times.total_accomulative / iterations;
 
-        // Escribir datos
-        for (size_t i = 0; i < function_times.total_times.size(); i++)
-        {
-            csv_file << (i + 1) << ","
-                     << function_times.total_times[i] << ","
-                     << function_times.maxmin_times[i] << ","
-                     << function_times.indices_times[i] << ","
-                     << function_times.armar_caminos_times[i] << "\n";
-        }
-
-        csv_file.close();
-        printf("\nTiempos detallados guardados en 'execution_times.csv'\n");
-
-        // Calcular estadísticas para tiempo total
-        double total_total = 0.0, min_total = function_times.total_times.empty() ? 0.0 : function_times.total_times[0];
-        double max_total = function_times.total_times.empty() ? 0.0 : function_times.total_times[0];
-        for (double time : function_times.total_times)
-        {
-            total_total += time;
-            if (time < min_total)
-                min_total = time;
-            if (time > max_total)
-                max_total = time;
-        }
-        double avg_total = function_times.total_times.empty() ? 0.0 : total_total / function_times.total_times.size();
-
-        // Calcular estadísticas para maxmin
-        double total_maxmin = 0.0, min_maxmin = function_times.maxmin_times.empty() ? 0.0 : function_times.maxmin_times[0];
-        double max_maxmin = function_times.maxmin_times.empty() ? 0.0 : function_times.maxmin_times[0];
-        for (double time : function_times.maxmin_times)
-        {
-            total_maxmin += time;
-            if (time < min_maxmin)
-                min_maxmin = time;
-            if (time > max_maxmin)
-                max_maxmin = time;
-        }
-        double avg_maxmin = function_times.maxmin_times.empty() ? 0.0 : total_maxmin / function_times.maxmin_times.size();
-
-        // Calcular estadísticas para indices
-        double total_indices = 0.0, min_indices = function_times.indices_times.empty() ? 0.0 : function_times.indices_times[0];
-        double max_indices = function_times.indices_times.empty() ? 0.0 : function_times.indices_times[0];
-        for (double time : function_times.indices_times)
-        {
-            total_indices += time;
-            if (time < min_indices)
-                min_indices = time;
-            if (time > max_indices)
-                max_indices = time;
-        }
-        double avg_indices = function_times.indices_times.empty() ? 0.0 : total_indices / function_times.indices_times.size();
-
-        // Calcular estadísticas para armar_caminos
-        double total_armar = 0.0, min_armar = function_times.armar_caminos_times.empty() ? 0.0 : function_times.armar_caminos_times[0];
-        double max_armar = function_times.armar_caminos_times.empty() ? 0.0 : function_times.armar_caminos_times[0];
-        for (double time : function_times.armar_caminos_times)
-        {
-            total_armar += time;
-            if (time < min_armar)
-                min_armar = time;
-            if (time > max_armar)
-                max_armar = time;
-        }
-        double avg_armar = function_times.armar_caminos_times.empty() ? 0.0 : total_armar / function_times.armar_caminos_times.size();
-
-        printf("\n=== Estadísticas de ejecución detalladas ===\n");
-        printf("Iteraciones: %d\n", iterations);
-        printf("\n--- TIEMPO TOTAL ---\n");
-        printf("Promedio: %.3f ms\n", avg_total);
-        printf("Mínimo: %.3f ms\n", min_total);
-        printf("Máximo: %.3f ms\n", max_total);
-        printf("Total acumulado: %.3f ms\n", total_total);
-
-        printf("\n--- FUNCIÓN MAXMIN ---\n");
-        printf("Promedio: %.3f ms (%.1f%% del total)\n", avg_maxmin, avg_total > 0 ? (avg_maxmin / avg_total) * 100 : 0.0);
-        printf("Mínimo: %.3f ms\n", min_maxmin);
-        printf("Máximo: %.3f ms\n", max_maxmin);
-        printf("Total acumulado: %.3f ms\n", total_maxmin);
-
-        printf("\n--- FUNCIÓN INDICES ---\n");
-        printf("Promedio: %.3f ms (%.1f%% del total)\n", avg_indices, avg_total > 0 ? (avg_indices / avg_total) * 100 : 0.0);
-        printf("Mínimo: %.3f ms\n", min_indices);
-        printf("Máximo: %.3f ms\n", max_indices);
-        printf("Total acumulado: %.3f ms\n", total_indices);
-
-        printf("\n--- FUNCIÓN ARMAR_CAMINOS ---\n");
-        printf("Promedio: %.3f ms (%.1f%% del total)\n", avg_armar, avg_total > 0 ? (avg_armar / avg_total) * 100 : 0.0);
-        printf("Mínimo: %.3f ms\n", min_armar);
-        printf("Máximo: %.3f ms\n", max_armar);
-        printf("Total acumulado: %.3f ms\n", total_armar);
-
-        printf("\n--- RESUMEN DE DISTRIBUCIÓN ---\n");
-        printf("Maxmin: %.1f%% del tiempo total\n", avg_total > 0 ? (avg_maxmin / avg_total) * 100 : 0.0);
-        printf("Indices: %.1f%% del tiempo total\n", avg_total > 0 ? (avg_indices / avg_total) * 100 : 0.0);
-        printf("Armar_caminos: %.1f%% del tiempo total\n", avg_total > 0 ? (avg_armar / avg_total) * 100 : 0.0);
-        double other_percent = avg_total > 0 ? 100.0 - ((avg_maxmin + avg_indices + avg_armar) / avg_total) * 100 : 0.0;
-        printf("Otras operaciones: %.1f%% del tiempo total\n", other_percent);
-    }
-    else
-    {
-        printf("\nError: No se pudo crear el archivo CSV\n");
-    }
+    // Imprimir promedios
+    printf("Promedio Total: %f ms\n", function_times.total_accomulative);
+    printf("Promedio Maxmin: %f ms\n", function_times.maxmin_accomulative);
+    printf("Promedio Indices: %f ms\n", function_times.indices_accomulative);
+    printf("Promedio Armar_caminos: %f ms\n", function_times.armar_caminos_accomulative);
 
     // Liberar memoria del tensor de prueba
     if (usar_archivo)
@@ -325,5 +241,4 @@ int main()
     }
 
     printf("\nPruebas completadas.\n");
-    return 0;
 }

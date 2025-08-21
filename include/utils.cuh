@@ -47,4 +47,7 @@ void safe_tensor_cleanup(TensorResult &tensor);
 // Función para crear una copia del tensor en memoria host
 TensorResult copy_tensor(const TensorResult &src);
 
+// Función para calentar el sistema CUDA
+void cuda_warmup();
+
 #endif

@@ -2,6 +2,7 @@
 #define ALGORITHMS_CUH
 
 #include "types.cuh"
+#include "maxmin_kernels.cuh"
 #include <vector>
 
 // Funciones exportadas desde archivos .cu
