@@ -7,26 +7,110 @@
 #include "utils.cuh"
 #include "types.cuh"
 #include <chrono>
+#include <cublas_v2.h>
+
+// Declarar la función wrapper del kernel_v1
+extern TensorResult maxmin_kernel_v1_wrapper(const TensorResult &tensor_a, const TensorResult &tensor_b);
 
 // Declaraciones de funciones
 void ejecutar_benchmark_original();
-
-// Estructura para almacenar tiempos de cada función
-struct FunctionTimes
-{
-    float maxmin_accomulative = 0;
-    float indices_accomulative = 0;
-    float armar_caminos_accomulative = 0;
-    float total_accomulative = 0;
-};
-
+void testing_traspose();
+void validar_kernel_v1();
+void ejecutar_max_min_con_archivos(const char *archivo_A, const char *archivo_B,
+                                   const char *output_min, const char *output_max,
+                                   int batch_size, int M, int K, int N);
 int main()
 {
     printf("=== SISTEMA DE PRUEBAS FECUDA ===\n");
 
-    ejecutar_benchmark_original();
+    int opcion;
+    printf("1. Ejecutar max_min con archivos\n");
+    printf("2. Validar Kernel V1\n");
+    printf("3. Benchmark original\n");
+    printf("Selecciona opción: ");
+    scanf("%d", &opcion);
 
-    return 0;
+    switch (opcion)
+    {
+    case 1:
+        // Ejemplo: reflexive vs reflexive
+        ejecutar_max_min_con_archivos(
+            "datasets_txt/reflexive.txt",
+            "datasets_txt/reflexive.txt",
+            "results/reflexive_min.txt",
+            "results/reflexive_max.txt",
+            1, 6, 6, 6);
+        break;
+    case 2:
+        validar_kernel_v1();
+        break;
+    case 3:
+        ejecutar_benchmark_original();
+        break;
+    default:
+        printf("Opción inválida\n");
+    }
+}
+
+void testing_traspose()
+{
+
+    int batch_size = 2, K = 2, N = 3;
+
+    int size = batch_size * K * N;
+    // Host: batch de 2 matrices [2,2,3]
+
+    float *h_input = (float *)malloc(size * sizeof(float));
+    for (int i = 0; i < size; i++)
+    {
+        h_input[i] = i + 1;
+    }
+
+    float *h_output = (float *)malloc(size * sizeof(float));
+
+    // Device
+    float *d_input;
+    float *d_output;
+    cudaMalloc((void **)&d_input, size * sizeof(float));
+    cudaMalloc((void **)&d_output, size * sizeof(float));
+
+    cudaMemcpy(d_input, h_input,
+               size * sizeof(float),
+               cudaMemcpyHostToDevice);
+
+    // Handle cuBLAS
+    cublasHandle_t handle;
+    cublasCreate(&handle);
+
+    // Transposición
+    transpose_kernel_optimized<<<dim3((N + 31) / 32, (K + 31) / 32, batch_size), dim3(32, 32)>>>(
+        d_input, d_output, K, N, batch_size);
+
+    cudaDeviceSynchronize();
+    // Copiar de vuelta
+    cudaMemcpy(h_output, d_output,
+               size * sizeof(float),
+               cudaMemcpyDeviceToHost);
+
+    // Ver resultados
+    std::cout << "Output:" << std::endl;
+    for (int b = 0; b < batch_size; b++)
+    {
+        std::cout << "Matriz " << b << " (transpuesta):" << std::endl;
+        for (int n = 0; n < N; n++)
+        {
+            for (int k = 0; k < K; k++)
+            {
+                std::cout << h_output[b * N * K + n * K + k] << " ";
+            }
+            std::cout << std::endl;
+        }
+    }
+
+    // Cleanup
+    cudaFree(d_input);
+    cudaFree(d_output);
+    cublasDestroy(handle);
 }
 
 void ejecutar_benchmark_original()
@@ -56,189 +140,149 @@ void ejecutar_benchmark_original()
     std::vector<TensorResult> pure_tensor_paths;
     std::vector<TensorResult> pure_values_paths;
 
-    float test_threshold = 0.4f;
+    float test_threshold = 0.4;
     int test_order = 4;
 
-    int iterations = 1000;
-    FunctionTimes function_times; // Estructura para almacenar todos los tiempos
+    iterative_maxmin_cuadrado(test_tensor, test_threshold, test_order, result_tensor_paths, result_values_paths, pure_tensor_paths, pure_values_paths);
+}
 
-    printf("Ejecutando %d iteraciones...\n", iterations);
+void test_max_min_simple()
+{
+    printf("\n=== TEST MAX_MIN KERNEL SIMPLE ===\n");
 
-    for (int i = 0; i < iterations; i++)
+    cuda_warmup();
+
+    int batch_size = 1, M = 2, K = 3, N = 2;
+
+    // Datos de prueba A[1,2,3,4,5,6] -> matrices [1,2,3] y [4,5,6]
+    // Datos de prueba B[1,2,3,4,5,6] -> matrices [1,2], [3,4], [5,6]
+    std::vector<float> A = {1, 2, 3, 4, 5, 6};
+    std::vector<float> B = {1, 2, 3, 4, 5, 6};
+
+    size_t size_A = batch_size * M * K * sizeof(float);
+    size_t size_B = batch_size * K * N * sizeof(float);
+    size_t size_C_min = batch_size * M * N * K * sizeof(float);
+    size_t size_C_max = batch_size * M * N * sizeof(float);
+
+    float *d_A, *d_B, *d_C_min, *d_C_max;
+    cudaMalloc(&d_A, size_A);
+    cudaMalloc(&d_B, size_B);
+    cudaMalloc(&d_C_min, size_C_min);
+    cudaMalloc(&d_C_max, size_C_max);
+
+    cudaMemcpy(d_A, A.data(), size_A, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, B.data(), size_B, cudaMemcpyHostToDevice);
+
+    dim3 blockSize(K);
+    dim3 gridSize(N, M, batch_size);
+    size_t shared_mem = K * sizeof(float);
+
+    auto inicio = std::chrono::high_resolution_clock::now();
+
+    max_min_kernel<<<gridSize, blockSize, shared_mem>>>(
+        d_A, d_B, d_C_min, d_C_max, M, K, N, batch_size);
+
+    cudaDeviceSynchronize();
+    auto fin = std::chrono::high_resolution_clock::now();
+
+    double tiempo = std::chrono::duration<double, std::milli>(fin - inicio).count();
+
+    std::vector<float> h_C_min(batch_size * M * N * K);
+    std::vector<float> h_C_max(batch_size * M * N);
+
+    cudaMemcpy(h_C_min.data(), d_C_min, size_C_min, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_C_max.data(), d_C_max, size_C_max, cudaMemcpyDeviceToHost);
+
+    printf("Tiempo ejecución: %.3f ms\n", tiempo);
+    printf("C_min (%d elementos): ", (int)h_C_min.size());
+    for (int i = 0; i < (int)h_C_min.size(); i++)
     {
-        // Usar std::chrono para mayor precisión
-        auto start_total = std::chrono::high_resolution_clock::now();
+        printf("%.1f ", h_C_min[i]);
+    }
+    printf("\nC_max (%d elementos): ", (int)h_C_max.size());
+    for (int i = 0; i < (int)h_C_max.size(); i++)
+    {
+        printf("%.1f ", h_C_max[i]);
+    }
+    printf("\n");
 
-        // Variables para medir tiempos de funciones individuales
-        double total_maxmin_time = 0.0;
-        double total_indices_time = 0.0;
-        double total_armar_caminos_time = 0.0;
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C_min);
+    cudaFree(d_C_max);
+}
 
-        // Copiar tensor original (asignar ownership)
-        TensorResult original_tensor = copy_tensor(test_tensor);
-        TensorResult gen_tensor = copy_tensor(original_tensor);
+void ejecutar_max_min_con_archivos(const char *archivo_A, const char *archivo_B,
+                                   const char *output_min, const char *output_max,
+                                   int batch_size, int M, int K, int N)
+{
 
-        // Limpiar vectores de salida
-        result_tensor_paths.clear();
-        result_values_paths.clear();
-        pure_tensor_paths.clear();
-        pure_values_paths.clear();
+    printf("Procesando: %s y %s\n", archivo_A, archivo_B);
 
-        for (int j = 0; j < test_order - 1; j++)
-        {
-            // === MEDIR TIEMPO DE MAXMIN ===
-            auto start_maxmin = std::chrono::high_resolution_clock::now();
+    // Cargar datos
+    TensorResult tensor_A, tensor_B;
+    bool exito_A = leer_matriz_3d_desde_archivo(archivo_A, tensor_A, batch_size, M, K, 1);
+    bool exito_B = leer_matriz_3d_desde_archivo(archivo_B, tensor_B, batch_size, K, N, 1);
 
-            TensorResult min_result, maxmin_conjugado;
-            maxmin(gen_tensor, original_tensor, maxmin_conjugado, min_result, false);
-
-            auto end_maxmin = std::chrono::high_resolution_clock::now();
-            auto duration_maxmin = std::chrono::duration_cast<std::chrono::microseconds>(end_maxmin - start_maxmin);
-            total_maxmin_time += duration_maxmin.count() / 1000.0;
-
-            // Los resultados de maxmin asignan memoria host sin marcar ownership; marcarlo.
-            if (maxmin_conjugado.data)
-                maxmin_conjugado.owns_memory = true;
-            if (min_result.data)
-                min_result.owns_memory = true;
-
-            // Calcular prima = maxmin_conjugado - gen_tensor
-            TensorResult prima;
-            calculate_prima(maxmin_conjugado, gen_tensor, prima);
-
-            // === MEDIR TIEMPO DE INDICES ===
-            auto start_indices = std::chrono::high_resolution_clock::now();
-
-            TensorResult result_tensor, result_values;
-            indices(min_result, prima, result_tensor, result_values, test_threshold);
-
-            auto end_indices = std::chrono::high_resolution_clock::now();
-            auto duration_indices = std::chrono::duration_cast<std::chrono::microseconds>(end_indices - start_indices);
-            total_indices_time += duration_indices.count() / 1000.0;
-
-            pure_tensor_paths.push_back(result_tensor);
-            pure_values_paths.push_back(result_values);
-
-            // Verificar si se encontraron efectos
-            if (pure_values_paths.back().data == nullptr || pure_values_paths.back().batch == 0)
-            {
-                if (j == 0)
-                {
-                    printf("Error: No se encontraron efectos con threshold %.4f\n", test_threshold);
-                    // Limpiar memoria y continuar con siguiente iteración
-                    safe_tensor_cleanup(original_tensor);
-                    safe_tensor_cleanup(gen_tensor);
-                    safe_tensor_cleanup(min_result);
-                    safe_tensor_cleanup(maxmin_conjugado);
-                    safe_tensor_cleanup(prima);
-                    break;
-                }
-                else
-                {
-                    break;
-                }
-            }
-
-            // Para órdenes superiores (j >= 1), construimos caminos usando armar_caminos
-            if (j >= 1)
-            {
-                TensorResult previous_paths = (j > 1)
-                                                  ? copy_tensor(result_tensor_paths.back())
-                                                  : copy_tensor(pure_tensor_paths[0]);
-
-                // === MEDIR TIEMPO DE ARMAR_CAMINOS ===
-                auto start_armar = std::chrono::high_resolution_clock::now();
-
-                TensorResult paths, values;
-                armar_caminos(previous_paths, result_tensor, result_values, paths, values, j);
-
-                auto end_armar = std::chrono::high_resolution_clock::now();
-                auto duration_armar = std::chrono::duration_cast<std::chrono::microseconds>(end_armar - start_armar);
-                total_armar_caminos_time += duration_armar.count() / 1000.0;
-
-                if (paths.batch == 0)
-                {
-                    j = test_order; // Forzar salida del loop
-                }
-
-                result_tensor_paths.push_back(std::move(paths));
-                result_values_paths.push_back(std::move(values));
-            }
-
-            safe_tensor_cleanup(gen_tensor);
-            gen_tensor = std::move(maxmin_conjugado);
-            safe_tensor_cleanup(min_result);
-            safe_tensor_cleanup(prima);
-            safe_tensor_cleanup(result_tensor);
-            safe_tensor_cleanup(result_values);
-        }
-
-        // Limpiar memoria
-        safe_tensor_cleanup(original_tensor);
-        safe_tensor_cleanup(gen_tensor);
-
-        if (!pure_tensor_paths.empty())
-        {
-            result_tensor_paths.insert(result_tensor_paths.begin(),
-                                       copy_tensor(pure_tensor_paths.front()));
-            result_values_paths.insert(result_values_paths.begin(),
-                                       copy_tensor(pure_values_paths.front()));
-        }
-
-        auto end_total = std::chrono::high_resolution_clock::now();
-        auto duration_total = std::chrono::duration_cast<std::chrono::microseconds>(end_total - start_total);
-        double time_total_ms = duration_total.count() / 1000.0;
-
-        // Almacenar tiempos
-        function_times.maxmin_accomulative += total_maxmin_time;
-        function_times.indices_accomulative += total_indices_time;
-        function_times.armar_caminos_accomulative += total_armar_caminos_time;
-        function_times.total_accomulative += time_total_ms;
-
-        printf("Iteración %d - Total: %.3f ms, Maxmin: %.3f ms, Indices: %.3f ms, Armar_caminos: %.3f ms\n",
-               i + 1, time_total_ms, total_maxmin_time, total_indices_time, total_armar_caminos_time);
-
-        // Limpiar vectores para siguiente iteración
-        for (auto &tensor : result_tensor_paths)
-        {
-            safe_tensor_cleanup(tensor);
-        }
-        for (auto &tensor : result_values_paths)
-        {
-            safe_tensor_cleanup(tensor);
-        }
-        for (auto &tensor : pure_tensor_paths)
-        {
-            safe_tensor_cleanup(tensor);
-        }
-        for (auto &tensor : pure_values_paths)
-        {
-            safe_tensor_cleanup(tensor);
-        }
+    if (!exito_A || !exito_B)
+    {
+        printf("Error cargando archivos\n");
+        return;
     }
 
-    function_times.maxmin_accomulative = function_times.maxmin_accomulative / iterations;
-    function_times.indices_accomulative = function_times.indices_accomulative / iterations;
-    function_times.armar_caminos_accomulative = function_times.armar_caminos_accomulative / iterations;
-    function_times.total_accomulative = function_times.total_accomulative / iterations;
+    // Tamaños
+    size_t size_A = batch_size * M * K * sizeof(float);
+    size_t size_B = batch_size * K * N * sizeof(float);
+    size_t size_C_min = batch_size * M * N * K * sizeof(float);
+    size_t size_C_max = batch_size * M * N * sizeof(float);
 
-    // Imprimir promedios
-    printf("Promedio Total: %f ms\n", function_times.total_accomulative);
-    printf("Promedio Maxmin: %f ms\n", function_times.maxmin_accomulative);
-    printf("Promedio Indices: %f ms\n", function_times.indices_accomulative);
-    printf("Promedio Armar_caminos: %f ms\n", function_times.armar_caminos_accomulative);
+    // GPU memory
+    float *d_A, *d_B, *d_C_min, *d_C_max;
+    cudaMalloc(&d_A, size_A);
+    cudaMalloc(&d_B, size_B);
+    cudaMalloc(&d_C_min, size_C_min);
+    cudaMalloc(&d_C_max, size_C_max);
 
-    // Liberar memoria del tensor de prueba
-    if (usar_archivo)
-    {
-        if (tensor_desde_archivo.data)
-            free(tensor_desde_archivo.data);
-    }
-    else
-    {
-        if (test_tensor.data)
-            free(test_tensor.data);
-    }
+    // Copiar a GPU
+    cudaMemcpy(d_A, tensor_A.data, size_A, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, tensor_B.data, size_B, cudaMemcpyHostToDevice);
 
-    printf("\nPruebas completadas.\n");
+    // Configurar kernel
+    dim3 blockSize(K);
+    dim3 gridSize(N, M, batch_size);
+    size_t shared_mem = K * sizeof(float);
+
+    // Ejecutar con timing
+
+    max_min_kernel<<<gridSize, blockSize, shared_mem>>>(
+        d_A, d_B, d_C_min, d_C_max, M, K, N, batch_size);
+
+    cudaDeviceSynchronize();
+
+    // Copiar resultados
+    float *h_C_min = new float[batch_size * M * N * K];
+    float *h_C_max = new float[batch_size * M * N];
+
+    cudaMemcpy(h_C_min, d_C_min, size_C_min, cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_C_max, d_C_max, size_C_max, cudaMemcpyDeviceToHost);
+
+    TensorResult max(h_C_min, false, batch_size, M, N, 1);
+
+    guardar_tensor_como_archivo(max, output_min);
+
+    // Cleanup
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C_min);
+    cudaFree(d_C_max);
+}
+
+void validar_kernel_v1()
+{
+    printf("\n=== VALIDACIÓN KERNEL_V1 ===\n");
+
+    cuda_warmup();
+
+    // Usar la función de validación automática
+    validar_algoritmos_maxmin(maxmin_kernel_v1_wrapper, "Kernel_V1_GPU");
 }

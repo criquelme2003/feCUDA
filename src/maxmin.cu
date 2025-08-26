@@ -6,16 +6,23 @@
 #include "utils.cuh"
 #include "maxmin_kernels.cuh"
 #include <device_launch_parameters.h>
-#include <cub/cub.cuh>
 #include "types.cuh"
-
-
+#include "headers.cuh"
 
 // Versión mejorada de maxmin que usa TensorResult y retorna tanto max como min
 void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
             TensorResult &max_result, TensorResult &min_result,
             bool keep_in_device)
 {
+
+    // Verificar estado del dispositivo CUDA
+    cudaError_t deviceError = cudaDeviceSynchronize();
+    if (deviceError != cudaSuccess)
+    {
+        printf("Error: El dispositivo CUDA no está disponible [maxmin]: %s\n", cudaGetErrorString(deviceError));
+        return;
+    }
+
     // Validaciones básicas
     if (tensor1.data == nullptr || tensor2.data == nullptr)
     {
@@ -42,19 +49,22 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
     size_t size_C_min = batch * M * N * K * sizeof(float);
     size_t size_C_max = batch * M * N * sizeof(float);
 
-    float *d_A = nullptr, *d_B = nullptr, *d_C_max = nullptr, *d_C_min = nullptr;
+    float *d_A = nullptr, *d_B = nullptr, *d_C_max = nullptr, *d_C_min = nullptr, *d_tB = nullptr;
     float *h_C_max = nullptr, *h_C_min = nullptr;
 
+    cudaMalloc(&d_tB, size_B); // memoria temporal para B transpuesta
     // Asignar memoria para los resultados en device
     if (cudaMalloc(&d_C_max, size_C_max) != cudaSuccess)
     {
         fprintf(stderr, "Error: No se pudo asignar memoria para el resultado max en el dispositivo\n");
+        cudaFree(d_tB);
         return;
     }
 
     if (cudaMalloc(&d_C_min, size_C_min) != cudaSuccess)
     {
         fprintf(stderr, "Error: No se pudo asignar memoria para el resultado min en el dispositivo\n");
+        cudaFree(d_tB);
         cudaFree(d_C_max);
         return;
     }
@@ -64,6 +74,7 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
         cudaMemset(d_C_min, 0, size_C_min) != cudaSuccess)
     {
         fprintf(stderr, "Error: No se pudo inicializar memoria de resultados\n");
+        cudaFree(d_tB);
         cudaFree(d_C_max);
         cudaFree(d_C_min);
         return;
@@ -76,6 +87,7 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
         if (cudaMalloc(&d_A, size_A) != cudaSuccess)
         {
             fprintf(stderr, "Error: No se pudo asignar memoria para tensor1 en el dispositivo\n");
+            cudaFree(d_tB);
             cudaFree(d_C_max);
             cudaFree(d_C_min);
             return;
@@ -84,6 +96,7 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
         if (cudaMemcpy(d_A, tensor1.data, size_A, cudaMemcpyHostToDevice) != cudaSuccess)
         {
             fprintf(stderr, "Error: No se pudo copiar tensor1 al dispositivo\n");
+            cudaFree(d_tB);
             cudaFree(d_A);
             cudaFree(d_C_max);
             cudaFree(d_C_min);
@@ -103,6 +116,7 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
         if (cudaMalloc(&d_B, size_B) != cudaSuccess)
         {
             fprintf(stderr, "Error: No se pudo asignar memoria para tensor2 en el dispositivo\n");
+            cudaFree(d_tB);
             if (!tensor1.is_device_ptr)
                 cudaFree(d_A);
             cudaFree(d_C_max);
@@ -113,6 +127,7 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
         if (cudaMemcpy(d_B, tensor2.data, size_B, cudaMemcpyHostToDevice) != cudaSuccess)
         {
             fprintf(stderr, "Error: No se pudo copiar tensor2 al dispositivo\n");
+            cudaFree(d_tB);
             if (!tensor1.is_device_ptr)
                 cudaFree(d_A);
             cudaFree(d_B);
@@ -127,16 +142,31 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
         d_B = tensor2.data;
     }
 
+    // trasponer B
+
     dim3 blockSize(K);
     dim3 gridSize(N, M, batch);
 
     int mins_size = K + K % 2;
 
-    max_min_kernel<<<gridSize, blockSize, mins_size * sizeof(float)>>>(
-        d_A, d_B, d_C_min, d_C_max, M, K, N, batch);
+    constexpr int TILE_SIZE = 32;
+    dim3 block(TILE_SIZE, TILE_SIZE);
+    dim3 grid((N + TILE_SIZE - 1) / TILE_SIZE,
+              (K + TILE_SIZE - 1) / TILE_SIZE,
+              batch);
+
+    // Transponer B
+    transpose_kernel_optimized<<<grid, block, 0, 0>>>(
+        d_B, d_tB, K, N, batch);
+
+    // imprimir b y tb
 
     cudaDeviceSynchronize();
+    // imprimir traspose
+    max_min_lineal_kernel<<<gridSize, blockSize, mins_size * sizeof(float)>>>(
+        d_A, d_tB, d_C_min, d_C_max, M, K, N, batch);
 
+    cudaDeviceSynchronize();
     cudaError_t kernelError = cudaGetLastError();
     if (kernelError != cudaSuccess)
     {
@@ -146,6 +176,7 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
         return;
     }
     // Liberar memoria temporal
+    cudaFree(d_tB); // Liberar memoria de B transpuesta
     if (!tensor1.is_device_ptr)
         cudaFree(d_A);
     if (!tensor2.is_device_ptr)
@@ -156,6 +187,7 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
     {
         max_result = TensorResult(d_C_max, true, batch, M, N);
         min_result = TensorResult(d_C_min, true, batch, M, N, K);
+
         return;
     }
 

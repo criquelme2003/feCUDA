@@ -80,7 +80,7 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
     cudaError_t deviceError = cudaDeviceSynchronize();
     if (deviceError != cudaSuccess)
     {
-        printf("Error: El dispositivo CUDA no está disponible: %s\n", cudaGetErrorString(deviceError));
+        printf("Error: El dispositivo CUDA no está disponible[indices.cu]: %s\n", cudaGetErrorString(deviceError));
         return;
     }
 

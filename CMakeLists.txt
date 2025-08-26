@@ -6,6 +6,8 @@ set(CMAKE_CUDA_STANDARD 14)
 
 # Habilitar compilación separable CUDA globalmente
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
+set(CMAKE_CUDA_FLAGS_DEBUG "-g -G -O0")
+set(CMAKE_CUDA_FLAGS_RELWITHDEBINFO "-g -G -O2")
 
 # Incluir directorios de headers
 include_directories(include)
@@ -19,13 +21,18 @@ link_directories(/usr/lib/x86_64-linux-gnu/libcutensor/12)
 file(GLOB CUDA_SOURCES "src/*.cu")
 file(GLOB CXX_SOURCES "src/*.cpp")
 file(GLOB MAXMIN_SOURCES "src/maxmin/*.cu")
+file(GLOB UTILS_SOURCES "src/utils/*.cu")
 
-set(ALL_SOURCES ${CUDA_SOURCES} ${CXX_SOURCES} ${MAXMIN_SOURCES})
+# Excluir utils.cu ya que este incluye todos los archivos de utils/
+list(REMOVE_ITEM CUDA_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/utils.cu")
+
+set(ALL_SOURCES ${CUDA_SOURCES} ${CXX_SOURCES} ${MAXMIN_SOURCES} ${UTILS_SOURCES})
 
 # Mostrar qué archivos se están compilando (para debug)
 message(STATUS "Archivos CUDA encontrados: ${CUDA_SOURCES}")
 message(STATUS "Archivos C++ encontrados: ${CXX_SOURCES}")
 message(STATUS "Archivos maxmin encontrados: ${MAXMIN_SOURCES}")
+message(STATUS "Archivos utils encontrados: ${UTILS_SOURCES}")
 
 # Agregar ejecutable
 add_executable(tu_ejecutable ${ALL_SOURCES})
@@ -36,10 +43,11 @@ set_target_properties(tu_ejecutable PROPERTIES
     CUDA_RESOLVE_DEVICE_SYMBOLS ON
 )
 
-# Enlazar el ejecutable con cuDNN, cuTENSOR y Python
+# Enlazar el ejecutable con cuDNN, cuTENSOR, cuBLAS y Python
 target_link_libraries(tu_ejecutable
     cudnn
     cutensor
+    cublas
     python3.12
     ${CUDA_LIBRARIES}
 )

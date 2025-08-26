@@ -24,4 +24,18 @@ __global__ void max_min_kernel(
     float * C_max,   // [batch, M, N]
     const int M, const int K, const int N, const int batch_size);
 
+__global__ void max_min_kernel_v2(
+    const float * A, // [batch, M, K]
+    const float * B, // [batch, K, N]
+    float * C_min,   // [batch, M, K, N]
+    float * C_max,   // [batch, M, N]
+    const int M, const int K, const int N, const int batch_size);
+
+__global__ void max_min_lineal_kernel(
+    const float * A, // [batch, M, K]
+    const float * B, // [batch, K, N]
+    float * C_min,   // [batch, M, K, N]
+    float * C_max,   // [batch, M, N]
+    const int M, const int K, const int N, const int batch_size);
+
 #endif // MAXMIN_KERNELS_CUH

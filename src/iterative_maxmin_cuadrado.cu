@@ -98,10 +98,20 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                                std::vector<TensorResult> &pure_tensor_paths,
                                std::vector<TensorResult> &pure_values_paths)
 {
+    
+
+    // Verificar estado del dispositivo CUDA
+    cudaError_t deviceError = cudaDeviceSynchronize();
+    if (deviceError != cudaSuccess)
+    {
+        printf("Error: El dispositivo CUDA no está disponible [iterative_maxmin_cuadrado]: %s\n", cudaGetErrorString(deviceError));
+        return;
+    }
+
     // Validaciones
     if (thr < 0.0f || thr > 1.0f)
     {
-        printf("Error: El threshold debe estar en el rango [0,1]\n");
+        printf("Error:El threshold debe estar en el rango [0,1] (thr = %.2f) \n", thr);
         return;
     }
 
