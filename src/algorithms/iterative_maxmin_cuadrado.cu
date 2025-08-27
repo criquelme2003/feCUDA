@@ -4,9 +4,11 @@
 #include <float.h>
 #include <chrono>
 #include <vector>
-#include "utils.cuh"
-#include "types.cuh"
-#include "headers.cuh"
+#include "../../include/utils/cuda_utils.cuh"
+#include "../../include/core/types.cuh"
+#include "../../include/algorithms/maxmin.cuh"
+#include "../../include/algorithms/indices.cuh"
+#include "../../include/algorithms/paths.cuh"
 
 // Kernel para calcular prima = maxmin_conjugado - gen_tensor
 __global__ void calculate_prima_kernel(float *maxmin_conjugado, float *gen_tensor,
@@ -98,7 +100,6 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                                std::vector<TensorResult> &pure_tensor_paths,
                                std::vector<TensorResult> &pure_values_paths)
 {
-    
 
     // Verificar estado del dispositivo CUDA
     cudaError_t deviceError = cudaDeviceSynchronize();
@@ -245,5 +246,5 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                                copy_tensor(pure_values_paths.front()));
 
     // Limpiar y verificar dispositivo CUDA
-    cuda_cleanup_and_check();
+    CudaUtils::cuda_cleanup_and_check();
 }

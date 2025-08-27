@@ -1,28 +1,16 @@
-#ifndef ALGORITHMS_CUH
-#define ALGORITHMS_CUH
+#ifndef MAXMIN_CUH
+#define MAXMIN_CUH
 
-#include "types.cuh"
-#include "maxmin_kernels.cuh"
-#include "simple_logger.hpp"
+#include "core/types.cuh"
+#include "kernels/maxmin_kernels.cuh"
 #include <vector>
-#include <string>
 
-// Funciones exportadas desde archivos .cu
+// Función principal maxmin - wrapper de alto nivel
 void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
             TensorResult &max_result, TensorResult &min_result,
             bool keep_in_device = false);
 
-// Función indices
-void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
-             TensorResult &result_tensor_filtered, TensorResult &result_tensor_values,
-             float threshold);
-
-// Función armar_caminos
-void armar_caminos(const TensorResult &previous_paths, const TensorResult &result_tensor,
-                   const TensorResult &result_values, TensorResult &paths,
-                   TensorResult &matched_values, int order);
-
-// Función calculate_prima
+// Función calculate_prima para cálculo de prima
 void calculate_prima(const TensorResult &maxmin_conjugado, const TensorResult &gen_tensor,
                      TensorResult &prima);
 
@@ -33,4 +21,4 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                                std::vector<TensorResult> &pure_tensor_paths,
                                std::vector<TensorResult> &pure_values_paths);
 
-#endif
+#endif // MAXMIN_CUH

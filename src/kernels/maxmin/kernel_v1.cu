@@ -1,7 +1,7 @@
 
 #include <float.h>
-#include "../../include/utils.cuh"
-#include "../../include/types.cuh"
+#include "../../../include/utils/cuda_utils.cuh"
+#include "../../../include/core/types.cuh"
 
 __global__ void max_min_kernel(
     const float *__restrict__ A, // [batch, M, K]
@@ -48,17 +48,6 @@ __global__ void max_min_kernel(
     {
         C_max[b * M * N + m * N + n] = mins[0];
     }
-}
-
-unsigned int nextPow2(unsigned int x)
-{
-    --x;
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    return ++x;
 }
 
 // Función wrapper para validación - ejecuta el kernel v1 y retorna solo C_max

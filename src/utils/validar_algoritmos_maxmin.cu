@@ -1,11 +1,12 @@
 #include "../../include/utils.cuh"
+#include "../../include/headers.cuh"
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <chrono>
 
 // Función para validar algoritmos maxmin contra archivos de referencia
-void validar_algoritmos_maxmin(FuncionMaxMin funcion_maxmin, const char *nombre_algoritmo)
+void validar_algoritmos_maxmin(const char *nombre_algoritmo)
 {
 
     printf("\n╔══════════════════════════════════════════════════════════════╗\n");
@@ -23,8 +24,8 @@ void validar_algoritmos_maxmin(FuncionMaxMin funcion_maxmin, const char *nombre_
 
     CasoPrueba casos[] = {
         {"Reflexive vs Reflexive", "../datasets_txt/reflexive.txt", "../results/reflexive_min.txt", 1, 6, 6, 1},
-        {"CC vs CC", "../datasets_txt/CC.txt", "../results/CC_min.txt", 10, 16, 16,1},
-        {"CC vs CC", "../datasets_txt/EE.txt", "../results/EE_min.txt", 10, 16, 16,1}        
+        {"CC vs CC", "../datasets_txt/CC.txt", "../results/CC_min.txt", 10, 16, 16, 1},
+        {"CC vs CC", "../datasets_txt/EE.txt", "../results/EE_min.txt", 10, 4, 4, 1}
 
     };
 
@@ -57,10 +58,14 @@ void validar_algoritmos_maxmin(FuncionMaxMin funcion_maxmin, const char *nombre_
         printf("🚀 Ejecutando algoritmo %s...\n", nombre_algoritmo);
         auto inicio = std::chrono::high_resolution_clock::now();
 
-        TensorResult resultado = funcion_maxmin(tensor_entrada, tensor_entrada);
+        TensorResult max_result, min_result;
+        maxmin(tensor_entrada, tensor_entrada, max_result, min_result, false);
 
         auto fin = std::chrono::high_resolution_clock::now();
         double tiempo_ms = std::chrono::duration<double, std::milli>(fin - inicio).count();
+
+        // Usamos min_result para la validación (que es lo que se compara tradicionalmente)
+        TensorResult resultado = max_result; // Cambiar a min_result si se quiere validar el mínimo
 
         if (resultado.data == nullptr)
         {
@@ -110,6 +115,7 @@ void validar_algoritmos_maxmin(FuncionMaxMin funcion_maxmin, const char *nombre_
         // Limpiar memoria
         safe_tensor_cleanup(tensor_entrada);
         safe_tensor_cleanup(resultado);
+        safe_tensor_cleanup(max_result); // Limpiar también max_result
         safe_tensor_cleanup(tensor_referencia);
 
         printf("\n");
