@@ -1,6 +1,6 @@
-#include "include/utils.cuh"
-#include "include/types.cuh"
-#include "include/headers.cuh"
+#include <include/utils.cuh>
+#include <include/types.cuh>
+#include <include/headers.cuh>
 
 int main()
 {

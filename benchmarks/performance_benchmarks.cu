@@ -2,11 +2,11 @@
 #include <chrono>
 #include <vector>
 #include <random>
-#include "algorithms/maxmin.cuh"
-#include "core/tensor.cuh"
-#include "utils/cuda_utils.cuh"
-#include "utils/logging.cuh"
-#include "utils/file_io.cuh"
+#include <maxmin.cuh>
+#include <core/tensor.cuh>
+#include <utils/cuda_utils.cuh>
+#include <utils/logging.cuh>
+#include <utils/file_io.cuh>
 
 // Medición de tiempo para benchmarks
 class Timer

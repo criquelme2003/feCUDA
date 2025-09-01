@@ -1,9 +1,9 @@
 #include <iostream>
 #include "algorithms/maxmin.cuh"
-#include "core/tensor.cuh"
-#include "utils/cuda_utils.cuh"
-#include "utils/logging.cuh"
-#include "utils/file_io.cuh"
+#include <core/tensor.cuh>
+#include <utils/cuda_utils.cuh>
+#include <utils/logging.cuh>
+#include <utils/file_io.cuh>
 
 // Ejemplo básico de uso de maxmin
 void example_basic_maxmin()

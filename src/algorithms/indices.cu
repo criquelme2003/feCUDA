@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <float.h>
 #include <chrono>
-#include "utils.cuh"
-#include "types.cuh"
+#include <utils.cuh>
+#include <types.cuh>
 
 __global__ void strainer(float *min_res, float *maxmin_prima, float *values, float *indices,
                          float threshold, int batch, int M, int N, int K, int *output_count)
@@ -19,7 +19,7 @@ __global__ void strainer(float *min_res, float *maxmin_prima, float *values, flo
         int b = idx / (M * N);
         int m = (idx % (M * N)) / N;
         int n = (idx % (M * N)) % N;
-
+        
         // Obtener valor de maxmin_prima en posición (b, m, n)
         float maxmin_value = maxmin_prima[idx];
 

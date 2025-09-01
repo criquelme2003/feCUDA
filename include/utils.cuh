@@ -4,7 +4,7 @@
 #include <cuda_runtime.h>
 #include <iostream>
 #include <stdexcept>
-#include "types.cuh"
+#include <core/types.cuh>
 
 // Excepción personalizada simple para errores CUDA
 class CudaException : public std::runtime_error

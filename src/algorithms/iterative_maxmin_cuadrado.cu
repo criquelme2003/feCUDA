@@ -4,11 +4,11 @@
 #include <float.h>
 #include <chrono>
 #include <vector>
-#include "../../include/utils/cuda_utils.cuh"
-#include "../../include/core/types.cuh"
-#include "../../include/algorithms/maxmin.cuh"
-#include "../../include/algorithms/indices.cuh"
-#include "../../include/algorithms/paths.cuh"
+#include <cuda_utils.cuh>
+#include <core/types.cuh>
+#include <algorithms/maxmin.cuh>
+#include <algorithms/indices.cuh>
+#include <algorithms/paths.cuh>
 
 // Kernel para calcular prima = maxmin_conjugado - gen_tensor
 __global__ void calculate_prima_kernel(float *maxmin_conjugado, float *gen_tensor,

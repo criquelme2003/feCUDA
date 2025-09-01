@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <float.h>
 #include <chrono>
-#include "utils.cuh"
-#include "maxmin_kernels.cuh"
+#include <maxmin_kernels.cuh>
 #include <device_launch_parameters.h>
-#include "types.cuh"
-#include "headers.cuh"
+#include <core/types.cuh>
+
+#include <headers.cuh>
 
 // Versión mejorada de maxmin que usa TensorResult y retorna tanto max como min
 void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,

@@ -3,8 +3,10 @@
 #include <memory>
 #include <stdexcept>
 #include <chrono>
-#include "utils.cuh"
-#include "types.cuh"
+#include <utils.cuh>
+#include <core/types.cuh>
+#include <utils/memory_utils.cuh>
+#include <utils/validation_utils.cuh>
 
 __global__ void find_path_matches_kernel(float *previous_paths, float *result_tensor,
                                          float *result_values, float *output_paths,
@@ -54,152 +56,15 @@ __global__ void find_path_matches_kernel(float *previous_paths, float *result_te
     }
 }
 
-// Validador simple para entradas
-struct InputValidator
-{
-    static bool validate_paths_input(const TensorResult &previous_paths,
-                                     const TensorResult &result_tensor,
-                                     const TensorResult &result_values)
-    {
-        if (previous_paths.data == nullptr)
-        {
-            std::cerr << "Error: previous_paths es nulo\n";
-            return false;
-        }
-        if (result_tensor.data == nullptr)
-        {
-            std::cerr << "Error: result_tensor es nulo\n";
-            return false;
-        }
-        if (result_values.data == nullptr)
-        {
-            std::cerr << "Error: result_values es nulo\n";
-            return false;
-        }
-        return true;
-    }
-
-    static bool validate_dimensions(int num_current_tensor, int num_values)
-    {
-        if (num_current_tensor != num_values)
-        {
-            std::cerr << "Error: Número de elementos en result_tensor (" << num_current_tensor
-                      << ") no coincide con result_values (" << num_values << ")\n";
-            return false;
-        }
-        return true;
-    }
-};
-
-// Gestor de memoria CUDA simple con RAII
-struct CudaMemoryManager
-{
-    static void *allocate_device(size_t size)
-    {
-        void *ptr = nullptr;
-        CHECK_CUDA(cudaMalloc(&ptr, size));
-        return ptr;
-    }
-
-    static void deallocate_device(void *ptr)
-    {
-        if (ptr)
-        {
-            cudaFree(ptr);
-        }
-    }
-
-    static void *allocate_host(size_t size)
-    {
-        void *ptr = std::malloc(size);
-        if (!ptr)
-        {
-            throw std::bad_alloc();
-        }
-        return ptr;
-    }
-
-    static void deallocate_host(void *ptr)
-    {
-        if (ptr)
-        {
-            std::free(ptr);
-        }
-    }
-};
-
-// Wrapper RAII para memoria CUDA
+// Usar aliases para mantener compatibilidad y claridad
 template <typename T>
-struct CudaDevicePtr
-{
-    T *ptr;
-    bool owns_memory;
+using CudaDevicePtr = MemoryUtils::CudaDevicePtr<T>;
 
-    explicit CudaDevicePtr(size_t count) : owns_memory(true)
-    {
-        ptr = static_cast<T *>(CudaMemoryManager::allocate_device(count * sizeof(T)));
-    }
-
-    // Constructor para punteros existentes (no toma ownership)
-    explicit CudaDevicePtr(T *existing_ptr) : ptr(existing_ptr), owns_memory(false) {}
-
-    ~CudaDevicePtr()
-    {
-        if (owns_memory)
-        {
-            CudaMemoryManager::deallocate_device(ptr);
-        }
-    }
-
-    // No copiable, solo movible
-    CudaDevicePtr(const CudaDevicePtr &) = delete;
-    CudaDevicePtr &operator=(const CudaDevicePtr &) = delete;
-
-    CudaDevicePtr(CudaDevicePtr &&other) noexcept
-        : ptr(other.ptr), owns_memory(other.owns_memory)
-    {
-        other.ptr = nullptr;
-        other.owns_memory = false;
-    }
-
-    T *get() const { return ptr; }
-    operator T *() const { return ptr; }
-};
-
-// Wrapper RAII para memoria host
 template <typename T>
-struct HostPtr
-{
-    T *ptr;
+using HostPtr = MemoryUtils::HostPtr<T>;
 
-    explicit HostPtr(size_t count)
-    {
-        ptr = static_cast<T *>(CudaMemoryManager::allocate_host(count * sizeof(T)));
-    }
-
-    ~HostPtr()
-    {
-        CudaMemoryManager::deallocate_host(ptr);
-    }
-
-    // No copiable, solo movible
-    HostPtr(const HostPtr &) = delete;
-    HostPtr &operator=(const HostPtr &) = delete;
-
-    HostPtr(HostPtr &&other) noexcept : ptr(other.ptr)
-    {
-        other.ptr = nullptr;
-    }
-
-    T *get() const { return ptr; }
-    operator T *() const { return ptr; }
-    T *release()
-    {
-        T *temp = ptr;
-        ptr = nullptr;
-        return temp;
-    }
-};
+using CudaMemoryManager = MemoryUtils::CudaMemoryManager;
+using InputValidator = ValidationUtils::InputValidator;
 
 void armar_caminos(const TensorResult &previous_paths, const TensorResult &result_tensor,
                    const TensorResult &result_values, TensorResult &paths,

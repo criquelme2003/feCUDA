@@ -1,17 +1,9 @@
-#include "src/headers.cuh"
-#include "src/utils.cuh"
-#include "src/types.cuh"
+#include <headers.cuh>
+#include <utils.cuh>
+#include <types.cuh>
 #include <chrono>
 
-extern "C"
-{
-    __global__ void max_min_kernel(
-        const float *__restrict__ A,
-        const float *__restrict__ B,
-        float *__restrict__ C_min,
-        float *__restrict__ C_max,
-        const int M, const int K, const int N, const int batch_size);
-}
+
 
 void procesar_max_min(const char *archivo_A, const char *archivo_B,
                       const char *salida_min, const char *salida_max,
@@ -43,8 +35,8 @@ void procesar_max_min(const char *archivo_A, const char *archivo_B,
     cudaMalloc(&d_min, size_min);
     cudaMalloc(&d_max, size_max);
 
-    cudaMemcpy(d_A, tensor_A.data.data(), size_A, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_B, tensor_B.data.data(), size_B, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_A, tensor_A.data, size_A, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_B, tensor_B.data, size_B, cudaMemcpyHostToDevice);
 
     // 3. Ejecutar kernel
     dim3 block(K);
