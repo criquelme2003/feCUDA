@@ -29,7 +29,7 @@ file(GLOB MAIN_SOURCES "src/main.cpp")
 file(GLOB CORE_SOURCES "src/core/*.cu")
 file(GLOB ALGORITHM_SOURCES "src/algorithms/*.cu")
 file(GLOB UTILS_SOURCES "src/utils/*.cu")
-file(GLOB KERNEL_SOURCES "src/kernels/*.cu")
+file(GLOB_RECURSE KERNEL_SOURCES "src/kernels/*.cu")
 file(GLOB KERNEL_MAXMIN_SOURCES "src/kernels/maxmin/*.cu")
 file(GLOB KERNEL_UTILS_SOURCES "src/kernels/utils/*.cu")
 
@@ -50,6 +50,7 @@ set(ALL_MAIN_SOURCES
     ${KERNEL_SOURCES}
     ${KERNEL_MAXMIN_SOURCES}
     ${KERNEL_UTILS_SOURCES}
+    ${TEST_SOURCES}
 )
 
 # Mostrar qué archivos se están compilando (para debug)
@@ -66,7 +67,22 @@ add_executable(fecuda_main ${ALL_MAIN_SOURCES})
 set_target_properties(fecuda_main PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
     CUDA_RESOLVE_DEVICE_SYMBOLS ON
+    
 )
+include(CheckLanguage)
+check_language(CUDA)
+if(CMAKE_CUDA_COMPILER)
+enable_language(CUDA)
+find_package(CUDAToolkit)
+target_link_libraries(fecuda_main CUDA::curand)
+else()
+message(STATUS "No CUDA compiler found")
+endif()
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(fecuda_main PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-G>)
+endif()
+
 
 # Enlazar el ejecutable principal
 target_link_libraries(fecuda_main
@@ -76,53 +92,11 @@ target_link_libraries(fecuda_main
     ${CUDA_LIBRARIES}
 )
 
-# Target para tests (opcional, solo si existen archivos de test)
-if(TEST_SOURCES)
-    add_executable(fecuda_tests ${ALL_MAIN_SOURCES} ${TEST_SOURCES})
-    set_target_properties(fecuda_tests PROPERTIES
-        CUDA_SEPARABLE_COMPILATION ON
-        CUDA_RESOLVE_DEVICE_SYMBOLS ON
-    )
-    target_link_libraries(fecuda_tests
-        cudnn
-        cutensor
-        cublas
-        ${CUDA_LIBRARIES}
-    )
-    target_compile_definitions(fecuda_tests PRIVATE BUILD_TESTS)
-endif()
 
-# Target para benchmarks (opcional)
-if(BENCHMARK_SOURCES)
-    add_executable(fecuda_benchmarks ${ALL_MAIN_SOURCES} ${BENCHMARK_SOURCES})
-    set_target_properties(fecuda_benchmarks PROPERTIES
-        CUDA_SEPARABLE_COMPILATION ON
-        CUDA_RESOLVE_DEVICE_SYMBOLS ON
-    )
-    target_link_libraries(fecuda_benchmarks
-        cudnn
-        cutensor
-        cublas
-        ${CUDA_LIBRARIES}
-    )
-    target_compile_definitions(fecuda_benchmarks PRIVATE BUILD_BENCHMARKS)
-endif()
+target_compile_options(fecuda_main PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
+                     --extended-lambda                      
+>)
 
-# Target para ejemplos (opcional)
-if(EXAMPLE_SOURCES)
-    add_executable(fecuda_examples ${ALL_MAIN_SOURCES} ${EXAMPLE_SOURCES})
-    set_target_properties(fecuda_examples PROPERTIES
-        CUDA_SEPARABLE_COMPILATION ON
-        CUDA_RESOLVE_DEVICE_SYMBOLS ON
-    )
-    target_link_libraries(fecuda_examples
-        cudnn
-        cutensor
-        cublas
-        ${CUDA_LIBRARIES}
-    )
-    target_compile_definitions(fecuda_examples PRIVATE BUILD_EXAMPLES)
-endif()
 
 # Alias para compatibilidad con scripts existentes
 add_custom_target(tu_ejecutable)

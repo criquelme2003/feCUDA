@@ -108,7 +108,15 @@ void imprimir_tensor(const TensorResult &tensor, int max_rows, int max_cols,
                                   i * (tensor.N * tensor.K) +
                                   n * tensor.K + k;
                         float val = datos_host[idx];
-                        printf("%8.4f ", val);
+
+                        if(val<0){
+                            //printf("\033[1;31m%8.4f \033[0m", val); // Rojo para negativos
+                            printf("\033[32;1m%8.4f \033[0m", val); // Rojo para negativos
+                        
+                        }else{
+
+                            printf("%8.4f ", val);
+                        }
                         if (mostrar_estadisticas)
                         {
                             min_val = (val < min_val) ? val : min_val;

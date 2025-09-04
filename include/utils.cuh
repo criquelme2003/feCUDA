@@ -6,12 +6,6 @@
 #include <stdexcept>
 #include <core/types.cuh>
 
-// Excepción personalizada simple para errores CUDA
-class CudaException : public std::runtime_error
-{
-public:
-    explicit CudaException(const std::string &message) : std::runtime_error(message) {}
-};
 
 // Macro para verificar errores de CUDA con exceptions
 #define CHECK_CUDA(call)                                                        \
@@ -28,7 +22,7 @@ public:
     }
 
 // Macro para verificar errores de CUDA sin salir del programa
-#define CHECK_CUDA_SAFE(call)                                                   \
+#define CHECK_CUDA_SAFE(call)                                                    \
     {                                                                           \
         cudaError_t err = (call);                                               \
         if (err != cudaSuccess)                                                 \
@@ -55,9 +49,6 @@ bool guardar_tensor_como_archivo(const TensorResult &tensor, const char *nombre_
 // Función para comparar dos tensores elemento a elemento
 bool comparar_tensores(const TensorResult &tensor_a, const TensorResult &tensor_b,
                        float tolerancia = 1e-6f, bool verbose = true);
-
-// Función para validar algoritmos maxmin contra archivos de referencia usando la función maxmin de maxmin.cu
-void validar_algoritmos_maxmin(const char *nombre_algoritmo = "MaxMin");
 
 // Función para limpiar y verificar el estado del dispositivo CUDA
 void cuda_cleanup_and_check();

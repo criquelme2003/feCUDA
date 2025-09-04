@@ -7,6 +7,11 @@
 #include "utils/logging.cuh"
 #include "utils/file_io.cuh"
 #include "core/tensor.cuh"
+#include "kernels/kernels.cuh"
+#include "test/test.cuh"
+#include "../../include/utils.cuh"
+#include "temp.cuh"
+#include <random>
 
 // Sistema de menú simple
 struct MenuSystem
@@ -14,12 +19,7 @@ struct MenuSystem
     static int show_main_menu()
     {
         std::cout << "=== SISTEMA DE PRUEBAS FECUDA ===\n";
-        std::cout << "1. Ejecutar max_min con archivos\n";
-        std::cout << "2. Validar Kernel V1\n";
-        std::cout << "3. Benchmark original\n";
-        std::cout << "4. Tests unitarios\n";
-        std::cout << "5. Benchmarks de rendimiento\n";
-        std::cout << "Selecciona opción: ";
+        std::cout << "1. Ejecutar test\n";
 
         int opcion;
         std::cin >> opcion;
@@ -29,92 +29,72 @@ struct MenuSystem
 
 // Declaraciones forward de funciones de test y benchmark
 void run_tests();
-void run_benchmarks();
-void ejecutar_max_min_con_archivos(const char *archivo_A, const char *archivo_B,
-                                   const char *output_min, const char *output_max,
-                                   int batch_size, int M, int K, int N);
-void validar_kernel_v1();
-void ejecutar_benchmark_original();
+
 
 int main()
 {
-    try
-    {
-        // Inicializar sistema
-        CudaUtils::cuda_warmup();
-        if (!CudaUtils::check_device_capabilities())
-        {
-            LOG_ERROR("El dispositivo no cumple con los requisitos mínimos");
-            return EXIT_FAILURE;
-        }
+    TensorResult data;
+    int reps = 1000;
+    leer_matriz_3d_desde_archivo("../datasets_txt/CC.txt", data, 10, 16, 16, 1);
 
-        const int opcion = MenuSystem::show_main_menu();
+    float *out_data = (float *)malloc(data.M * data.N * 1000 * sizeof(float));
+    float *perc = (float *)malloc(1000 * sizeof(float));
 
-        switch (opcion)
-        {
-        case 1:
-            // Ejemplo: reflexive vs reflexive
-            ejecutar_max_min_con_archivos(
-                "datasets_txt/reflexive.txt",
-                "datasets_txt/reflexive.txt",
-                "results/reflexive_min.txt",
-                "results/reflexive_max.txt",
-                1, 6, 6, 6);
-            break;
-        case 2:
-            validar_kernel_v1();
-            break;
-        case 3:
-            ejecutar_benchmark_original();
-            break;
-        case 4:
-            run_tests();
-            break;
-        case 5:
-            run_benchmarks();
-            break;
-        default:
-            std::cout << "Opción inválida\n";
-        }
-    }
-    catch (const std::exception &e)
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    // Distribución uniforme entre 0 y 10 (enteros)
+    std::uniform_int_distribution<int> dist(0, 10);
+
+    for (int i = 0; i < reps; ++i)
     {
-        LOG_ERROR("Error en main: ", e.what());
-        return EXIT_FAILURE;
+        // valores entre 0 y 1 de 1 decimal
+        perc[i] = (float) dist(gen) / 10.0f;
     }
 
-    return EXIT_SUCCESS;
+
+    bootstrap(10, data.M, data.N, data.batch, reps, data.data, out_data, perc);
+
+    imprimir_tensor(TensorResult(out_data, false, reps, data.M, data.N, 1, false));
+
+    
+    return 0;
 }
+
 
 // Implementaciones mínimas (luego las moveremos a archivos separados)
 void run_tests()
 {
-    LOG_INFO("Ejecutando tests unitarios...");
-    // Llamar a funciones de tests/
-}
+    
+    
 
-void run_benchmarks()
-{
-    LOG_INFO("Ejecutando benchmarks...");
-    // Llamar a funciones de benchmarks/
-}
+    // TensorResult tensor1, result2;
 
-void ejecutar_max_min_con_archivos(const char *archivo_A, const char *archivo_B,
-                                   const char *output_min, const char *output_max,
-                                   int batch_size, int M, int K, int N)
-{
-    LOG_INFO("Procesando archivos: ", archivo_A, " y ", archivo_B);
-    // Implementación temporal - luego mover a examples/
-}
+    // bool carga_ok = leer_matriz_3d_desde_archivo("../datasets_txt/CC.txt", tensor1, 10, 16, 16, 1);
 
-void validar_kernel_v1()
-{
-    LOG_INFO("Validando Kernel V1...");
-    // Implementación temporal - luego mover a tests/
-}
+    // if(!carga_ok)
+    // {
+    //     LOG_ERROR("Fallo al cargar tensor de prueba.");
+    //     return;
+    // }
 
-void ejecutar_benchmark_original()
-{
-    LOG_INFO("Ejecutando benchmark original...");
-    // Implementación temporal - luego mover a benchmarks/
+    // LOG_INFO("Test feEmpirical().");
+
+
+    // FEempirical(tensor1, result2, 10);
+    // imprimir_tensor(result2);
+
+    // // medir el tiempo
+    // float global_time = 0.0f;
+    // for (int i = 0; i < 100; ++i)
+    // {
+    //     auto start = std::chrono::high_resolution_clock::now();
+    //     FEempirical(tensor1, result2, 1000);
+    //     auto end = std::chrono::high_resolution_clock::now();
+    //     std::chrono::duration<double, std::milli> duration = end - start;
+    //     global_time += duration.count();
+    // }
+    // LOG_INFO("Tiempo promedio : ", global_time / 100.0f, " ms");
+
+    validar_algoritmos_maxmin("Maxmin v1");
 }
