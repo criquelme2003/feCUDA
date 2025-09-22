@@ -149,23 +149,23 @@ void bootstrap(const int num_bins,
     
     float *d_data, *d_out_data, *d_perc;
     
-    cudaEvent_t start, stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
 
-    cudaEventRecord(start);
-    cudaMalloc(&d_data, M * N * batch_size * sizeof(float));
-    cudaMalloc(&d_out_data, M * N * rep * sizeof(float));
+    size_t data_size = M * N * batch_size * sizeof(float);
+    size_t out_size = M * N * rep * sizeof(float);
+    int hist_len = M * N * num_bins;
+
+    cudaMalloc(&d_data, data_size);
+    cudaMalloc(&d_out_data, out_size);
     cudaMalloc(&d_perc, rep * sizeof(float));
+    cudaMalloc(&d_histogram, hist_len * sizeof(int));
+    cudaMalloc(&d_cdf, hist_len * sizeof(float));
 
-    cudaMemcpy(d_data, data, M * N * batch_size * sizeof(float), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_data, data, data_size, cudaMemcpyHostToDevice);
     cudaMemcpy(d_perc, perc, rep * sizeof(float), cudaMemcpyHostToDevice);
 
-    cudaMalloc(&d_histogram, M * N * num_bins * sizeof(int));
-    cudaMalloc(&d_cdf, M * N * num_bins * sizeof(float));
 
-    cudaMemset(d_histogram, 0, M * N * num_bins * sizeof(int));
-    cudaMemset(d_cdf, 0, M * N * num_bins * sizeof(float));
+    cudaMemset(d_histogram, 0, hist_len * sizeof(int));
+    cudaMemset(d_cdf, 0, hist_len * sizeof(float));
 
     dim3 blocks(M, N);
     dim3 threads(batch_size);
@@ -177,9 +177,6 @@ void bootstrap(const int num_bins,
     dim3 blocksI(M, N);
     dim3 threadsI(rep);
 
-
-
-
     hist_by_x_y<<<blocks, threads, shared_mem_size>>>(d_data, num_bins, M, N, d_histogram);
     cdf<<<blocksCdf, threadsCdf, shared_mem_sizeCdf>>>(d_histogram, M, N, num_bins, batch_size, d_cdf);
     interpolate<<<blocksI, threadsI>>>(d_perc, d_cdf, d_out_data, num_bins);
@@ -187,14 +184,6 @@ void bootstrap(const int num_bins,
 
     cudaMemcpy(out_data, d_out_data, M * N * rep * sizeof(float), cudaMemcpyDeviceToHost);
 
-
-    cudaEventRecord(stop);
-    cudaEventSynchronize(stop);
-    float milliseconds = 0;
-    cudaEventElapsedTime(&milliseconds, start, stop);
-    std::cout << "Bootstrap time: " << milliseconds << " ms" << std::endl;
-
-    cudaEventRecord(start);
     cudaFree(d_histogram);
     cudaFree(d_cdf);
 }

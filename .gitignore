@@ -16,3 +16,4 @@ Makefile
 *.a
 *.so
 *.dll
+*.env

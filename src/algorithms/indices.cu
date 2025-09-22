@@ -48,7 +48,8 @@ __global__ void strainer(float *min_res, float *maxmin_prima, float *values, flo
             for (int k = 0; k < K; k++)
             {
                 float current_val = min_res[base_idx + k];
-                if (current_val == max_val)
+                const float EPSILON = 1e-6f;
+                if (fabsf(current_val - max_val) < EPSILON)
                 {
                     // Obtener posición en el array de salida usando atomic add
                     int output_pos = atomicAdd(output_count, 1);
@@ -312,3 +313,5 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
     if (allocated_maxmin_prima && d_maxmin_prima)
         cudaFree(d_maxmin_prima);
 }
+
+

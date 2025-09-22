@@ -9,3 +9,5 @@ void bootstrap(const int num_bins,
                float *d_perc);
                
 int example_bootstrap();
+
+void iterative_test();

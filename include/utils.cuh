@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <core/types.cuh>
 
-
 // Macro para verificar errores de CUDA con exceptions
 #define CHECK_CUDA(call)                                                        \
     {                                                                           \
@@ -22,7 +21,7 @@
     }
 
 // Macro para verificar errores de CUDA sin salir del programa
-#define CHECK_CUDA_SAFE(call)                                                    \
+#define CHECK_CUDA_SAFE(call)                                                   \
     {                                                                           \
         cudaError_t err = (call);                                               \
         if (err != cudaSuccess)                                                 \
@@ -67,5 +66,12 @@ __global__ void transpose_kernel_optimized(
     const float *__restrict__ input, // [batch, K, N]
     float *__restrict__ output,      // [batch, N, K]
     int K, int N, int batch_size);
+
+__device__ __host__ int nextPow2(int n);
+
+void save_tensor_4d_as_file(float *tensor, int B, int M, int N, int K,
+                            const std::string &name = "output_4d.txt");
+
+void save_tensor_vector(const std::vector<TensorResult> &tensors, const std::string &filename = "output_vec.txt");
 
 #endif

@@ -12,6 +12,9 @@
 #include "../../include/utils.cuh"
 #include "temp.cuh"
 #include <random>
+#include <time.h>
+#include <bootstrap.cuh>
+#include <temp.cuh>
 
 // Sistema de menú simple
 struct MenuSystem
@@ -30,43 +33,24 @@ struct MenuSystem
 // Declaraciones forward de funciones de test y benchmark
 void run_tests();
 
-
 int main()
 {
-    TensorResult data;
-    int reps = 1000;
-    leer_matriz_3d_desde_archivo("../datasets_txt/CC.txt", data, 10, 16, 16, 1);
+    TensorResult t1;
+    leer_matriz_3d_desde_archivo("../datasets_txt/CC.txt", t1, 10, 16, 16, 1);
 
-    float *out_data = (float *)malloc(data.M * data.N * 1000 * sizeof(float));
-    float *perc = (float *)malloc(1000 * sizeof(float));
+    float *bootstrap_res, *d_bootstrap;
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    bootstrap_res = (float *)malloc(t1.total_elements() * sizeof(float));
+    d_bootstrap = bootstrap_wrapper(t1.data, t1.M, t1.N, t1.batch, 100);
 
-    // Distribución uniforme entre 0 y 10 (enteros)
-    std::uniform_int_distribution<int> dist(0, 10);
+    cudaMemcpy(bootstrap_res, d_bootstrap, t1.total_elements() * sizeof(float), cudaMemcpyDeviceToHost);
 
-    for (int i = 0; i < reps; ++i)
-    {
-        // valores entre 0 y 1 de 1 decimal
-        perc[i] = (float) dist(gen) / 10.0f;
-    }
-
-
-    bootstrap(10, data.M, data.N, data.batch, reps, data.data, out_data, perc);
-
-    imprimir_tensor(TensorResult(out_data, false, reps, data.M, data.N, 1, false));
-
-    
-    return 0;
+    save_tensor_4d_as_file(bootstrap_res, 100, 16, 16, 1, "bootstrap_cc.txt");
 }
-
 
 // Implementaciones mínimas (luego las moveremos a archivos separados)
 void run_tests()
 {
-    
-    
 
     // TensorResult tensor1, result2;
 
@@ -79,7 +63,6 @@ void run_tests()
     // }
 
     // LOG_INFO("Test feEmpirical().");
-
 
     // FEempirical(tensor1, result2, 10);
     // imprimir_tensor(result2);

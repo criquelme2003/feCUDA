@@ -1,12 +1,10 @@
 #include <cuda_runtime.h>
-#include <iostream>
-#include <memory>
-#include <stdexcept>
+#include <stdio.h>
+#include <stdlib.h>
+#include <float.h>
 #include <chrono>
-#include <utils.cuh>
-#include <core/types.cuh>
-#include <utils/memory_utils.cuh>
-#include <utils/validation_utils.cuh>
+#include "utils.cuh"
+#include "types.cuh"
 
 __global__ void find_path_matches_kernel(float *previous_paths, float *result_tensor,
                                          float *result_values, float *output_paths,
@@ -56,134 +54,173 @@ __global__ void find_path_matches_kernel(float *previous_paths, float *result_te
     }
 }
 
-// Usar aliases para mantener compatibilidad y claridad
-template <typename T>
-using CudaDevicePtr = MemoryUtils::CudaDevicePtr<T>;
-
-template <typename T>
-using HostPtr = MemoryUtils::HostPtr<T>;
-
-using CudaMemoryManager = MemoryUtils::CudaMemoryManager;
-using InputValidator = ValidationUtils::InputValidator;
-
 void armar_caminos(const TensorResult &previous_paths, const TensorResult &result_tensor,
                    const TensorResult &result_values, TensorResult &paths,
                    TensorResult &matched_values, int iteration)
 {
-    // Validación de entrada
-    if (!InputValidator::validate_paths_input(previous_paths, result_tensor, result_values))
+    // Validaciones
+    if (previous_paths.data == nullptr)
     {
+        printf("Error: previous_paths es nulo\n");
         return;
     }
+    if (result_tensor.data == nullptr)
+    {
+        printf("Error: result_tensor es nulo\n");
+        return;
+    }
+    if (result_values.data == nullptr)
+    {
+        printf("Error: result_values es nulo\n");
+        return;
+    };
 
     // Extraer dimensiones
-    const int num_prev_paths = previous_paths.M;
-    const int prev_cols = previous_paths.N; // Debe ser 4 + (iteration - 1)
-    const int num_current_tensor = result_tensor.M;
-    const int current_cols = result_tensor.N; // Debe ser 4
-    const int num_values = result_values.N;
-    const int new_cols = 4 + iteration; // El nuevo camino tendrá 4 + iteration columnas
+    int num_prev_paths = previous_paths.M;
+    int prev_cols = previous_paths.N; // Debe ser 4 + (iteration - 1)
+    int num_current_tensor = result_tensor.M;
+    int current_cols = result_tensor.N; // Debe ser 4
+    int num_values = result_values.N;
 
-    if (!InputValidator::validate_dimensions(num_current_tensor, num_values))
+    // El nuevo camino tendrá 4 + iteration columnas
+    int new_cols = 4 + iteration;
+
+    if (num_current_tensor != num_values)
     {
+        printf("Error: Número de elementos en result_tensor (%d) no coincide con result_values (%d)\n",
+               num_current_tensor, num_values);
         return;
     }
 
-    // Calcular tamaños
-    const int max_output_size = num_prev_paths * num_current_tensor;
-    const size_t prev_size = num_prev_paths * prev_cols * sizeof(float);
-    const size_t curr_size = num_current_tensor * current_cols * sizeof(float);
-    const size_t values_size = num_values * sizeof(float);
+    // Calcular tamaños máximos de salida
+    int max_output_size = num_prev_paths * num_current_tensor;
+    size_t prev_size = num_prev_paths * prev_cols * sizeof(float);
+    size_t curr_size = num_current_tensor * current_cols * sizeof(float);
+    size_t values_size = num_values * sizeof(float);
+    size_t output_paths_size = max_output_size * new_cols * sizeof(float);
+    size_t output_values_size = max_output_size * sizeof(float);
 
-    try
+    // Alocar memoria en device
+    float *d_previous_paths, *d_result_tensor, *d_result_values;
+    float *d_output_paths, *d_output_values;
+    int *d_match_count;
+
+    CHECK_CUDA(cudaMalloc(&d_output_paths, output_paths_size));
+    CHECK_CUDA(cudaMalloc(&d_output_values, output_values_size));
+    CHECK_CUDA(cudaMalloc(&d_match_count, sizeof(int)));
+    CHECK_CUDA(cudaMemset(d_match_count, 0, sizeof(int)));
+
+    // Copiar datos a device o usar punteros existentes
+    if (previous_paths.is_device_ptr)
     {
-        // Alocar memoria en device con RAII
-        CudaDevicePtr<float> d_output_paths(max_output_size * new_cols);
-        CudaDevicePtr<float> d_output_values(max_output_size);
-        CudaDevicePtr<int> d_match_count(1);
-
-        CHECK_CUDA(cudaMemset(d_match_count.get(), 0, sizeof(int)));
-
-        // Preparar punteros para datos de entrada (usar existentes o crear copias)
-        CudaDevicePtr<float> d_previous_paths = previous_paths.is_device_ptr ? CudaDevicePtr<float>(previous_paths.data) : CudaDevicePtr<float>(num_prev_paths * prev_cols);
-
-        CudaDevicePtr<float> d_result_tensor = result_tensor.is_device_ptr ? CudaDevicePtr<float>(result_tensor.data) : CudaDevicePtr<float>(num_current_tensor * current_cols);
-
-        CudaDevicePtr<float> d_result_values = result_values.is_device_ptr ? CudaDevicePtr<float>(result_values.data) : CudaDevicePtr<float>(num_values);
-
-        // Copiar datos si es necesario
-        if (!previous_paths.is_device_ptr)
-        {
-            CHECK_CUDA(cudaMemcpy(d_previous_paths.get(), previous_paths.data, prev_size, cudaMemcpyHostToDevice));
-        }
-        if (!result_tensor.is_device_ptr)
-        {
-            CHECK_CUDA(cudaMemcpy(d_result_tensor.get(), result_tensor.data, curr_size, cudaMemcpyHostToDevice));
-        }
-        if (!result_values.is_device_ptr)
-        {
-            CHECK_CUDA(cudaMemcpy(d_result_values.get(), result_values.data, values_size, cudaMemcpyHostToDevice));
-        }
-
-        // Configurar y lanzar kernel
-        const dim3 block_size(16, 16);
-        const dim3 grid_size((num_prev_paths + block_size.x - 1) / block_size.x,
-                             (num_current_tensor + block_size.y - 1) / block_size.y);
-
-        find_path_matches_kernel<<<grid_size, block_size>>>(
-            d_previous_paths.get(), d_result_tensor.get(), d_result_values.get(),
-            d_output_paths.get(), d_output_values.get(), d_match_count.get(),
-            num_prev_paths, num_current_tensor, prev_cols, current_cols, iteration);
-
-        CHECK_CUDA(cudaDeviceSynchronize());
-
-        // Obtener número de matches
-        int match_count;
-        CHECK_CUDA(cudaMemcpy(&match_count, d_match_count.get(), sizeof(int), cudaMemcpyDeviceToHost));
-
-        if (match_count > 0)
-        {
-            // Alocar memoria host para resultados usando RAII
-            const size_t final_paths_size = match_count * new_cols * sizeof(float);
-            const size_t final_values_size = match_count * sizeof(float);
-
-            HostPtr<float> h_output_paths(match_count * new_cols);
-            HostPtr<float> h_output_values(match_count);
-
-            // Copiar resultados a host
-            CHECK_CUDA(cudaMemcpy(h_output_paths.get(), d_output_paths.get(), final_paths_size, cudaMemcpyDeviceToHost));
-            CHECK_CUDA(cudaMemcpy(h_output_values.get(), d_output_values.get(), final_values_size, cudaMemcpyDeviceToHost));
-
-            // Configurar TensorResult de salida (transferir ownership)
-            paths.data = h_output_paths.release();
-            paths.is_device_ptr = false;
-            paths.owns_memory = true;
-            paths.batch = previous_paths.batch;
-            paths.M = match_count;
-            paths.N = new_cols;
-            paths.K = 1;
-
-            matched_values.data = h_output_values.release();
-            matched_values.is_device_ptr = false;
-            matched_values.owns_memory = true;
-            matched_values.batch = previous_paths.batch;
-            matched_values.M = 1;
-            matched_values.N = match_count;
-            matched_values.K = 1;
-        }
-        else
-        {
-            std::cerr << "Error: No se encontraron matches\n";
-
-            // Configurar TensorResult vacíos
-            paths = TensorResult();
-            matched_values = TensorResult();
-        }
+        d_previous_paths = previous_paths.data;
     }
-    catch (const std::exception &e)
+    else
     {
-        std::cerr << "Error en armar_caminos: " << e.what() << '\n';
-        paths = TensorResult();
-        matched_values = TensorResult();
+        CHECK_CUDA(cudaMalloc(&d_previous_paths, prev_size));
+        CHECK_CUDA(cudaMemcpy(d_previous_paths, previous_paths.data, prev_size, cudaMemcpyHostToDevice));
     }
+
+    if (result_tensor.is_device_ptr)
+    {
+        d_result_tensor = result_tensor.data;
+    }
+    else
+    {
+        CHECK_CUDA(cudaMalloc(&d_result_tensor, curr_size));
+        CHECK_CUDA(cudaMemcpy(d_result_tensor, result_tensor.data, curr_size, cudaMemcpyHostToDevice));
+    }
+
+    if (result_values.is_device_ptr)
+    {
+        d_result_values = result_values.data;
+    }
+    else
+    {
+        CHECK_CUDA(cudaMalloc(&d_result_values, values_size));
+        CHECK_CUDA(cudaMemcpy(d_result_values, result_values.data, values_size, cudaMemcpyHostToDevice));
+    }
+
+    // Configurar kernel
+    dim3 block_size(16, 16);
+    dim3 grid_size((num_prev_paths + block_size.x - 1) / block_size.x,
+                   (num_current_tensor + block_size.y - 1) / block_size.y);
+
+    // Lanzar kernel
+    find_path_matches_kernel<<<grid_size, block_size>>>(
+        d_previous_paths, d_result_tensor, d_result_values,
+        d_output_paths, d_output_values, d_match_count,
+        num_prev_paths, num_current_tensor, prev_cols, current_cols, iteration);
+
+    CHECK_CUDA(cudaDeviceSynchronize());
+
+    // Obtener número de matches
+    int match_count;
+    CHECK_CUDA(cudaMemcpy(&match_count, d_match_count, sizeof(int), cudaMemcpyDeviceToHost));
+
+    if (match_count > 0)
+    {
+        // Alocar memoria host para resultados
+        size_t final_paths_size = match_count * new_cols * sizeof(float);
+        size_t final_values_size = match_count * sizeof(float);
+
+        float *h_output_paths = (float *)malloc(final_paths_size);
+        float *h_output_values = (float *)malloc(final_values_size);
+
+        // Copiar resultados a host
+        CHECK_CUDA(cudaMemcpy(h_output_paths, d_output_paths, final_paths_size, cudaMemcpyDeviceToHost));
+        CHECK_CUDA(cudaMemcpy(h_output_values, d_output_values, final_values_size, cudaMemcpyDeviceToHost));
+
+        // Configurar TensorResult de salida
+        paths.data = h_output_paths;
+        paths.is_device_ptr = false;
+        paths.owns_memory = true;
+        paths.batch = previous_paths.batch; // Mantener el batch de previous_paths
+        paths.M = match_count;              // 4 + iteration columnas
+        paths.N = new_cols;
+        paths.K = 1;
+
+        matched_values.data = h_output_values;
+        matched_values.is_device_ptr = false;
+        matched_values.owns_memory = true;
+        matched_values.batch = previous_paths.batch; // Mantener el batch de previous_paths
+        matched_values.M = 1;
+        matched_values.N = match_count;
+        matched_values.K = 1;
+    }
+    else
+    {
+        printf("Error: No se encontraron matches\n");
+
+        // Configurar TensorResult vacíos
+        paths.data = nullptr;
+        paths.is_device_ptr = false;
+        paths.batch = 0;
+        paths.M = 0;
+        paths.N = 0;
+        paths.K = 0;
+
+        matched_values.data = nullptr;
+        matched_values.is_device_ptr = false;
+        matched_values.batch = 0;
+        matched_values.M = 0;
+        matched_values.N = 0;
+        matched_values.K = 0;
+    }
+
+    // Limpiar memoria device
+    if (d_output_paths)
+        cudaFree(d_output_paths);
+    if (d_output_values)
+        cudaFree(d_output_values);
+    if (d_match_count)
+        cudaFree(d_match_count);
+
+    // Limpiar copias temporales si se crearon
+    if (!previous_paths.is_device_ptr && d_previous_paths)
+        cudaFree(d_previous_paths);
+    if (!result_tensor.is_device_ptr && d_result_tensor)
+        cudaFree(d_result_tensor);
+    if (!result_values.is_device_ptr && d_result_values)
+        cudaFree(d_result_values);
 }

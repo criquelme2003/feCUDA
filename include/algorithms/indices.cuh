@@ -8,6 +8,9 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
              TensorResult &result_tensor_filtered, TensorResult &result_tensor_values,
              float threshold);
 
+void indices_two_pass(const TensorResult &min_result, const TensorResult &maxmin_prima,
+                      TensorResult &result_tensor_filtered, TensorResult &result_tensor_values,
+                      float threshold = 0.4);
 // Funciones auxiliares para procesamiento de índices
 namespace IndexUtils
 {

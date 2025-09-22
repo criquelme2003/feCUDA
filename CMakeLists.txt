@@ -25,7 +25,7 @@ link_directories(/usr/lib/x86_64-linux-gnu/)
 link_directories(/usr/lib/x86_64-linux-gnu/libcutensor/12)
 
 # Archivos fuente del proyecto - nueva estructura modular
-file(GLOB MAIN_SOURCES "src/main.cpp")
+file(GLOB MAIN_SOURCES "src/main.cu")
 file(GLOB CORE_SOURCES "src/core/*.cu")
 file(GLOB ALGORITHM_SOURCES "src/algorithms/*.cu")
 file(GLOB UTILS_SOURCES "src/utils/*.cu")
