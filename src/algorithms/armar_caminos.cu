@@ -6,6 +6,16 @@
 #include "utils.cuh"
 #include "types.cuh"
 
+// MACRO para debug de memory leaks específicos
+#define MEMORY_CHECKPOINT(name)                                                                                                             \
+    do                                                                                                                                      \
+    {                                                                                                                                       \
+        size_t free_mem, total_mem;                                                                                                         \
+        cudaMemGetInfo(&free_mem, &total_mem);                                                                                              \
+        printf("[%s] Memoria libre: %.1f MB, Memoria total: %.1f MB\n", name, free_mem / (1024.0 * 1024.0), total_mem / (1024.0 * 1024.0)); \
+        cudaDeviceSynchronize();                                                                                                            \
+    } while (0)
+
 __global__ void find_path_matches_kernel(float *previous_paths, float *result_tensor,
                                          float *result_values, float *output_paths,
                                          float *output_values, int *match_count,
@@ -54,7 +64,7 @@ __global__ void find_path_matches_kernel(float *previous_paths, float *result_te
     }
 }
 
-void armar_caminos(const TensorResult &previous_paths, const TensorResult &result_tensor,
+void armar_caminos_original(const TensorResult &previous_paths, const TensorResult &result_tensor,
                    const TensorResult &result_values, TensorResult &paths,
                    TensorResult &matched_values, int iteration)
 {
@@ -105,6 +115,9 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
     float *d_output_paths, *d_output_values;
     int *d_match_count;
 
+    MEMORY_CHECKPOINT("PREVIO A ERROR");
+    printf("%f required memo\n", output_paths_size);
+    printf("prevpathsM: %i , resultM: %i \n", previous_paths.M, result_tensor.M);
     CHECK_CUDA(cudaMalloc(&d_output_paths, output_paths_size));
     CHECK_CUDA(cudaMalloc(&d_output_values, output_values_size));
     CHECK_CUDA(cudaMalloc(&d_match_count, sizeof(int)));
@@ -223,4 +236,162 @@ void armar_caminos(const TensorResult &previous_paths, const TensorResult &resul
         cudaFree(d_result_tensor);
     if (!result_values.is_device_ptr && d_result_values)
         cudaFree(d_result_values);
+}
+
+
+
+// Función auxiliar para verificar memoria disponible
+void check_cuda_memory() {
+    size_t free_mem, total_mem;
+    cudaMemGetInfo(&free_mem, &total_mem);
+    printf("Memoria GPU - Libre: %.2f MB, Total: %.2f MB, Usado: %.2f MB\n", 
+           free_mem / (1024.0 * 1024.0), 
+           total_mem / (1024.0 * 1024.0),
+           (total_mem - free_mem) / (1024.0 * 1024.0));
+}
+
+// SOLUCIÓN 1: Procesamiento por lotes (batches)
+void armar_caminos_batch(const TensorResult &previous_paths, const TensorResult &result_tensor,
+                         const TensorResult &result_values, TensorResult &paths,
+                         TensorResult &matched_values, int iteration, int batch_size = 1000)
+{
+    // Verificar memoria disponible
+    check_cuda_memory();
+    
+    // Validaciones básicas
+    if (previous_paths.data == nullptr || result_tensor.data == nullptr || result_values.data == nullptr) {
+        printf("Error: Uno de los tensores de entrada es nulo\n");
+        return;
+    }
+
+    int num_prev_paths = previous_paths.M;
+    int prev_cols = previous_paths.N;
+    int num_current_tensor = result_tensor.M;
+    int current_cols = result_tensor.N;
+    int new_cols = 4 + iteration;
+
+    // Vectores para acumular resultados
+    std::vector<float> all_paths;
+    std::vector<float> all_values;
+    int total_matches = 0;
+
+    // Procesar en lotes más pequeños
+    for (int batch_start = 0; batch_start < num_prev_paths ; batch_start += batch_size) {
+        int current_batch_size = std::min(batch_size, num_prev_paths - batch_start);
+        
+        printf("Procesando lote %d/%d (tamaño: %d)\n", 
+               batch_start/batch_size + 1, 
+               (num_prev_paths + batch_size - 1)/batch_size, 
+               current_batch_size);
+
+        // Crear sub-tensor para este lote
+        TensorResult batch_paths;
+        batch_paths.data = previous_paths.data + (batch_start * prev_cols);
+        batch_paths.is_device_ptr = previous_paths.is_device_ptr;
+        batch_paths.owns_memory = false; // No posee la memoria
+        batch_paths.M = current_batch_size;
+        batch_paths.N = prev_cols;
+        batch_paths.batch = previous_paths.batch;
+
+        // Procesar este lote
+        TensorResult batch_result_paths, batch_result_values;
+        armar_caminos_original(batch_paths, result_tensor, result_values, 
+                              batch_result_paths, batch_result_values, iteration);
+
+        // Acumular resultados si hay matches
+        if (batch_result_paths.data != nullptr && batch_result_paths.M > 0) {
+            int batch_matches = batch_result_paths.M;
+            printf("matches encontrados: %d\n", batch_matches);
+            size_t paths_size = batch_matches * new_cols;
+            size_t values_size = batch_matches;
+
+            // Expandir vectores
+            all_paths.insert(all_paths.end(), 
+                           batch_result_paths.data, 
+                           batch_result_paths.data + paths_size);
+            all_values.insert(all_values.end(), 
+                            batch_result_values.data, 
+                            batch_result_values.data + values_size);
+            
+            total_matches += batch_matches;
+
+            // Liberar memoria del lote
+            // if (batch_result_paths.owns_memory && batch_result_paths.data) {
+            //     free(batch_result_paths.data);
+            // }
+            // if (batch_result_values.owns_memory && batch_result_values.data) {
+            //     free(batch_result_values.data);
+            // }
+        }
+
+        check_cuda_memory(); // Verificar memoria después de cada lote
+    }
+    printf("matches totales: %d\n", all_values.size());
+    // Crear tensores de salida con todos los resultados
+    if (total_matches > 0) {
+        paths.data = (float*)malloc(all_paths.size() * sizeof(float));
+        matched_values.data = (float*)malloc(all_values.size() * sizeof(float));
+        
+        std::copy(all_paths.begin(), all_paths.end(), paths.data);
+        std::copy(all_values.begin(), all_values.end(), matched_values.data);
+        
+        paths.is_device_ptr = false;
+        paths.owns_memory = true;
+        paths.M = total_matches;
+        paths.N = new_cols;
+        paths.batch = previous_paths.batch;
+        
+        matched_values.is_device_ptr = false;
+        matched_values.owns_memory = true;
+        matched_values.M = 1;
+        matched_values.N = total_matches;
+        matched_values.batch = previous_paths.batch;
+    } else {
+        // Sin matches
+        paths.data = nullptr;
+        paths.M = 0; paths.N = 0;
+        matched_values.data = nullptr;
+        matched_values.M = 0; matched_values.N = 0;
+    }
+    printf("savedCorrectly\n");
+}
+
+// SOLUCIÓN 2: Versión con mejor manejo de memoria
+void armar_caminos_optimized(const TensorResult &previous_paths, const TensorResult &result_tensor,
+                            const TensorResult &result_values, TensorResult &paths,
+                            TensorResult &matched_values, int iteration)
+{
+    // Verificar memoria disponible antes de empezar
+    size_t free_mem, total_mem;
+    cudaMemGetInfo(&free_mem, &total_mem);
+    
+    int num_prev_paths = previous_paths.M;
+    int prev_cols = previous_paths.N;
+    int num_current_tensor = result_tensor.M;
+    int current_cols = result_tensor.N;
+    int new_cols = 4 + iteration;
+    
+    // Calcular memoria requerida
+    size_t max_output_size = (size_t)num_prev_paths * num_current_tensor;
+    size_t required_paths_mem = max_output_size * new_cols * sizeof(float);
+    size_t required_values_mem = max_output_size * sizeof(float);
+    size_t total_required = required_paths_mem + required_values_mem;
+    
+    printf("Memoria requerida: %.2f MB, Disponible: %.2f MB\n", 
+           total_required / (1024.0 * 1024.0), 
+           free_mem / (1024.0 * 1024.0));
+    
+    // Si no hay suficiente memoria, usar procesamiento por lotes
+    if (total_required > free_mem * 0.8) { // Usar solo 80% de memoria disponible
+        printf("Memoria insuficiente, usando procesamiento por lotes\n");
+        int batch_size = (int)(free_mem * 0.6) / (new_cols * sizeof(float) * num_current_tensor);
+        batch_size = std::max(1, std::min(batch_size, num_prev_paths));
+        armar_caminos_batch(previous_paths, result_tensor, result_values, 
+                           paths, matched_values, iteration, batch_size);
+        return;
+    }
+    
+    // Continuar con implementación original si hay suficiente memoria
+    armar_caminos_original(previous_paths, result_tensor, result_values, 
+                          paths, matched_values, iteration);
 }

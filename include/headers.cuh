@@ -18,7 +18,7 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
              float threshold);
 
 // Función armar_caminos
-void armar_caminos(const TensorResult &previous_paths, const TensorResult &result_tensor,
+void armar_caminos_original(const TensorResult &previous_paths, const TensorResult &result_tensor,
                    const TensorResult &result_values, TensorResult &paths,
                    TensorResult &matched_values, int order);
 

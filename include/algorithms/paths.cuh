@@ -4,9 +4,12 @@
 #include "core/types.cuh"
 
 // Función armar_caminos - construcción de caminos
-void armar_caminos(const TensorResult &previous_paths, const TensorResult &result_tensor,
+void armar_caminos_original(const TensorResult &previous_paths, const TensorResult &result_tensor,
                    const TensorResult &result_values, TensorResult &paths,
                    TensorResult &matched_values, int order);
+void armar_caminos_batch(const TensorResult &previous_paths, const TensorResult &result_tensor,
+                         const TensorResult &result_values, TensorResult &paths,
+                         TensorResult &matched_values, int iteration, int batch_size = 1000);
 
 // Funciones auxiliares para construcción de caminos
 namespace PathUtils

@@ -121,83 +121,6 @@ __global__ void bitonic_sort(
     }
 }
 
-/*
-Este kernel genera muestras bootstrap según los percentiles dados.
-Cada bloque maneja una fila m y una columna n, y cada hilo maneja un percentil
-
-    blockIdx.x -> m (fila)
-    blockIdx.y -> n (columna)
-
-    gridDim.x = M (número de filas)
-    gridDim.y = N (número de columnas)
-
-    blockSize.x = n de percentiles (replicas)
-    threadIdx.x -> percentil
-
-    Parámetros:
-        ordered_m_n : matriz de datos ordenados (batch_size, M, N)
-        out_data : matriz de datos de salida (replicas, M, N)
-        B: batch_size
-
-*/
-__global__ void interpolate(
-    const float *__restrict__ ordered_m_n, // [B*M*N]
-    float *__restrict__ out_data,          // [replicas*M*N]
-    const float *__restrict__ percents,    // [replicas]
-    int B)
-{
-    int tid = threadIdx.x;
-    int m = blockIdx.x;
-    int n = blockIdx.y;
-    int M = gridDim.x;
-    int N = gridDim.y;
-
-    float p = percents[tid];
-    float pos = p * (B - 1);
-    int lower_idx = (int)pos;
-    int upper_idx = min(lower_idx + 1, B - 1);
-    float alpha = pos - lower_idx;
-
-    int data_offset = (m * N + n) * B;
-    float value = ordered_m_n[lower_idx * M * N + m * N + n] +
-                  alpha * (ordered_m_n[upper_idx * M * N + m * N + n] - ordered_m_n[lower_idx * M * N + m * N + n]);
-
-    out_data[tid * M * N + m * N + n] = value;
-}
-
-__global__ void interpolate_coalesced(
-    const float *__restrict__ ordered_data,
-    float *__restrict__ bootstrap_data,
-    const float *__restrict__ percents,
-    int B, int M, int N, int replicas) {
-    
-    // Usar índices para mejor coalescing
-    int global_tid = blockIdx.x * blockDim.x + threadIdx.x;
-    int total_elements = M * N * replicas;
-    
-    if (global_tid >= total_elements) return;
-    
-    // Calcular coordenadas
-    int replica_idx = global_tid % replicas;
-    int mn_idx = global_tid / replicas;
-    int m = mn_idx / N;
-    int n = mn_idx % N;
-    
-    float p = percents[replica_idx];
-    float pos = p * (B - 1);
-    int lower_idx = (int)pos;
-    int upper_idx = min(lower_idx + 1, B - 1);
-    float alpha = pos - lower_idx;
-    
-    int base_offset = m * N + n;
-    float lower_val = ordered_data[lower_idx * M * N + base_offset];
-    float upper_val = ordered_data[upper_idx * M * N + base_offset];
-    
-    float interpolated_value = lower_val + alpha * (upper_val - lower_val);
-    bootstrap_data[global_tid] = interpolated_value;
-}
-
-
 __global__ void interpolate_optimized(
     const float *__restrict__ ordered_m_n,
     float *__restrict__ out_data,
@@ -220,8 +143,8 @@ __global__ void interpolate_optimized(
     
     // CORRECIÓN: Usar un índice separado para los estados de random
     // que sea único para cada (m,n,replica) combinación
-    int rand_state_idx = m * N * replicas + n * replicas + global_replica_idx;
-    
+    int rand_state_idx = (m * N + n) * replicas + global_replica_idx;
+
     // Generar percentil aleatorio
     float p = curand_uniform(&rand_states[rand_state_idx]);
     
@@ -244,6 +167,58 @@ __global__ void interpolate_optimized(
     // Escribir resultado
     out_data[global_replica_idx * M * N + base_addr] = value;
 }
+
+__global__ void interpolate_optimized_fixed(
+    const float *__restrict__ ordered_m_n,
+    float *__restrict__ out_data,
+    curandState *rand_states,
+    int B, int replicas)
+{
+    int m = blockIdx.x;
+    int n = blockIdx.y;
+    int replica_block = blockIdx.z;
+    int tid = threadIdx.x;
+    int M = gridDim.x;
+    int N = gridDim.y;
+    
+    int global_replica_idx = replica_block * blockDim.x + tid;
+    
+    if (global_replica_idx >= replicas)
+        return;
+    
+    float p = curand_uniform(&rand_states[global_replica_idx]);
+    
+    // ✅ CORRECCIÓN 1: Asegurar que p esté estrictamente en (0,1)
+    p = fmaxf(1e-7f, fminf(1.0f - 1e-7f, p));
+    
+    // ✅ CORRECCIÓN 2: Mapear a rango de índices válidos
+    float pos = p * (float)(B - 1);
+    int lower_idx = (int)floorf(pos);
+    int upper_idx = lower_idx + 1;
+    
+    // ✅ CORRECCIÓN 3: Clamp índices para casos extremos
+    lower_idx = max(0, min(lower_idx, B - 2));  // Máximo B-2 para que upper sea B-1
+    upper_idx = min(upper_idx, B - 1);
+    
+    float alpha = pos - (float)lower_idx;
+    alpha = fmaxf(0.0f, fminf(1.0f, alpha));  // Clamp alpha también
+    
+    int base_addr = m * N + n;
+    
+    float lower_val = ordered_m_n[lower_idx * M * N + base_addr];
+    float upper_val = ordered_m_n[upper_idx * M * N + base_addr];
+    
+    // Interpolación lineal
+    float value = lower_val + alpha * (upper_val - lower_val);
+    
+    // ✅ CORRECCIÓN 4: Verificación final de seguridad
+    float min_allowed = ordered_m_n[0 * M * N + base_addr];
+    float max_allowed = ordered_m_n[(B-1) * M * N + base_addr];
+    value = fmaxf(min_allowed, fminf(max_allowed, value));
+    
+    out_data[global_replica_idx * M * N + base_addr] = value;
+}
+
 float *bootstrap_wrapper(float *data, int M, int N, int batch_size, int replicas)
 {
     size_t data_size = M * N * batch_size * sizeof(float);
@@ -286,8 +261,9 @@ float *bootstrap_wrapper(float *data, int M, int N, int batch_size, int replicas
     dim3 grid(M, N, num_replica_blocks);
     dim3 block(OPTIMAL_BLOCK_SIZE);
     
-    interpolate_optimized<<<grid, block>>>(
+    interpolate_optimized_fixed<<<grid, block>>>(
         d_ordered_data, d_bootstrap_data, d_rand_states, batch_size, replicas);
+    printf("AAA");
     cudaDeviceSynchronize();
     
     // Limpiar memoria

@@ -223,7 +223,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
             }
 
             TensorResult paths, values;
-            armar_caminos(previous_paths, // previous_paths: caminos previos
+            armar_caminos_batch(previous_paths, // previous_paths: caminos previos
                           result_tensor,  // current_paths: nuevos caminos encontrados
                           result_values,  // current_values: valores correspondientes
                           paths, values, i);
@@ -271,3 +271,5 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
 
     CudaUtils::cuda_cleanup_and_check();
 }
+
+
