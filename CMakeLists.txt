@@ -1,6 +1,18 @@
 cmake_minimum_required(VERSION 3.18)
+
+
+# Configurar compiladores explícitamente
+set(CMAKE_C_COMPILER gcc)
+set(CMAKE_CXX_COMPILER g++)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+
+# Configurar arquitecturas CUDA
+set(CMAKE_CUDA_ARCHITECTURES "75;80;86;89;90")
+
+
 project(FeCUDA CUDA CXX)
 
+include_directories(/usr/include)   
 # Usar C++17 para mejor soporte de características modernas
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
@@ -18,7 +30,6 @@ include_directories(include/core)
 include_directories(include/algorithms)
 include_directories(include/utils)
 include_directories(include/kernels)
-include_directories(/usr/include)   
 
 # Directorios donde buscar bibliotecas compartidas
 link_directories(/usr/lib/x86_64-linux-gnu/)
@@ -36,7 +47,9 @@ file(GLOB KERNEL_UTILS_SOURCES "src/kernels/utils/*.cu")
 # Archivos para targets separados
 file(GLOB TEST_SOURCES "tests/*.cu")
 file(GLOB BENCHMARK_SOURCES "benchmarks/*.cu")
-file(GLOB EXAMPLE_SOURCES "examples/*.cu")
+file(GLOB EXAMPLE_SOURCES "exa
+
+mples/*.cu")
 
 # Temporalmente excluir kernel_v1_f16.cu hasta que se corrija el tipo de datos
 list(REMOVE_ITEM KERNEL_MAXMIN_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/maxmin/kernel_v1_f16.cu")
