@@ -87,7 +87,11 @@ struct TensorResult
     // Destructor seguro
     ~TensorResult()
     {
-        cleanup();
+        if (data && owns_memory)
+        {
+
+            cleanup();
+        }
     }
 
     // Función para limpiar memoria

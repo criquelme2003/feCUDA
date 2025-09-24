@@ -71,19 +71,14 @@ __global__ void strainer(float *min_res, float *maxmin_prima, float *values, flo
 
 void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
              TensorResult &result_tensor_filtered, TensorResult &result_tensor_values,
-             float threshold = 0.4)
+             float threshold, bool keep_in_device)
 {
     // Inicializar resultados como vacíos
     result_tensor_filtered = TensorResult();
     result_tensor_values = TensorResult();
 
     // Verificar estado del dispositivo CUDA
-    cudaError_t deviceError = cudaDeviceSynchronize();
-    if (deviceError != cudaSuccess)
-    {
-        printf("Error: El dispositivo CUDA no está disponible[indices.cu]: %s\n", cudaGetErrorString(deviceError));
-        return;
-    }
+    CHECK_CUDA(cudaDeviceSynchronize());
 
     // Extraer dimensiones
     int batch = min_result.batch;
@@ -105,12 +100,7 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
 
     // Verificar memoria disponible
     size_t free_memory, total_memory;
-    cudaError_t memError = cudaMemGetInfo(&free_memory, &total_memory);
-    if (memError != cudaSuccess)
-    {
-        printf("Error: No se puede obtener información de memoria: %s\n", cudaGetErrorString(memError));
-        return;
-    }
+    CHECK_CUDA(cudaMemGetInfo(&free_memory, &total_memory));
 
     size_t required_memory = max_output_size * sizeof(float) +     // d_values
                              max_output_size * 4 * sizeof(float) + // d_indices
@@ -125,7 +115,7 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
         return;
     }
 
-    // Declarar todas las variables
+    // Declarar variables
     float *d_min_res = nullptr;
     float *d_maxmin_prima = nullptr;
     float *d_values = nullptr;
@@ -133,137 +123,94 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
     int *d_output_count = nullptr;
     bool allocated_min_res = false;
     bool allocated_maxmin_prima = false;
-    cudaError_t allocError;
-    int output_count = 0;
-    bool success = true;
 
     // Alocar memoria device
-    do
+    CHECK_CUDA(cudaMalloc(&d_values, max_output_size * sizeof(float)));
+    CHECK_CUDA(cudaMalloc(&d_indices, max_output_size * 4 * sizeof(float)));
+    CHECK_CUDA(cudaMalloc(&d_output_count, sizeof(int)));
+    CHECK_CUDA(cudaMemset(d_output_count, 0, sizeof(int)));
+
+    // Preparar datos de entrada
+    if (min_result.is_device_ptr)
     {
-        allocError = cudaMalloc(&d_values, max_output_size * sizeof(float));
-        if (allocError != cudaSuccess)
-        {
-            printf("Error: No se pudo alocar memoria para d_values: %s\n", cudaGetErrorString(allocError));
-            success = false;
-            break;
-        }
+        d_min_res = min_result.data;
+    }
+    else
+    {
+        CHECK_CUDA(cudaMalloc(&d_min_res, total_elements_4d * sizeof(float)));
+        CHECK_CUDA(cudaMemcpy(d_min_res, min_result.data, total_elements_4d * sizeof(float), cudaMemcpyHostToDevice));
+        allocated_min_res = true;
+    }
 
-        allocError = cudaMalloc(&d_indices, max_output_size * 4 * sizeof(float));
-        if (allocError != cudaSuccess)
-        {
-            printf("Error: No se pudo alocar memoria para d_indices: %s\n", cudaGetErrorString(allocError));
-            success = false;
-            break;
-        }
+    if (maxmin_prima.is_device_ptr)
+    {
+        d_maxmin_prima = maxmin_prima.data;
+    }
+    else
+    {
+        CHECK_CUDA(cudaMalloc(&d_maxmin_prima, total_elements_3d * sizeof(float)));
+        CHECK_CUDA(cudaMemcpy(d_maxmin_prima, maxmin_prima.data, total_elements_3d * sizeof(float), cudaMemcpyHostToDevice));
+        allocated_maxmin_prima = true;
+    }
 
-        allocError = cudaMalloc(&d_output_count, sizeof(int));
-        if (allocError != cudaSuccess)
-        {
-            printf("Error: No se pudo alocar memoria para d_output_count: %s\n", cudaGetErrorString(allocError));
-            success = false;
-            break;
-        }
+    // Configurar y lanzar kernel
+    int block_size = 256;
+    int grid_size = (total_elements_3d + block_size - 1) / block_size;
+    strainer<<<grid_size, block_size>>>(d_min_res, d_maxmin_prima, d_values, d_indices,
+                                        threshold, batch, M, N, K, d_output_count);
+    CHECK_CUDA(cudaDeviceSynchronize());
 
-        // Inicializar contador
-        allocError = cudaMemset(d_output_count, 0, sizeof(int));
-        if (allocError != cudaSuccess)
-        {
-            printf("Error: No se pudo inicializar contador: %s\n", cudaGetErrorString(allocError));
-            success = false;
-            break;
-        }
+    // Obtener número de elementos de salida
+    int output_count;
+    CHECK_CUDA(cudaMemcpy(&output_count, d_output_count, sizeof(int), cudaMemcpyDeviceToHost));
 
-        // Preparar datos de entrada
-        if (min_result.is_device_ptr)
+    // Procesar resultados
+    if (output_count > 0)
+    {
+        if (keep_in_device)
         {
-            d_min_res = min_result.data;
+            // Mantener resultados en GPU con tamaño optimizado
+            float *d_values_final, *d_indices_final;
+            CHECK_CUDA(cudaMalloc(&d_values_final, output_count * sizeof(float)));
+            CHECK_CUDA(cudaMalloc(&d_indices_final, output_count * 4 * sizeof(float)));
+            CHECK_CUDA(cudaMemcpy(d_values_final, d_values, output_count * sizeof(float), cudaMemcpyDeviceToDevice));
+            CHECK_CUDA(cudaMemcpy(d_indices_final, d_indices, output_count * 4 * sizeof(float), cudaMemcpyDeviceToDevice));
+
+            // Configurar TensorResult en GPU
+            result_tensor_filtered.data = d_indices_final;
+            result_tensor_filtered.is_device_ptr = true;
+            result_tensor_filtered.owns_memory = true;
+            result_tensor_filtered.batch = 1;
+            result_tensor_filtered.M = output_count;
+            result_tensor_filtered.N = 4;
+            result_tensor_filtered.K = 1;
+
+            result_tensor_values.data = d_values_final;
+            result_tensor_values.is_device_ptr = true;
+            result_tensor_values.owns_memory = true;
+            result_tensor_values.batch = 1;
+            result_tensor_values.M = 1;
+            result_tensor_values.N = output_count;
+            result_tensor_values.K = 1;
         }
         else
         {
-            allocError = cudaMalloc(&d_min_res, total_elements_4d * sizeof(float));
-            if (allocError != cudaSuccess)
+            // Transferir resultados a CPU
+            float *h_values = (float *)malloc(output_count * sizeof(float));
+            float *h_indices = (float *)malloc(output_count * 4 * sizeof(float));
+            
+            if (!h_values || !h_indices)
             {
-                printf("Error: No se pudo alocar memoria para d_min_res: %s\n", cudaGetErrorString(allocError));
-                success = false;
-                break;
+                printf("Error: No se pudo alocar memoria host para resultados\n");
+                if (h_values) free(h_values);
+                if (h_indices) free(h_indices);
             }
-            allocated_min_res = true;
-
-            allocError = cudaMemcpy(d_min_res, min_result.data, total_elements_4d * sizeof(float), cudaMemcpyHostToDevice);
-            if (allocError != cudaSuccess)
+            else
             {
-                printf("Error: No se pudo copiar min_result a device: %s\n", cudaGetErrorString(allocError));
-                success = false;
-                break;
-            }
-        }
+                CHECK_CUDA(cudaMemcpy(h_values, d_values, output_count * sizeof(float), cudaMemcpyDeviceToHost));
+                CHECK_CUDA(cudaMemcpy(h_indices, d_indices, output_count * 4 * sizeof(float), cudaMemcpyDeviceToHost));
 
-        if (maxmin_prima.is_device_ptr)
-        {
-            d_maxmin_prima = maxmin_prima.data;
-        }
-        else
-        {
-            allocError = cudaMalloc(&d_maxmin_prima, total_elements_3d * sizeof(float));
-            if (allocError != cudaSuccess)
-            {
-                printf("Error: No se pudo alocar memoria para d_maxmin_prima: %s\n", cudaGetErrorString(allocError));
-                success = false;
-                break;
-            }
-            allocated_maxmin_prima = true;
-
-            allocError = cudaMemcpy(d_maxmin_prima, maxmin_prima.data, total_elements_3d * sizeof(float), cudaMemcpyHostToDevice);
-            if (allocError != cudaSuccess)
-            {
-                printf("Error: No se pudo copiar maxmin_prima a device: %s\n", cudaGetErrorString(allocError));
-                success = false;
-                break;
-            }
-        }
-
-        // Configurar kernel
-        int block_size = 256;
-        int grid_size = (total_elements_3d + block_size - 1) / block_size;
-
-        // Lanzar kernel
-        strainer<<<grid_size, block_size>>>(d_min_res, d_maxmin_prima, d_values, d_indices,
-                                            threshold, batch, M, N, K, d_output_count);
-
-        // Sincronizar y verificar errores
-        allocError = cudaDeviceSynchronize();
-        if (allocError != cudaSuccess)
-        {
-            printf("Error: Fallo en la ejecución del kernel: %s\n", cudaGetErrorString(allocError));
-            success = false;
-            break;
-        }
-
-        // Obtener número de elementos de salida
-        allocError = cudaMemcpy(&output_count, d_output_count, sizeof(int), cudaMemcpyDeviceToHost);
-        if (allocError != cudaSuccess)
-        {
-            printf("Error: No se pudo obtener contador de salida: %s\n", cudaGetErrorString(allocError));
-            success = false;
-            break;
-        }
-
-    } while (false); // Solo una iteración, permite usar break para salir
-
-    // Procesar resultados si todo salió bien
-    if (success && output_count > 0)
-    {
-        // Alocar memoria host para resultados
-        float *h_values = (float *)malloc(output_count * sizeof(float));
-        float *h_indices = (float *)malloc(output_count * 4 * sizeof(float));
-
-        if (h_values && h_indices)
-        {
-            // Copiar resultados a host
-            if (cudaMemcpy(h_values, d_values, output_count * sizeof(float), cudaMemcpyDeviceToHost) == cudaSuccess &&
-                cudaMemcpy(h_indices, d_indices, output_count * 4 * sizeof(float), cudaMemcpyDeviceToHost) == cudaSuccess)
-            {
-                // Configurar TensorResult de salida con ownership
+                // Configurar TensorResult en CPU
                 result_tensor_filtered.data = h_indices;
                 result_tensor_filtered.is_device_ptr = false;
                 result_tensor_filtered.owns_memory = true;
@@ -280,38 +227,19 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
                 result_tensor_values.N = output_count;
                 result_tensor_values.K = 1;
             }
-            else
-            {
-                printf("Error: No se pudieron copiar resultados a host\n");
-                free(h_values);
-                free(h_indices);
-            }
-        }
-        else
-        {
-            printf("Error: No se pudo alocar memoria host para resultados\n");
-            if (h_values)
-                free(h_values);
-            if (h_indices)
-                free(h_indices);
         }
     }
-    else if (success && output_count == 0)
+    else
     {
         printf("No se encontraron elementos que superen el threshold %.4f\n", threshold);
     }
 
     // Limpiar memoria device
-    if (d_values)
-        cudaFree(d_values);
-    if (d_indices)
-        cudaFree(d_indices);
-    if (d_output_count)
-        cudaFree(d_output_count);
-    if (allocated_min_res && d_min_res)
-        cudaFree(d_min_res);
-    if (allocated_maxmin_prima && d_maxmin_prima)
-        cudaFree(d_maxmin_prima);
+    CHECK_CUDA(cudaFree(d_values));
+    CHECK_CUDA(cudaFree(d_indices));
+    CHECK_CUDA(cudaFree(d_output_count));
+    if (allocated_min_res)
+        CHECK_CUDA(cudaFree(d_min_res));
+    if (allocated_maxmin_prima)
+        CHECK_CUDA(cudaFree(d_maxmin_prima));
 }
-
-

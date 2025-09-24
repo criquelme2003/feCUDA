@@ -130,13 +130,83 @@ TensorResult copy_tensor(const TensorResult &src)
 {
     TensorResult dst;
     size_t size = src.batch * src.M * src.N * src.K * sizeof(float);
-    dst.data = (float *)malloc(size);
-    memcpy(dst.data, src.data, size);
-    dst.is_device_ptr = false;
+    
+    if (src.is_device_ptr)
+    {
+        // Copiar en GPU (device to device)
+        CHECK_CUDA(cudaMalloc(&dst.data, size));
+        CHECK_CUDA(cudaMemcpy(dst.data, src.data, size, cudaMemcpyDeviceToDevice));
+        dst.is_device_ptr = true;
+    }
+    else
+    {
+        // Copiar en CPU (host to host)
+        dst.data = (float *)malloc(size);
+        memcpy(dst.data, src.data, size);
+        dst.is_device_ptr = false;
+    }
+    
     dst.batch = src.batch;
     dst.M = src.M;
     dst.N = src.N;
     dst.K = src.K;
     dst.owns_memory = true;
+    
+    return dst;
+}
+
+
+
+// Función para forzar copia en CPU
+TensorResult copy_tensor_to_cpu(const TensorResult &src)
+{
+    TensorResult dst;
+    size_t size = src.batch * src.M * src.N * src.K * sizeof(float);
+    
+    dst.data = (float *)malloc(size);
+    
+    if (src.is_device_ptr)
+    {
+        CHECK_CUDA(cudaMemcpy(dst.data, src.data, size, cudaMemcpyDeviceToHost));
+    }
+    else
+    {
+        memcpy(dst.data, src.data, size);
+    }
+    
+    dst.is_device_ptr = false; // Siempre CPU
+    dst.batch = src.batch;
+    dst.M = src.M;
+    dst.N = src.N;
+    dst.K = src.K;
+    dst.owns_memory = true;
+    
+    return dst;
+}
+
+// Función para forzar copia en GPU
+TensorResult copy_tensor_to_gpu(const TensorResult &src)
+{
+    TensorResult dst;
+    size_t size = src.batch * src.M * src.N * src.K * sizeof(float);
+    
+    CHECK_CUDA(cudaMalloc(&dst.data, size));
+    
+    if (src.is_device_ptr)
+    {
+        CHECK_CUDA(cudaMemcpy(dst.data, src.data, size, cudaMemcpyDeviceToDevice));
+    }
+    else
+    {
+        CHECK_CUDA(cudaMemcpy(dst.data, src.data, size, cudaMemcpyHostToDevice));
+    }
+    
+    dst.is_device_ptr = true; // Siempre GPU
+    dst.batch = src.batch;
+    dst.M = src.M;
+    dst.N = src.N;
+    dst.K = src.K;
+    dst.owns_memory = true;
+    
     return dst;
 }

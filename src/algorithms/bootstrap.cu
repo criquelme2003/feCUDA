@@ -133,37 +133,37 @@ __global__ void interpolate_optimized(
     int tid = threadIdx.x;
     int M = gridDim.x;
     int N = gridDim.y;
-    
+
     // Calcular el índice global de replica
     int global_replica_idx = replica_block * blockDim.x + tid;
-    
+
     // Verificar que estamos dentro del rango
     if (global_replica_idx >= replicas)
         return;
-    
+
     // CORRECIÓN: Usar un índice separado para los estados de random
     // que sea único para cada (m,n,replica) combinación
     int rand_state_idx = (m * N + n) * replicas + global_replica_idx;
 
     // Generar percentil aleatorio
     float p = curand_uniform(&rand_states[rand_state_idx]);
-    
+
     // CORRECCIÓN: Asegurar que pos esté en el rango [0, B-1]
     float pos = p * (float)(B - 1);
     int lower_idx = (int)floorf(pos);
     int upper_idx = min(lower_idx + 1, B - 1);
     float alpha = pos - (float)lower_idx;
-    
+
     // CORRECCIÓN: Acceso correcto a los datos ordenados
     // Los datos están organizados como [batch][M][N]
-    int base_addr = m * N + n;  // Posición (m,n) en la matriz
-    
+    int base_addr = m * N + n; // Posición (m,n) en la matriz
+
     float lower_val = ordered_m_n[lower_idx * M * N + base_addr];
     float upper_val = ordered_m_n[upper_idx * M * N + base_addr];
-    
+
     // Interpolación lineal
     float value = lower_val + alpha * (upper_val - lower_val);
-    
+
     // Escribir resultado
     out_data[global_replica_idx * M * N + base_addr] = value;
 }
@@ -180,42 +180,42 @@ __global__ void interpolate_optimized_fixed(
     int tid = threadIdx.x;
     int M = gridDim.x;
     int N = gridDim.y;
-    
+
     int global_replica_idx = replica_block * blockDim.x + tid;
-    
+
     if (global_replica_idx >= replicas)
         return;
-    
+
     float p = curand_uniform(&rand_states[global_replica_idx]);
-    
+
     // ✅ CORRECCIÓN 1: Asegurar que p esté estrictamente en (0,1)
     p = fmaxf(1e-7f, fminf(1.0f - 1e-7f, p));
-    
+
     // ✅ CORRECCIÓN 2: Mapear a rango de índices válidos
     float pos = p * (float)(B - 1);
     int lower_idx = (int)floorf(pos);
     int upper_idx = lower_idx + 1;
-    
+
     // ✅ CORRECCIÓN 3: Clamp índices para casos extremos
-    lower_idx = max(0, min(lower_idx, B - 2));  // Máximo B-2 para que upper sea B-1
+    lower_idx = max(0, min(lower_idx, B - 2)); // Máximo B-2 para que upper sea B-1
     upper_idx = min(upper_idx, B - 1);
-    
+
     float alpha = pos - (float)lower_idx;
-    alpha = fmaxf(0.0f, fminf(1.0f, alpha));  // Clamp alpha también
-    
+    alpha = fmaxf(0.0f, fminf(1.0f, alpha)); // Clamp alpha también
+
     int base_addr = m * N + n;
-    
+
     float lower_val = ordered_m_n[lower_idx * M * N + base_addr];
     float upper_val = ordered_m_n[upper_idx * M * N + base_addr];
-    
+
     // Interpolación lineal
     float value = lower_val + alpha * (upper_val - lower_val);
-    
+
     // ✅ CORRECCIÓN 4: Verificación final de seguridad
     float min_allowed = ordered_m_n[0 * M * N + base_addr];
-    float max_allowed = ordered_m_n[(B-1) * M * N + base_addr];
+    float max_allowed = ordered_m_n[(B - 1) * M * N + base_addr];
     value = fmaxf(min_allowed, fminf(max_allowed, value));
-    
+
     out_data[global_replica_idx * M * N + base_addr] = value;
 }
 
@@ -226,50 +226,49 @@ float *bootstrap_wrapper(float *data, int M, int N, int batch_size, int replicas
     float *d_ordered_data;
     float *d_bootstrap_data;
     curandState *d_rand_states;
-    
+
     cudaMalloc(&d_data, data_size);
     cudaMalloc(&d_ordered_data, data_size);
     cudaMalloc(&d_bootstrap_data, M * N * replicas * sizeof(float));
-    
+
     // CORRECCIÓN: Asignar memoria para todos los estados de random necesarios
     cudaMalloc(&d_rand_states, M * N * replicas * sizeof(curandState));
-    
+
     cudaMemcpy(d_data, data, data_size, cudaMemcpyHostToDevice);
-    
+
     // Ordenamiento bitónico
     dim3 gridDim(M, N);
     size_t shared_mem_size = nextPow2(batch_size) * sizeof(float);
     dim3 blockDim(nextPow2(batch_size));
-    
+
     bitonic_sort<<<gridDim, blockDim, shared_mem_size>>>(d_data, d_ordered_data, batch_size);
     cudaDeviceSynchronize();
-    
+
     // CORRECCIÓN: Inicializar estados de random correctamente
     const int RAND_BLOCK_SIZE = 256;
-    int total_rand_states = M * N * replicas;
+    int total_rand_states = replicas;
     dim3 grid_rand((total_rand_states + RAND_BLOCK_SIZE - 1) / RAND_BLOCK_SIZE);
     dim3 block_rand(RAND_BLOCK_SIZE);
-    
+
     init_curand_states<<<grid_rand, block_rand>>>(
         d_rand_states, time(NULL), total_rand_states);
     cudaDeviceSynchronize();
-    
+
     // Interpolación
     const int OPTIMAL_BLOCK_SIZE = 256;
     const int num_replica_blocks = (replicas + OPTIMAL_BLOCK_SIZE - 1) / OPTIMAL_BLOCK_SIZE;
-    
+
     dim3 grid(M, N, num_replica_blocks);
     dim3 block(OPTIMAL_BLOCK_SIZE);
-    
+
     interpolate_optimized_fixed<<<grid, block>>>(
         d_ordered_data, d_bootstrap_data, d_rand_states, batch_size, replicas);
-    printf("AAA");
     cudaDeviceSynchronize();
-    
+
     // Limpiar memoria
     cudaFree(d_data);
     cudaFree(d_ordered_data);
     cudaFree(d_rand_states);
-    
+
     return d_bootstrap_data;
 }

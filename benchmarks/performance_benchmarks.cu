@@ -2,7 +2,6 @@
 #include <chrono>
 #include <vector>
 #include <random>
-#include <maxmin.cuh>
 #include <core/tensor.cuh>
 #include <utils/cuda_utils.cuh>
 #include <utils/logging.cuh>

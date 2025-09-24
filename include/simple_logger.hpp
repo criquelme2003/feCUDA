@@ -41,7 +41,7 @@ private:
         case DEBUG:
             return "[DEBUG]";
         case INFO:
-            return "[INFO] ";
+            return "[INFO " + std::string(__FILE__) + "]";
         case WARNING:
             return "[WARN] ";
         case ERROR:

@@ -8,6 +8,8 @@ Makefile
 # Configuración local de VS Code
 .vscode/
 
+*.ncu-rep
+
 # Archivos binarios y objetos
 *.o
 *.obj
@@ -17,3 +19,4 @@ Makefile
 *.so
 *.dll
 *.env
+fecuda_main

@@ -1,11 +1,11 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include "algorithms/maxmin.cuh"
 #include "core/tensor.cuh"
 #include "utils/cuda_utils.cuh"
 #include "utils/logging.cuh"
 #include "utils/file_io.cuh"
+#include <headers.cuh>
 
 // Test básico de kernel maxmin
 bool test_maxmin_kernel()

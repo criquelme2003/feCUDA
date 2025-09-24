@@ -10,4 +10,3 @@ void bootstrap(const int num_bins,
                
 int example_bootstrap();
 
-void iterative_test();

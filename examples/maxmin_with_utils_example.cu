@@ -46,7 +46,6 @@ void maxmin_with_utils(const TensorResult &tensor1, const TensorResult &tensor2,
     int K = tensor1.N;
     int N = tensor2.N;
 
-    printf("Ejecutando kernel_v1 con dimensiones: batch=%d, M=%d, K=%d, N=%d\n", batch, M, K, N);
 
     // 3. GESTIÓN DE MEMORIA usando MemoryUtils::CudaDevicePtr
     try

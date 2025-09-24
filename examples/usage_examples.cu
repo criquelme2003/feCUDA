@@ -1,5 +1,4 @@
 #include <iostream>
-#include "algorithms/maxmin.cuh"
 #include <core/tensor.cuh>
 #include <utils/cuda_utils.cuh>
 #include <utils/logging.cuh>

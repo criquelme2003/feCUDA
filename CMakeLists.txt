@@ -1,15 +1,19 @@
 cmake_minimum_required(VERSION 3.18)
 
-
 # Configurar compiladores explícitamente
-set(CMAKE_C_COMPILER gcc)
-set(CMAKE_CXX_COMPILER g++)
-set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
+set(CMAKE_C_COMPILER gcc-12)
+set(CMAKE_CXX_COMPILER g++-12)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda-13.0/bin/nvcc)
 
-# Configurar arquitecturas CUDA
+# Forzar que NVCC use GCC-12
+set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -ccbin g++-12")
+set(CMAKE_CUDA_HOST_COMPILER g++-12)
+
+# Variables de entorno para asegurar el uso correcto
+set(ENV{CC} gcc-12)
+set(ENV{CXX} g++-12)
+
 set(CMAKE_CUDA_ARCHITECTURES "75;80;86;89;90")
-
-
 project(FeCUDA CUDA CXX)
 
 include_directories(/usr/include)   

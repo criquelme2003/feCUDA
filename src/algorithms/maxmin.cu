@@ -29,7 +29,6 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
     int K = tensor1.N; // En el contexto del kernel, N del tensor1 es K
     int N = tensor2.N;
 
-    printf("Ejecutando kernel_v1 con dimensiones: batch=%d, M=%d, K=%d, N=%d\n", batch, M, K, N);
 
     // Tamaños de memoria
     size_t size_A = batch * M * K * sizeof(float);
@@ -112,6 +111,5 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
     if (liberar_B)
         free(h_B);
 
-    printf("Kernel_v1 ejecutado exitosamente\n");
     return ;
 }

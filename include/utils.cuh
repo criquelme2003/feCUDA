@@ -57,6 +57,9 @@ void safe_tensor_cleanup(TensorResult &tensor);
 
 // Función para crear una copia del tensor en memoria host
 TensorResult copy_tensor(const TensorResult &src);
+TensorResult copy_tensor_to_cpu(const TensorResult &src);
+TensorResult copy_tensor_to_gpu(const TensorResult &src);
+
 
 // Función para calentar el sistema CUDA
 void cuda_warmup();
@@ -73,5 +76,8 @@ void save_tensor_4d_as_file(float *tensor, int B, int M, int N, int K,
                             const std::string &name = "output_4d.txt");
 
 void save_tensor_vector(const std::vector<TensorResult> &tensors, const std::string &filename = "output_vec.txt");
+
+void calculate_prima(const TensorResult &maxmin_conjugado, const TensorResult &gen_tensor,
+                     TensorResult &prima, bool keep_in_device = false);
 
 #endif
