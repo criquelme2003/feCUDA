@@ -177,6 +177,7 @@ __global__ void interpolate_optimized_fixed(
     int m = blockIdx.x;
     int n = blockIdx.y;
     int replica_block = blockIdx.z;
+
     int tid = threadIdx.x;
     int M = gridDim.x;
     int N = gridDim.y;

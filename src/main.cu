@@ -21,7 +21,7 @@ int main()
     TensorResult t1;
     leer_matriz_3d_desde_archivo("./datasets_txt/CC.txt", t1, 10, 16, 16, 1);
     int M = t1.M, N = t1.N, replicas = 1000;
-    int iter = 100;
+    int iter = 1;
 
     auto start_total = std::chrono::high_resolution_clock::now();
     std::vector<double> tiempos_iteracion;

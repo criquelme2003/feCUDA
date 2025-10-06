@@ -77,6 +77,7 @@ message(STATUS "Archivos algorithms: ${ALGORITHM_SOURCES}")
 message(STATUS "Archivos utils: ${UTILS_SOURCES}")
 message(STATUS "Archivos kernels: ${KERNEL_SOURCES}")
 
+set(mathdx_ROOT "$ENV{HOME}/nvidia/mathdx/nvidia-mathdx-25.06.1/nvidia/mathdx/25.06/")
 # Ejecutable principal
 add_executable(fecuda_main ${ALL_MAIN_SOURCES})
 
@@ -91,7 +92,16 @@ check_language(CUDA)
 if(CMAKE_CUDA_COMPILER)
 enable_language(CUDA)
 find_package(CUDAToolkit)
-target_link_libraries(fecuda_main CUDA::curand)
+find_package(mathdx REQUIRED
+    COMPONENTS curanddx # Puedes añadir más componentes aquí
+    CONFIG
+    PATHS "${mathdx_ROOT}"
+)
+
+target_link_libraries(fecuda_main 
+                    CUDA::curand
+                    mathdx::curanddx
+                    )
 else()
 message(STATUS "No CUDA compiler found")
 endif()
