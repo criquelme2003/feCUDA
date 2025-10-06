@@ -1,12 +1,14 @@
 # Ignorar carpeta de build
 /build/
+/forgeffects/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
-
 # Configuración local de VS Code
 .vscode/
+
+*.ncu-rep
 
 # Archivos binarios y objetos
 *.o
@@ -16,3 +18,5 @@ Makefile
 *.a
 *.so
 *.dll
+*.env
+fecuda_main
