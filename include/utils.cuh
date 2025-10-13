@@ -3,6 +3,7 @@
 
 #include <cuda_runtime.h>
 #include <iostream>
+#include <vector>
 #include <stdexcept>
 #include <core/types.cuh>
 
@@ -60,7 +61,6 @@ TensorResult copy_tensor(const TensorResult &src);
 TensorResult copy_tensor_to_cpu(const TensorResult &src);
 TensorResult copy_tensor_to_gpu(const TensorResult &src);
 
-
 // Función para calentar el sistema CUDA
 void cuda_warmup();
 
@@ -79,5 +79,7 @@ void save_tensor_vector(const std::vector<TensorResult> &tensors, const std::str
 
 void calculate_prima(const TensorResult &maxmin_conjugado, const TensorResult &gen_tensor,
                      TensorResult &prima, bool keep_in_device = false);
+
+float *uniform(int n);
 
 #endif

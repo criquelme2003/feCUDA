@@ -17,10 +17,11 @@ __global__ void max_min_kernel(
     unsigned int n = blockIdx.x;
     unsigned int m = blockIdx.y;
     unsigned int b = blockIdx.z;
+    unsigned int Bz = gridDim.z;
 
     unsigned int a_idx = b * M * K + m * K + k;
     unsigned int b_idx = b * K * N + k * N + n;
-    unsigned int c_min_idx = b * M * N * K + m * N * K + n * K + k;
+    unsigned int c_min_idx = k * Bz * M * N + b * M * N + m * N + n;
 
     if (k < K)
     {

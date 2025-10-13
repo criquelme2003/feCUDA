@@ -72,115 +72,90 @@ __global__ void strainer(float *min_res,
     }
 }
 
-// Versión 1: Reducir atómicas usando shared memory para contar localmente
-__global__ void strainer_optimized_v1(
-    const float *__restrict__ min_res,
-    const float *__restrict__ maxmin_prima,
-    float *values,
-    float *indices,
+#ifndef MAX_TIES
+#define MAX_TIES 32 // cuántos empates por (b,m,n) guardamos a lo más
+#endif
+
+__global__ void strainer_v2(
+    const float *__restrict__ min_res_Kmajor, // [K][B*M*N]  => min_res[k*total3 + idx3]
+    const float *__restrict__ maxmin_prima,   // [B*M*N]     => max sobre K previo (tu tensor 3D)
+    float *__restrict__ values,               // salida: valores (<= B*M*N*K)
+    float *__restrict__ indices,              // salida: [*, 4] en float: (b,m,k,n)
     float threshold,
     int batch, int M, int N, int K,
-    int *output_count)
+    int *__restrict__ output_count)
 {
-    // Shared memory para acumular resultados del bloque
-    __shared__ int s_local_count;
-    __shared__ int s_block_offset;
-
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int total_elements_3d = batch * M * N;
-
+    __shared__ int s_block_sum, s_block_base;
     if (threadIdx.x == 0)
-    {
-        s_local_count = 0;
-    }
+        s_block_sum = 0;
     __syncthreads();
 
-    // Variables locales para este thread
-    int local_matches = 0;
-    float local_maxmin_value;
-    float local_max_val = -FLT_MAX;
-    int local_indices[32]; // Máximo K razonable
-    int local_count_matches = 0;
+    const int total3 = batch * M * N;
+    const int gtid = blockIdx.x * blockDim.x + threadIdx.x;
+    int ties = 0, ks[MAX_TIES];
+    float write_val = 0.f;
+    int b = 0, m = 0, n = 0;
 
-    if (idx < total_elements_3d)
+    if (gtid < total3)
     {
-        // Convertir índice lineal a coordenadas
-        int b = idx / (M * N);
-        int mn = idx % (M * N);
-        int m = mn / N;
-        int n = mn % N;
+        // (b,m,n) desde idx lineal
+        b = gtid / (M * N);
+        int mn = gtid % (M * N);
+        m = mn / N;
+        n = mn % N;
 
-        // Cargar maxmin_value UNA VEZ
-        local_maxmin_value = maxmin_prima[idx];
-
-        // Early exit si no supera threshold
-        if (local_maxmin_value > threshold)
+        float mmv = __ldg(&maxmin_prima[gtid]); // 3D
+        if (mmv > threshold)
         {
-            // Calcular base_idx UNA VEZ
-            int base_idx = (b * M * N + m * N + n) * K;
-
-// Primer paso: encontrar máximo (con loop unrolling manual si K es conocido)
+            // 1) máximo sobre K (lecturas coalescidas gracias a K-major)
+            float maxv = -FLT_MAX;
 #pragma unroll 8
-            for (int k = 0; k < K; k++)
+            for (int k = 0; k < K; ++k)
             {
-                float current_val = min_res[base_idx + k];
-                local_max_val = fmaxf(local_max_val, current_val);
+                float v = __ldg(&min_res_Kmajor[k * total3 + gtid]);
+                maxv = fmaxf(maxv, v);
             }
 
-            // Segundo paso: contar coincidencias y guardar índices localmente
-            const float EPSILON = 1e-6f;
+            // 2) recolectar empates (si no los necesitas, rompe en el primero)
+            const float EPS = 1e-6f;
 #pragma unroll 8
-            for (int k = 0; k < K; k++)
+            for (int k = 0; k < K; ++k)
             {
-                float current_val = min_res[base_idx + k];
-                if (fabsf(current_val - local_max_val) < EPSILON)
+                float v = __ldg(&min_res_Kmajor[k * total3 + gtid]);
+                if (fabsf(v - maxv) < EPS)
                 {
-                    if (local_count_matches < 32)
-                    { // Protección
-                        local_indices[local_count_matches++] = k;
-                    }
+                    if (ties < MAX_TIES)
+                        ks[ties++] = k;
                 }
             }
 
-            local_matches = local_count_matches;
+            if (ties > 0)
+                write_val = mmv; // o maxv, según quieras guardar
         }
     }
 
-    // Reducir conteo en shared memory (UNA atómica por thread en lugar de múltiples)
-    int thread_offset = 0;
-    if (local_matches > 0)
-    {
-        thread_offset = atomicAdd(&s_local_count, local_matches);
-    }
+    // 3) reservar espacio por bloque (menos atómicas globales)
+    int thread_base = 0;
+    if (ties > 0)
+        thread_base = atomicAdd(&s_block_sum, ties);
     __syncthreads();
 
-    // Un solo thread del bloque hace la atómica global
-    if (threadIdx.x == 0 && s_local_count > 0)
-    {
-        s_block_offset = atomicAdd(output_count, s_local_count);
-    }
+    if (threadIdx.x == 0 && s_block_sum > 0)
+        s_block_base = atomicAdd(output_count, s_block_sum);
     __syncthreads();
 
-    // Escribir resultados (escrituras coalescidas)
-    if (local_matches > 0 && idx < total_elements_3d)
+    // 4) escribir resultados
+    if (ties > 0 && gtid < total3)
     {
-        int b = idx / (M * N);
-        int mn = idx % (M * N);
-        int m = mn / N;
-        int n = mn % N;
-
-        int output_base = s_block_offset + thread_offset;
-
-        for (int i = 0; i < local_count_matches; i++)
+        int out0 = s_block_base + thread_base;
+        for (int i = 0; i < ties; ++i)
         {
-            int output_pos = output_base + i;
-
-            // Escrituras coalescidas en estructura SoA (Structure of Arrays)
-            indices[output_pos * 4 + 0] = (float)b;
-            indices[output_pos * 4 + 1] = (float)m;
-            indices[output_pos * 4 + 2] = (float)local_indices[i];
-            indices[output_pos * 4 + 3] = (float)n;
-            values[output_pos] = local_maxmin_value;
+            int out = out0 + i;
+            indices[out * 4 + 0] = (float)b;
+            indices[out * 4 + 1] = (float)m;
+            indices[out * 4 + 2] = (float)ks[i]; // k
+            indices[out * 4 + 3] = (float)n;
+            values[out] = write_val; // mmv o maxv
         }
     }
 }
@@ -257,10 +232,22 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
     }
 
     // Configurar y lanzar kernel
-    int block_size = 256;
-    int grid_size = (total_elements_3d + block_size - 1) / block_size;
-    strainer<<<grid_size, block_size>>>(d_min_res, d_maxmin_prima, d_values, d_indices,threshold, batch, M, N, K, d_output_count);
+    // int block_size = 256;
+    // int grid_size = (total_elements_3d + block_size - 1) / block_size;
+    // strainer<<<grid_size, block_size>>>(d_min_res, d_maxmin_prima, d_values, d_indices, threshold, batch, M, N, K, d_output_count);
     
+    int total3 = batch * M * N;
+    dim3 block(256);
+    dim3 grid((total3 + block.x - 1) / block.x);
+
+    strainer_v2<<<grid, block>>>(
+        d_min_res,      // = tu C_min ya K-major
+        d_maxmin_prima, // = tu tensor 3D
+        d_values, d_indices,
+        threshold,
+        batch, M, N, K,
+        d_output_count);
+
     CHECK_CUDA(cudaDeviceSynchronize());
 
     // Obtener número de elementos de salida

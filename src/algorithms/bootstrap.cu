@@ -171,7 +171,7 @@ __global__ void interpolate_optimized(
 __global__ void interpolate_optimized_fixed(
     const float *__restrict__ ordered_m_n,
     float *__restrict__ out_data,
-    curandState *rand_states,
+    float *rand_floats,
     int B, int replicas)
 {
     int m = blockIdx.x;
@@ -187,7 +187,7 @@ __global__ void interpolate_optimized_fixed(
     if (global_replica_idx >= replicas)
         return;
 
-    float p = curand_uniform(&rand_states[global_replica_idx]);
+    float p = rand_floats[global_replica_idx];
 
     // ✅ CORRECCIÓN 1: Asegurar que p esté estrictamente en (0,1)
     p = fmaxf(1e-7f, fminf(1.0f - 1e-7f, p));
@@ -226,14 +226,16 @@ float *bootstrap_wrapper(float *data, int M, int N, int batch_size, int replicas
     float *d_data;
     float *d_ordered_data;
     float *d_bootstrap_data;
-    curandState *d_rand_states;
+
+    int n_random_float = (int)replicas + 3 / 4;
+    float *d_rand_float;
 
     cudaMalloc(&d_data, data_size);
     cudaMalloc(&d_ordered_data, data_size);
     cudaMalloc(&d_bootstrap_data, M * N * replicas * sizeof(float));
 
     // CORRECCIÓN: Asignar memoria para todos los estados de random necesarios
-    cudaMalloc(&d_rand_states, M * N * replicas * sizeof(curandState));
+    cudaMalloc(&d_rand_float, n_random_float * sizeof(float));
 
     cudaMemcpy(d_data, data, data_size, cudaMemcpyHostToDevice);
 
@@ -245,15 +247,24 @@ float *bootstrap_wrapper(float *data, int M, int N, int batch_size, int replicas
     bitonic_sort<<<gridDim, blockDim, shared_mem_size>>>(d_data, d_ordered_data, batch_size);
     cudaDeviceSynchronize();
 
-    // CORRECCIÓN: Inicializar estados de random correctamente
-    const int RAND_BLOCK_SIZE = 256;
-    int total_rand_states = replicas;
-    dim3 grid_rand((total_rand_states + RAND_BLOCK_SIZE - 1) / RAND_BLOCK_SIZE);
-    dim3 block_rand(RAND_BLOCK_SIZE);
+    // // CORRECCIÓN: Inicializar estados de random correctamente
+    // int device;
+    // cudaGetDevice(&device); // Obtener el dispositivo actual
+    // cudaDeviceProp props;
+    // cudaGetDeviceProperties(&props, device); // Obtener propiedades del dispositivo
 
-    init_curand_states<<<grid_rand, block_rand>>>(
-        d_rand_states, time(NULL), total_rand_states);
-    cudaDeviceSynchronize();
+    // int total_rand_states = replicas;
+    // const int RAND_BLOCK_SIZE = (total_rand_states + props.multiProcessorCount - 1) / props.multiProcessorCount;
+    // int grid_rand_size = total_rand_states < props.multiProcessorCount ? (total_rand_states) : props.multiProcessorCount;
+    // dim3 grid_rand(grid_rand_size);
+    // dim3 block_rand(RAND_BLOCK_SIZE);
+
+    // init_curand_states<<<grid_rand, block_rand>>>(
+    //     d_rand_states, time(NULL), total_rand_states);
+    // cudaDeviceSynchronize();
+
+    // Inicializar floats alealtorios
+    d_rand_float = uniform(n_random_float);
 
     // Interpolación
     const int OPTIMAL_BLOCK_SIZE = 256;
@@ -263,13 +274,13 @@ float *bootstrap_wrapper(float *data, int M, int N, int batch_size, int replicas
     dim3 block(OPTIMAL_BLOCK_SIZE);
 
     interpolate_optimized_fixed<<<grid, block>>>(
-        d_ordered_data, d_bootstrap_data, d_rand_states, batch_size, replicas);
+        d_ordered_data, d_bootstrap_data, d_rand_float, batch_size, replicas);
     cudaDeviceSynchronize();
 
     // Limpiar memoria
     cudaFree(d_data);
     cudaFree(d_ordered_data);
-    cudaFree(d_rand_states);
+    cudaFree(d_rand_float);
 
     return d_bootstrap_data;
 }
