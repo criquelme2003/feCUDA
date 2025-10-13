@@ -46,28 +46,23 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
 
     for (int i = 0; i < order - 1; i++)
     {
-        // Calcular min_result y maxmin_conjugado
-        TensorResult min_result, maxmin_conjugado;
-        maxmin(gen_tensor, original_tensor, maxmin_conjugado, min_result, keep_in_device);
-
-        // Marcar ownership correcto
-        if (maxmin_conjugado.data)
-            maxmin_conjugado.owns_memory = true;
-        if (min_result.data)
-            min_result.owns_memory = true;
-
-        // Calcular prima
-        TensorResult prima;
-        calculate_prima(maxmin_conjugado, gen_tensor, prima, keep_in_device);
-        // Calcular indices
-        TensorResult result_tensor, result_values;
-        indices(min_result, prima, result_tensor, result_values, thr, keep_in_device);
+        TensorResult maxmin_conjugado, result_tensor, result_values;
+        maxmin_prima_indices(gen_tensor, original_tensor, maxmin_conjugado,
+                             result_tensor, result_values, thr, keep_in_device);
 
         // Para vectores de almacenamiento (siempre CPU para evitar problemas con std::vector)
-        TensorResult pure_tensor_copy = copy_tensor_to_cpu(result_tensor);
-        TensorResult pure_values_copy = copy_tensor_to_cpu(result_values);
-        pure_tensor_paths.push_back(std::move(pure_tensor_copy));
-        pure_values_paths.push_back(std::move(pure_values_copy));
+        if (result_tensor.data && result_values.data)
+        {
+            TensorResult pure_tensor_copy = copy_tensor_to_cpu(result_tensor);
+            TensorResult pure_values_copy = copy_tensor_to_cpu(result_values);
+            pure_tensor_paths.push_back(std::move(pure_tensor_copy));
+            pure_values_paths.push_back(std::move(pure_values_copy));
+        }
+        else
+        {
+            pure_tensor_paths.emplace_back();
+            pure_values_paths.emplace_back();
+        }
 
         // Ahora result_tensor y result_values siguen siendo válidos
 
@@ -80,9 +75,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                 // Limpiar y retornar
                 safe_tensor_cleanup(original_tensor);
                 safe_tensor_cleanup(gen_tensor);
-                safe_tensor_cleanup(min_result);
                 safe_tensor_cleanup(maxmin_conjugado);
-                safe_tensor_cleanup(prima);
                 safe_tensor_cleanup(result_tensor);
                 safe_tensor_cleanup(result_values);
                 return;
@@ -141,8 +134,6 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
         gen_tensor = std::move(maxmin_conjugado);
 
         // Limpiar temporales
-        safe_tensor_cleanup(min_result);
-        safe_tensor_cleanup(prima);
         safe_tensor_cleanup(result_tensor);
         safe_tensor_cleanup(result_values);
     }

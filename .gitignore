@@ -20,3 +20,4 @@ Makefile
 *.dll
 *.env
 fecuda_main
+fecuda_main
