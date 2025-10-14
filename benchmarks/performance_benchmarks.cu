@@ -6,6 +6,7 @@
 #include <utils/cuda_utils.cuh>
 #include <utils/logging.cuh>
 #include <utils/file_io.cuh>
+#include <headers.cuh>
 
 // Medición de tiempo para benchmarks
 class Timer
