@@ -92,6 +92,8 @@ check_language(CUDA)
 if(CMAKE_CUDA_COMPILER)
 enable_language(CUDA)
 find_package(CUDAToolkit)
+find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
+
 find_package(mathdx REQUIRED
     COMPONENTS curanddx # Puedes añadir más componentes aquí
     CONFIG
@@ -101,7 +103,15 @@ find_package(mathdx REQUIRED
 target_link_libraries(fecuda_main 
                     CUDA::curand
                     mathdx::curanddx
+                    Python3::Python 
+                    Python3::NumPy
                     )
+
+target_include_directories(fecuda_main PRIVATE
+    ${Python3_INCLUDE_DIRS}
+    ~/libs/matplotlib-cpp
+    )
+             
 else()
 message(STATUS "No CUDA compiler found")
 endif()

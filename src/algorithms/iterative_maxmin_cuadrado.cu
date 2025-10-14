@@ -9,6 +9,7 @@
 #include <core/types.cuh>
 #include <headers.cuh>
 
+
 // Función principal iterative_maxmin_cuadrado
 void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                                std::vector<TensorResult> &result_tensor_paths,
