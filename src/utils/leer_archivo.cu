@@ -7,7 +7,7 @@
 #include <string>
 #include <iomanip>
 #include <stdexcept>
-
+#include <vector>
 // Include the string library
 // Función para leer matrices 3D desde archivo de texto
 bool leer_matriz_3d_desde_archivo(const char *archivo, TensorResult &tensor,
@@ -125,7 +125,7 @@ void save_tensor_4d_as_file(float *tensor, int B, int M, int N, int K,
     }
 
     // Header: dimensiones
-    file << B << " " << M << " " << N << " " << K << std::endl;
+    // file << B << " " << M << " " << N << " " << K << std::endl;
 
     // Datos: todos los números uno tras otro
     int total = B * M * N * K;
@@ -134,7 +134,7 @@ void save_tensor_4d_as_file(float *tensor, int B, int M, int N, int K,
         file << tensor[i];
         if (i < total - 1)
         {
-            file << " ";
+            file << ",";
         }
     }
     file << std::endl;
@@ -145,7 +145,7 @@ void save_tensor_4d_as_file(float *tensor, int B, int M, int N, int K,
 }
 
 // Función para guardar vector de tensores
-void save_tensor_vector(const std::vector<TensorResult> &tensors, const std::string &filename)
+void save_tensor_vector(const std::vector<TensorResult> &tensors, const std::string &filename, bool save_info)
 {
     std::ofstream file(filename);
 
@@ -156,7 +156,8 @@ void save_tensor_vector(const std::vector<TensorResult> &tensors, const std::str
     }
 
     // Header: número de tensores
-    file << tensors.size() << std::endl;
+    if (save_info)
+        file << tensors.size() << std::endl;
 
     // Para cada tensor, guardar sus dimensiones y datos
     for (size_t tensor_idx = 0; tensor_idx < tensors.size(); tensor_idx++)
@@ -164,7 +165,8 @@ void save_tensor_vector(const std::vector<TensorResult> &tensors, const std::str
         const TensorResult &tensor = tensors[tensor_idx];
 
         // Guardar dimensiones del tensor
-        file << tensor.batch << " " << tensor.M << " " << tensor.N << " " << tensor.K << std::endl;
+        if (save_info)
+            file << tensor.batch << " " << tensor.M << " " << tensor.N << " " << tensor.K << std::endl;
 
         // Guardar todos los datos del tensor
         int total = tensor.total_elements();
@@ -173,10 +175,11 @@ void save_tensor_vector(const std::vector<TensorResult> &tensors, const std::str
             file << (float)tensor.data[i];
             if (i < total - 1)
             {
-                file << " ";
+                file << ",";
             }
         }
-        file << std::endl;
+        if (save_info)
+            file << std::endl;
     }
 
     file.close();

@@ -19,5 +19,9 @@ Adoptar un kernel fusionado que:
 - Kernel más complejo de mantener y perfilar.
 - Necesidad de dimensionar shared memory para almacenar colas e índices.
 
+## Evidencia
+- Experimento `2025-02-14-exp-001-fused-kernel` documentado en `benchmark/docs/experiments/...` medirá el impacto.
+- Se espera capturar reportes `ncu`/`nsys` y CSV crudos para comparar con el pipeline anterior.
+
 ## Estado
 Aceptado – 2025-02-14

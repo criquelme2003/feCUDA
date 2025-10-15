@@ -48,12 +48,12 @@ file(GLOB_RECURSE KERNEL_SOURCES "src/kernels/*.cu")
 file(GLOB KERNEL_MAXMIN_SOURCES "src/kernels/maxmin/*.cu")
 file(GLOB KERNEL_UTILS_SOURCES "src/kernels/utils/*.cu")
 
-# Archivos para targets separados
-file(GLOB TEST_SOURCES "tests/*.cu")
-file(GLOB BENCHMARK_SOURCES "benchmarks/*.cu")
-file(GLOB EXAMPLE_SOURCES "exa
 
-mples/*.cu")
+
+# Archivos para targets separados
+file(GLOB BENCHMARK_SOURCES "benchmarks/*.cu")
+file(GLOB EXAMPLE_SOURCES "examples/*.cu")
+file(GLOB VALIDATION_SOURCES "validation/*.cu")
 
 # Temporalmente excluir kernel_v1_f16.cu hasta que se corrija el tipo de datos
 list(REMOVE_ITEM KERNEL_MAXMIN_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/maxmin/kernel_v1_f16.cu")
@@ -67,7 +67,7 @@ set(ALL_MAIN_SOURCES
     ${KERNEL_SOURCES}
     ${KERNEL_MAXMIN_SOURCES}
     ${KERNEL_UTILS_SOURCES}
-    ${TEST_SOURCES}
+    ${VALIDATION_SOURCES}
 )
 
 # Mostrar qué archivos se están compilando (para debug)
@@ -92,6 +92,7 @@ check_language(CUDA)
 if(CMAKE_CUDA_COMPILER)
 enable_language(CUDA)
 find_package(CUDAToolkit)
+find_package(fmt)
 find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
 
 find_package(mathdx REQUIRED
@@ -105,6 +106,7 @@ target_link_libraries(fecuda_main
                     mathdx::curanddx
                     Python3::Python 
                     Python3::NumPy
+                    fmt::fmt
                     )
 
 target_include_directories(fecuda_main PRIVATE

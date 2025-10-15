@@ -1,8 +1,7 @@
 # Efectos Olvidados – CUDA
 
 ## Descripción
-Implementación experimental para detectar “efectos olvidados” sobre tensores cuadrados usando kernels CUDA. El flujo principal combina operaciones de maxmin iterativas, cálculo de `prima` y armado de caminos. El objetivo actual es optimizar el kernel fusionado y la cadena de post-procesamiento, conservando verificaciones reproducibles.
-
+Implementación experimental para detectar “efectos olvidados” sobre tensores cuadrados usando kernels CUDA. El flujo principal consta de la replicación de los datos mediante bootstraping, para luego aplicar convoluciones maxmin de manera iterativa sobre los datos, permitiendo así identificar efectos olvidados y armar los caminos hacia estos efectos
 ## Requisitos
 - NVIDIA Driver: ≥ 535.xx
 - CUDA Toolkit: 13.0 (ver `CMakeLists.txt`)
@@ -11,23 +10,24 @@ Implementación experimental para detectar “efectos olvidados” sobre tensore
 
 ## Compilación
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake . 
 cmake --build build -j
 ```
 
 ## Baseline rápido
 Una vez generado el binario principal:
 ```bash
-./build/fecuda_main --help
+./build/fecuda_main 
 ```
 
-Para benchmarks reproducibles revisar la carpeta `benchmark/benchmarks` y ejecutar los scripts documentados allí.
+## Metodología de medición de rendimiento
 
-## Reproducibilidad
-- `benchmark/PERF.md`: metodología estable de medición.
-- `benchmark/docs/experiments/*`: registros por experimento.
-- `benchmark/docs/ADR/*`: decisiones de arquitectura.
-- `benchmark/docs/failure-log.md`: intentos sin éxito y aprendizajes.
+Para medir el rendimiento se opta por un tensor de 10x16x16, aplicando bootstraping x10,x100,x1000 y x10000, midiendo el tiempo y memoria (CPU y GPU ) utilizados. 
 
-## Contribución
-Sigue Conventional Commits (`feat:`, `perf:`, `docs:`, etc.) y versionado SemVer. Usa ramas `feat/*`, `perf/*` o `fix/*` según corresponda. Antes de fusionar a `main`, valida la checklist en `benchmark/PERF.md`.
+## Validación de Resultados
+
+Para comprobar el correcto funcionamiento, después de cada cambio dentro del flujo principal, se comprueba el correcto funcionamiento del mismo, comprobando que compile y ejecute sin errores  y validadando los resultados de salida. La validación del output del programa es de dos maneras. 
+
+1. Resultados usando tensores puros (sin bootstrap),comparando con resultados correctos en /validation/data .
+
+2. Resultados usando el bootstraping de 4 etapas mencionado anteriormente (busqueda de valores fuera de rango)
