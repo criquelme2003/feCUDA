@@ -20,7 +20,7 @@ void generate_results()
 {
 
     std::cout << "Generando resultados para validacion...." << std::endl;
-    TensorResult cc, ee, ce;
+    TensorResult cc, ee;
     std::vector<int> reps = {10, 100, 1000, 10000}; // replicas bootstrap
     int orden = 5;                                  // orden fijo
 
@@ -41,14 +41,14 @@ void generate_results()
     };
 
     leer_matriz_3d_desde_archivo("./datasets_txt/CC.txt", cc, 10, 16, 16, 1);
-    leer_matriz_3d_desde_archivo("./datasets_txt/CE.txt", ce, 10, 16, 4, 1);
+    // leer_matriz_3d_desde_archivo("./datasets_txt/CE.txt", ce, 10, 16, 4, 1);
     leer_matriz_3d_desde_archivo("./datasets_txt/EE.txt", ee, 10, 4, 4, 1);
+    imprimir_tensor(ee);
 
     // Generar resultados con tensores
-    std::vector<TensorResult> tens = {cc, ee, ce}; // replicas bootstrap
-    std::vector<std::string> names = {"cc", "ee", "ce"};
+    std::vector<TensorResult> tens = {cc, ee}; // replicas bootstrap
+    std::vector<std::string> names = {"cc", "ee"};
     std::vector<float> thrs = {0.1, 0.3, 0.5, 0.7};
-
 
     for (int i = 0; i < tens.size(); i++)
     {
@@ -69,8 +69,17 @@ void generate_results()
             auto cpu_paths = convert_to_cpu(paths);
             auto cpu_values = convert_to_cpu(values);
 
-            save_tensor_vector(cpu_paths, name_paths);
-            save_tensor_vector(cpu_values, name_values);
+            std::string name = "ee";
+            if (std::fabs(thr - 0.7) < 0.00001f && names[i] == name)
+            {
+                for (auto t : values)
+                {
+                    imprimir_tensor(t);
+                }
+            }
+
+            std::string name_structured = fmt::format("./validation/results/paths_values_{}_{}.json", names[i], thr);
+            save_paths_with_values(cpu_paths, cpu_values, name_structured);
         }
     }
 
@@ -104,8 +113,8 @@ void generate_results()
         auto cpu_paths = convert_to_cpu(paths);
         auto cpu_values = convert_to_cpu(values);
 
-        save_tensor_vector(cpu_paths, name_paths, true);
-        save_tensor_vector(cpu_values, name_values, true);
+        std::string name_structured = fmt::format("./validation/results/paths_values_bootstrap_{}.json", replicas);
+        save_paths_with_values(cpu_paths, cpu_values, name_structured);
 
         cudaFree(d_bootstrap);
     }

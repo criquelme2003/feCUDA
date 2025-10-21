@@ -75,6 +75,9 @@ void save_tensor_4d_as_file(float *tensor, int B, int M, int N, int K,
                             const std::string &name = "output_4d.txt");
 
 void save_tensor_vector(const std::vector<TensorResult> &tensors, const std::string &filename = "output_vec.txt", bool save_info = false);
+void save_paths_with_values(const std::vector<TensorResult> &paths,
+                            const std::vector<TensorResult> &values,
+                            const std::string &filename);
 
 void calculate_prima(const TensorResult &maxmin_conjugado, const TensorResult &gen_tensor,TensorResult &prima, bool keep_in_device = false);
 

@@ -54,21 +54,10 @@ file(GLOB KERNEL_UTILS_SOURCES "src/kernels/utils/*.cu")
 file(GLOB BENCHMARK_SOURCES "benchmarks/*.cu")
 file(GLOB EXAMPLE_SOURCES "examples/*.cu")
 file(GLOB VALIDATION_SOURCES "validation/*.cu")
+set(SERVICE_BINDING_SOURCE "services/effects_api_binding.cpp")
 
 # Temporalmente excluir kernel_v1_f16.cu hasta que se corrija el tipo de datos
 list(REMOVE_ITEM KERNEL_MAXMIN_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/kernels/maxmin/kernel_v1_f16.cu")
-
-# Recopilar todas las fuentes para el ejecutable principal
-set(ALL_MAIN_SOURCES 
-    ${MAIN_SOURCES} 
-    ${CORE_SOURCES} 
-    ${ALGORITHM_SOURCES} 
-    ${UTILS_SOURCES} 
-    ${KERNEL_SOURCES}
-    ${KERNEL_MAXMIN_SOURCES}
-    ${KERNEL_UTILS_SOURCES}
-    ${VALIDATION_SOURCES}
-)
 
 # Mostrar qué archivos se están compilando (para debug)
 message(STATUS "Archivos principales: ${MAIN_SOURCES}")
@@ -78,15 +67,7 @@ message(STATUS "Archivos utils: ${UTILS_SOURCES}")
 message(STATUS "Archivos kernels: ${KERNEL_SOURCES}")
 
 set(mathdx_ROOT "$ENV{HOME}/nvidia/mathdx/nvidia-mathdx-25.06.1/nvidia/mathdx/25.06/")
-# Ejecutable principal
-add_executable(fecuda_main ${ALL_MAIN_SOURCES})
 
-# Configurar propiedades del target principal
-set_target_properties(fecuda_main PROPERTIES
-    CUDA_SEPARABLE_COMPILATION ON
-    CUDA_RESOLVE_DEVICE_SYMBOLS ON
-    
-)
 include(CheckLanguage)
 check_language(CUDA)
 if(CMAKE_CUDA_COMPILER)
@@ -101,41 +82,59 @@ find_package(mathdx REQUIRED
     PATHS "${mathdx_ROOT}"
 )
 
-target_link_libraries(fecuda_main 
-                    CUDA::curand
-                    mathdx::curanddx
-                    Python3::Python 
-                    Python3::NumPy
-                    fmt::fmt
-                    )
+add_library(fecuda_core STATIC
+    ${CORE_SOURCES}
+    ${ALGORITHM_SOURCES}
+    ${UTILS_SOURCES}
+    ${KERNEL_SOURCES}
+    ${KERNEL_MAXMIN_SOURCES}
+    ${KERNEL_UTILS_SOURCES}
+    ${VALIDATION_SOURCES}
+)
 
-target_include_directories(fecuda_main PRIVATE
-    ${Python3_INCLUDE_DIRS}
-    ~/libs/matplotlib-cpp
-    )
-             
+set_target_properties(fecuda_core PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON
+    CUDA_RESOLVE_DEVICE_SYMBOLS ON
+    POSITION_INDEPENDENT_CODE ON
+)
+
+target_link_libraries(fecuda_core
+    PUBLIC
+        CUDA::curand
+        mathdx::curanddx
+        Python3::Python
+        Python3::NumPy
+        fmt::fmt
+        cudnn
+        cutensor
+        cublas
+        ${CUDA_LIBRARIES}
+)
+
+target_include_directories(fecuda_core
+    PUBLIC
+        ${Python3_INCLUDE_DIRS}
+        ~/libs/matplotlib-cpp
+)
+
+target_compile_options(fecuda_core PRIVATE
+    $<$<COMPILE_LANGUAGE:CUDA>:--extended-lambda -Xcompiler=-fPIC>
+    $<$<COMPILE_LANGUAGE:CXX>:-fPIC>
+)
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_options(fecuda_core PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-G>)
+endif()
+
+add_executable(fecuda_main ${MAIN_SOURCES})
+target_link_libraries(fecuda_main PRIVATE fecuda_core)
+
+add_library(effects_api SHARED ${SERVICE_BINDING_SOURCE})
+target_link_libraries(effects_api PRIVATE fecuda_core)
+
 else()
 message(STATUS "No CUDA compiler found")
 endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_options(fecuda_main PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:-G>)
-endif()
-
-
-# Enlazar el ejecutable principal
-target_link_libraries(fecuda_main
-    cudnn
-    cutensor
-    cublas
-    ${CUDA_LIBRARIES}
-)
-
-
-target_compile_options(fecuda_main PRIVATE $<$<COMPILE_LANGUAGE:CUDA>:
-                     --extended-lambda                      
->)
-
 
 # Alias para compatibilidad con scripts existentes
 add_custom_target(tu_ejecutable)
