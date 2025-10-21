@@ -20,3 +20,5 @@ Makefile
 *.dll
 *.env
 fecuda_main
+forgeffects
+*.pyc
