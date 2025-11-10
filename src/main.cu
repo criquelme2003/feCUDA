@@ -15,9 +15,8 @@
 #include <bootstrap.cuh>
 #include <chrono>
 #include <temp.cuh>
-#include <matplotlibcpp.h>
+#include <algorithm>
 
-namespace plt = matplotlibcpp;
 
 int main(int args, char *argv[])
 {
@@ -65,8 +64,6 @@ int main(int args, char *argv[])
         }
 
         // Liberar memoria
-        plt::plot(reps, tiempos_iteracion);
-        plt::show();
         auto end_total = std::chrono::high_resolution_clock::now();
         auto duration_total = std::chrono::duration_cast<std::chrono::milliseconds>(end_total - start_total);
 

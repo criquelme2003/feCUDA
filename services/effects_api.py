@@ -17,6 +17,7 @@ import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, validator
 
 
@@ -144,6 +145,17 @@ class EffectsResponse(BaseModel):
 
 
 app = FastAPI(title="Effects Generation API", version="1.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8000",      # el host donde sirves el frontend
+        "http://127.0.0.1:8000",
+        "https://tu-app.vercel.app"   # añade los dominios que necesites
+    ],
+    allow_methods=["*"],           # o ["*"] si prefieres
+    allow_headers=["*"],
+)
 
 _STATIC_DIR = Path(__file__).resolve().parent / "web"
 if _STATIC_DIR.exists():

@@ -82,6 +82,18 @@ find_package(mathdx REQUIRED
     PATHS "${mathdx_ROOT}"
 )
 
+find_library(NVML_LIBRARY NAMES nvidia-ml
+    PATHS /usr/lib/x86_64-linux-gnu /usr/lib
+)
+
+if(NOT NVML_LIBRARY AND EXISTS "/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1")
+    set(NVML_LIBRARY "/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1")
+endif()
+
+if(NOT NVML_LIBRARY)
+    message(FATAL_ERROR "No se encontró la librería NVML (libnvidia-ml.so)")
+endif()
+
 add_library(fecuda_core STATIC
     ${CORE_SOURCES}
     ${ALGORITHM_SOURCES}
@@ -128,6 +140,14 @@ endif()
 
 add_executable(fecuda_main ${MAIN_SOURCES})
 target_link_libraries(fecuda_main PRIVATE fecuda_core)
+
+add_executable(fecuda_bench bench.cu)
+set_target_properties(fecuda_bench PROPERTIES
+    CUDA_SEPARABLE_COMPILATION ON
+    CUDA_RESOLVE_DEVICE_SYMBOLS ON
+)
+target_compile_definitions(fecuda_bench PRIVATE FECUDA_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+target_link_libraries(fecuda_bench PRIVATE fecuda_core ${NVML_LIBRARY})
 
 add_library(effects_api SHARED ${SERVICE_BINDING_SOURCE})
 target_link_libraries(effects_api PRIVATE fecuda_core)

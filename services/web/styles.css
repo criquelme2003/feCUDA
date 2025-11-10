@@ -111,6 +111,30 @@ button[type="submit"]:hover {
   background: var(--accent-dark);
 }
 
+.actions {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.actions button {
+  padding: 0.9rem 1.3rem;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+#use-sample {
+  background: rgba(148, 163, 184, 0.25);
+  color: inherit;
+}
+
+#use-sample:hover {
+  background: rgba(148, 163, 184, 0.35);
+}
+
 #status {
   margin-top: 0.75rem;
   font-weight: 600;

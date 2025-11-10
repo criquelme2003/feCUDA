@@ -5,6 +5,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <core/types.cuh>
+#include <vector>
 
 // Macro para verificar errores de CUDA con exceptions
 #define CHECK_CUDA(call)                                                        \
@@ -75,6 +76,7 @@ void save_tensor_4d_as_file(float *tensor, int B, int M, int N, int K,
                             const std::string &name = "output_4d.txt");
 
 void save_tensor_vector(const std::vector<TensorResult> &tensors, const std::string &filename = "output_vec.txt", bool save_info = false);
+
 void save_paths_with_values(const std::vector<TensorResult> &paths,
                             const std::vector<TensorResult> &values,
                             const std::string &filename);

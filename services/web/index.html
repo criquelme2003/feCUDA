@@ -37,7 +37,15 @@
             <small>Usa 0 para desactivar.</small>
           </div>
         </div>
-        <button type="submit" id="submit-btn">Generar efectos</button>
+        <div class="field">
+          <label for="backend-url">URL del servicio (opcional)</label>
+          <input type="url" id="backend-url" name="backend-url" placeholder="http://localhost:8000/effects" />
+          <small>Deja vacío para usar solo los datos de ejemplo.</small>
+        </div>
+        <div class="actions">
+          <button type="submit" id="submit-btn">Generar efectos</button>
+          <button type="button" id="use-sample">Ver ejemplo sin servicio</button>
+        </div>
       </form>
       <div id="status" role="status"></div>
     </section>

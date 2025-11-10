@@ -9,6 +9,8 @@ const tablesContainer = document.getElementById("tables-container");
 const dictionaryContainer = document.getElementById("dictionary-container");
 const dictionaryWrapper = document.getElementById("dictionary-table-wrapper");
 const submitBtn = document.getElementById("submit-btn");
+const backendInput = document.getElementById("backend-url");
+const sampleBtn = document.getElementById("use-sample");
 
 const DEFAULT_TENSOR = [
   [
@@ -22,6 +24,38 @@ const DEFAULT_TENSOR = [
 ];
 
 textarea.value = JSON.stringify(DEFAULT_TENSOR, null, 2);
+
+const SAMPLE_RESPONSE = {
+  effects: [
+    { order: 0, row: 0, path: [0, 0, 4, 1], value: 0.5 },
+    { order: 0, row: 1, path: [0, 0, 5, 2], value: 0.32 },
+    { order: 0, row: 2, path: [0, 0, 6, 3], value: 0.41 },
+    { order: 0, row: 3, path: [0, 1, 7, 4], value: 0.54 },
+    { order: 0, row: 4, path: [1, 0, 2, 5], value: 0.48 },
+    { order: 1, row: 0, path: [0, 0, 5, 2, 9], value: 0.39 },
+    { order: 1, row: 1, path: [0, 1, 7, 4, 12], value: 0.45 },
+    { order: 1, row: 2, path: [1, 0, 2, 5, 11], value: 0.51 },
+    { order: 2, row: 0, path: [0, 0, 5, 2, 9, 13], value: 0.31 }
+  ],
+  total_entries: 9,
+  metrics: {
+    total_processing_ms: 18.42,
+    algorithm_ms: 15.73,
+    bootstrap_ms: 0.0,
+    bootstrap_replicas: 0,
+    gpu_memory_free_before_mb: 992.5,
+    gpu_memory_free_after_mb: 990.3,
+    gpu_memory_delta_mb: 2.2
+  }
+};
+
+const storedBackend = localStorage.getItem("effects-backend-url");
+backendInput.value = storedBackend || "http://localhost:8000/effects";
+
+sampleBtn.addEventListener("click", () => {
+  renderResults(SAMPLE_RESPONSE.effects, SAMPLE_RESPONSE.metrics);
+  showStatus("Mostrando datos de ejemplo sin contactar al servicio.", false);
+});
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -44,11 +78,22 @@ form.addEventListener("submit", async (event) => {
     bootstrap_replicas: parseInt(form.bootstrap.value, 10) || 0
   };
 
+  const endpoint = backendInput.value.trim();
+
   submitBtn.disabled = true;
+
+  if (!endpoint) {
+    renderResults(SAMPLE_RESPONSE.effects, SAMPLE_RESPONSE.metrics);
+    showStatus("Mostrando datos de ejemplo (sin servicio configurado).", false);
+    submitBtn.disabled = false;
+    return;
+  }
+
+  localStorage.setItem("effects-backend-url", endpoint);
   showStatus("Procesando en GPU...", false);
 
   try {
-    const response = await fetch("/effects", {
+    const response = await fetch(endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
