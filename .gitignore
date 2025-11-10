@@ -5,6 +5,14 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
+
+# Resultados y datasets pesados
+
+/datasets_txt/
+/validation/results/
+/validation/data/
+*.ncu-rep
+
 # Configuración local de VS Code
 .vscode/
 *.txt
@@ -21,3 +29,4 @@ Makefile
 fecuda_main
 forgeffects
 *.pyc
+*.json
