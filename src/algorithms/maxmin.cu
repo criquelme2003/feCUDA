@@ -11,6 +11,8 @@
 
 #include <headers.cuh>
 
+constexpr int WARP_SIZE = 32;
+
 __global__ void maxmin_prima_indices_kernel(
     const float *__restrict__ A,
     const float *__restrict__ B,
@@ -186,7 +188,8 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
     // Configurar grid y bloques para el kernel
     dim3 blockSize(nextPow2(K)); // la potencia de 2 mas cercana threads por bloque
     dim3 gridSize(N, M, batch);  // Grid de (N, M, batch)
-    size_t shared_mem_size = K * sizeof(float);
+    const int warp_count = (blockSize.x + WARP_SIZE - 1) / WARP_SIZE;
+    size_t shared_mem_size = static_cast<size_t>(std::max(K, warp_count)) * sizeof(float);
 
     // Ejecutar kernel
     max_min_kernel<<<gridSize, blockSize, shared_mem_size>>>(

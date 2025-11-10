@@ -286,14 +286,23 @@ namespace
                                           ? fmt::format("ncu_report_{}", sanitize_token(*forced_only_label))
                                           : "ncu_report";
         const auto export_base = (report_dir / base_name).string();
+        const auto log_file = (report_dir / (base_name + ".txt")).string();
+
         std::ostringstream command;
         command << "FECUDA_BENCH_REPORT_DIR=" << shell_quote(report_dir.string()) << " ";
         if (forced_only_label)
         {
             command << "FECUDA_BENCH_ONLY_OVERRIDE=" << shell_quote(*forced_only_label) << " ";
         }
-        command << "ncu -f --target-processes all --set default --export "
-                << shell_quote(export_base) << " "
+        command << "ncu -f --target-processes all "
+                << "--set full "
+                << "--section LaunchStats "
+                << "--section SpeedOfLight "
+                << "--section MemoryWorkloadAnalysis "
+                << "--section SchedulerStats "
+                << "--export " << shell_quote(export_base) << " "
+                << "--log-file " << shell_quote(log_file) << " "
+                << "--csv "
                 << shell_quote(exe_path);
 
         for (const auto &arg : config.forwarded_args)
