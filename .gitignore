@@ -7,8 +7,7 @@ cmake_install.cmake
 Makefile
 # Configuración local de VS Code
 .vscode/
-
-*.ncu-rep
+*.txt
 
 # Archivos binarios y objetos
 *.o
@@ -20,3 +19,5 @@ Makefile
 *.dll
 *.env
 fecuda_main
+forgeffects
+*.pyc

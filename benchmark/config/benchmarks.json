@@ -1,0 +1,9 @@
+{
+  "variants": [
+    {
+      "name": "fused_kernel",
+      "executable": "./build/fecuda_main",
+      "args": []
+    }
+  ]
+}
