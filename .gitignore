@@ -8,7 +8,6 @@ Makefile
 # Configuración local de VS Code
 .vscode/
 *.txt
-*.ncu-rep
 
 # Archivos binarios y objetos
 *.o
