@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
-#include <chrono>
+#include <cmath>
 #include <utils.cuh>
-#include <types.cuh>
+#include <core/types.cuh>
 
 __global__ void strainer(float *min_res,
                          float *maxmin_prima,
@@ -72,119 +72,6 @@ __global__ void strainer(float *min_res,
     }
 }
 
-// Versión 1: Reducir atómicas usando shared memory para contar localmente
-__global__ void strainer_optimized_v1(
-    const float *__restrict__ min_res,
-    const float *__restrict__ maxmin_prima,
-    float *values,
-    float *indices,
-    float threshold,
-    int batch, int M, int N, int K,
-    int *output_count)
-{
-    // Shared memory para acumular resultados del bloque
-    __shared__ int s_local_count;
-    __shared__ int s_block_offset;
-
-    int idx = blockIdx.x * blockDim.x + threadIdx.x;
-    int total_elements_3d = batch * M * N;
-
-    if (threadIdx.x == 0)
-    {
-        s_local_count = 0;
-    }
-    __syncthreads();
-
-    // Variables locales para este thread
-    int local_matches = 0;
-    float local_maxmin_value;
-    float local_max_val = -FLT_MAX;
-    int local_indices[32]; // Máximo K razonable
-    int local_count_matches = 0;
-
-    if (idx < total_elements_3d)
-    {
-        // Convertir índice lineal a coordenadas
-        int b = idx / (M * N);
-        int mn = idx % (M * N);
-        int m = mn / N;
-        int n = mn % N;
-
-        // Cargar maxmin_value UNA VEZ
-        local_maxmin_value = maxmin_prima[idx];
-
-        // Early exit si no supera threshold
-        if (local_maxmin_value > threshold)
-        {
-            // Calcular base_idx UNA VEZ
-            int base_idx = (b * M * N + m * N + n) * K;
-
-// Primer paso: encontrar máximo (con loop unrolling manual si K es conocido)
-#pragma unroll 8
-            for (int k = 0; k < K; k++)
-            {
-                float current_val = min_res[base_idx + k];
-                local_max_val = fmaxf(local_max_val, current_val);
-            }
-
-            // Segundo paso: contar coincidencias y guardar índices localmente
-            const float EPSILON = 1e-6f;
-#pragma unroll 8
-            for (int k = 0; k < K; k++)
-            {
-                float current_val = min_res[base_idx + k];
-                if (fabsf(current_val - local_max_val) < EPSILON)
-                {
-                    if (local_count_matches < 32)
-                    { // Protección
-                        local_indices[local_count_matches++] = k;
-                    }
-                }
-            }
-
-            local_matches = local_count_matches;
-        }
-    }
-
-    // Reducir conteo en shared memory (UNA atómica por thread en lugar de múltiples)
-    int thread_offset = 0;
-    if (local_matches > 0)
-    {
-        thread_offset = atomicAdd(&s_local_count, local_matches);
-    }
-    __syncthreads();
-
-    // Un solo thread del bloque hace la atómica global
-    if (threadIdx.x == 0 && s_local_count > 0)
-    {
-        s_block_offset = atomicAdd(output_count, s_local_count);
-    }
-    __syncthreads();
-
-    // Escribir resultados (escrituras coalescidas)
-    if (local_matches > 0 && idx < total_elements_3d)
-    {
-        int b = idx / (M * N);
-        int mn = idx % (M * N);
-        int m = mn / N;
-        int n = mn % N;
-
-        int output_base = s_block_offset + thread_offset;
-
-        for (int i = 0; i < local_count_matches; i++)
-        {
-            int output_pos = output_base + i;
-
-            // Escrituras coalescidas en estructura SoA (Structure of Arrays)
-            indices[output_pos * 4 + 0] = (float)b;
-            indices[output_pos * 4 + 1] = (float)m;
-            indices[output_pos * 4 + 2] = (float)local_indices[i];
-            indices[output_pos * 4 + 3] = (float)n;
-            values[output_pos] = local_maxmin_value;
-        }
-    }
-}
-
 void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
              TensorResult &result_tensor_filtered, TensorResult &result_tensor_values,
              float threshold, bool keep_in_device)
@@ -213,10 +100,6 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
     int total_elements_3d = batch * M * N;
     int total_elements_4d = batch * M * N * K;
     int max_output_size = total_elements_3d * K;
-
-    // Verificar memoria disponible
-    size_t free_memory, total_memory;
-    CHECK_CUDA(cudaMemGetInfo(&free_memory, &total_memory));
 
     // Declarar variables
     float *d_min_res = nullptr;

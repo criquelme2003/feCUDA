@@ -1,8 +1,6 @@
 #ifndef TYPES_CUH
 #define TYPES_CUH
 
-#include <cutensor.h>
-#include <cudnn.h>
 #include <string>
 #include <memory>
 #include <cstring>

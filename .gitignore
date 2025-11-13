@@ -11,6 +11,7 @@ Makefile
 /datasets_txt/
 /validation/results/
 /validation/data/
+/results/benchmarks/
 *.ncu-rep
 
 # Configuración local de VS Code

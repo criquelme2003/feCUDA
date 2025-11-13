@@ -4,7 +4,7 @@
 #include <float.h>
 #include <chrono>
 #include "utils.cuh"
-#include "types.cuh"
+#include <core/types.cuh>
 
 // MACRO para debug de memory leaks específicos
 #define MEMORY_CHECKPOINT(name)                                                                                                             \

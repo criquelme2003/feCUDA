@@ -1,122 +1,133 @@
-#include <fmt/format.h>
+#include <filesystem>
+#include <iomanip>
 #include <iostream>
-#include "algorithms/paths.cuh"
-#include "utils/cuda_utils.cuh"
-#include "utils/logging.cuh"
-#include "utils/file_io.cuh"
-#include "core/tensor.cuh"
-#include "kernels/kernels.cuh"
-#include "test/test.cuh"
-#include "../../include/utils.cuh"
-#include "temp.cuh"
-#include <headers.cuh>
-#include <random>
-#include <bootstrap.cuh>
-#include <chrono>
-#include <temp.cuh>
-#include <utils.cuh>
+#include <sstream>
+#include <string>
+#include <vector>
+#include "headers.cuh"
+#include "utils.cuh"
 
-void generate_results()
+#ifndef FECUDA_SOURCE_DIR
+#define FECUDA_SOURCE_DIR "."
+#endif
+
+namespace
 {
-
-    std::cout << "Generando resultados para validacion...." << std::endl;
-    TensorResult cc, ee;
-    std::vector<int> reps = {10, 100, 1000, 10000}; // replicas bootstrap
-    int orden = 5;                                  // orden fijo
-
-    auto convert_to_cpu = [](const std::vector<TensorResult> &tensors)
+    struct DatasetConfig
     {
-        std::vector<TensorResult> cpu_tensors;
-        cpu_tensors.reserve(tensors.size());
-        for (const auto &tensor : tensors)
-        {
-            if (tensor.data == nullptr)
-            {
-                cpu_tensors.emplace_back();
-                continue;
-            }
-            cpu_tensors.push_back(copy_tensor_to_cpu(tensor)); // Garantiza puntero en host
-        }
-        return cpu_tensors;
+        std::string alias;
+        std::string filename;
+        int batch;
+        int M;
+        int N;
     };
 
-    leer_matriz_3d_desde_archivo("../datasets_txt/CC.txt", cc, 10, 16, 16, 1);
-    // leer_matriz_3d_desde_archivo("./datasets_txt/CE.txt", ce, 10, 16, 4, 1);
-    leer_matriz_3d_desde_archivo("../datasets_txt/EE.txt", ee, 10, 4, 4, 1);
-    imprimir_tensor(ee);
-
-    // Generar resultados con tensores
-    std::vector<TensorResult> tens = {cc, ee}; // replicas bootstrap
-    std::vector<std::string> names = {"cc", "ee"};
-    std::vector<float> thrs = {0.1, 0.3, 0.5, 0.7};
-
-    for (int i = 0; i < tens.size(); i++)
+    std::string dataset_path(const std::string &filename)
     {
-        for (auto thr : thrs)
-        {
-            cudaDeviceReset();
-            std::string name_values = fmt::format("../validation/results/values_{}_{}.txt", names[i], thr);
+        return std::string(FECUDA_SOURCE_DIR) + "/datasets_txt/" + filename;
+    }
 
-            std::cout << "generando resultados para:" << name_values << std::endl;
+    std::string results_dir()
+    {
+        return std::string(FECUDA_SOURCE_DIR) + "/validation/results";
+    }
+
+    std::string build_results_name(const std::string &alias, float thr)
+    {
+        std::ostringstream oss;
+        oss << std::fixed << std::setprecision(1) << thr;
+        return "paths_values_" + alias + "_" + oss.str() + ".json";
+    }
+
+    std::vector<TensorResult> copy_to_cpu_vector(const std::vector<TensorResult> &src)
+    {
+        std::vector<TensorResult> out;
+        out.reserve(src.size());
+        for (const auto &tensor : src)
+        {
+            if (!tensor.data)
+            {
+                out.emplace_back();
+                continue;
+            }
+            if (tensor.is_device_ptr)
+            {
+                out.push_back(copy_tensor_to_cpu(tensor));
+            }
+            else
+            {
+                out.push_back(copy_tensor(tensor));
+            }
+        }
+        return out;
+    }
+
+    void cleanup_vector(std::vector<TensorResult> &tensors)
+    {
+        for (auto &tensor : tensors)
+        {
+            safe_tensor_cleanup(tensor);
+        }
+        tensors.clear();
+    }
+}
+
+int main()
+{
+    std::cout << "Generando artefactos de validacion para Sprint 1...\n";
+    std::filesystem::create_directories(results_dir());
+
+    const std::vector<DatasetConfig> datasets = {
+        {"cc", "CC.txt", 10, 16, 16},
+        {"ee", "EE.txt", 10, 4, 4}};
+    const std::vector<float> thresholds = {0.1f, 0.3f, 0.5f, 0.7f};
+    const int order = 5;
+
+    for (const auto &config : datasets)
+    {
+        TensorResult tensor;
+        if (!leer_matriz_3d_desde_archivo(dataset_path(config.filename).c_str(),
+                                          tensor, config.batch, config.M, config.N, 1))
+        {
+            std::cerr << "No se pudo cargar " << config.filename << ", se omite.\n";
+            continue;
+        }
+
+        for (float thr : thresholds)
+        {
             std::vector<TensorResult> paths;
             std::vector<TensorResult> values;
             std::vector<TensorResult> pure_paths;
             std::vector<TensorResult> pure_values;
 
-            iterative_maxmin_cuadrado(tens[i], thr, orden, paths, values, pure_paths, pure_values, true);
-            std::string name_paths = fmt::format("../validation/results/paths_{}_{}.txt", names[i], thr);
+            iterative_maxmin_cuadrado(tensor, thr, order, paths, values, pure_paths, pure_values, false);
 
-            auto cpu_paths = convert_to_cpu(paths);
-            auto cpu_values = convert_to_cpu(values);
-
-            std::string name = "ee";
-            if (std::fabs(thr - 0.7) < 0.00001f && names[i] == name)
+            if (paths.empty())
             {
-                for (auto t : values)
-                {
-                    imprimir_tensor(t);
-                }
+                std::cout << "[WARN] No hubo caminos para " << config.alias << " thr=" << thr << "\n";
+            }
+            else
+            {
+                auto cpu_paths = copy_to_cpu_vector(paths);
+                auto cpu_values = copy_to_cpu_vector(values);
+
+                const std::string output_file = results_dir() + "/" + build_results_name(config.alias, thr);
+                save_paths_with_values(cpu_paths, cpu_values, output_file);
+                std::cout << "[OK] " << output_file << " (" << cpu_paths.size() << " conjuntos)\n";
+
+                cleanup_vector(cpu_paths);
+                cleanup_vector(cpu_values);
             }
 
-            std::string name_structured = fmt::format("../validation/results/paths_values_{}_{}.json", names[i], thr);
-            save_paths_with_values(cpu_paths, cpu_values, name_structured);
+            cleanup_vector(paths);
+            cleanup_vector(values);
+            cleanup_vector(pure_paths);
+            cleanup_vector(pure_values);
         }
+
+        safe_tensor_cleanup(tensor);
     }
 
-    // Generar resultados con bootstrap
-    int M = cc.M;
-    int N = cc.N;
-    int batch = cc.batch;
-    float *data = cc.data;
-    float thr = 0.2; // threshold fijo
-    for (int i = 0; i < reps.size(); i++)
-    {
-        cudaDeviceReset();
-        int replicas = reps[i];
-        float *bootstrap_res, *d_bootstrap;
-
-        bootstrap_res = (float *)malloc(M * N * replicas * sizeof(float));
-        d_bootstrap = bootstrap_wrapper(data, M, N, batch, replicas);
-
-        cudaMemcpy(bootstrap_res, d_bootstrap, M * N * replicas * sizeof(float), cudaMemcpyDeviceToHost);
-
-        TensorResult t2 = TensorResult(bootstrap_res, false, replicas, M, N);
-        std::vector<TensorResult> paths;
-        std::vector<TensorResult> values;
-        std::vector<TensorResult> pure_paths;
-        std::vector<TensorResult> pure_values;
-
-        iterative_maxmin_cuadrado(t2, thr, orden, paths, values, pure_paths, pure_values, true);
-        std::string name_paths = fmt::format("../validation/results/paths_bootstrap_{}.txt", replicas);
-        std::string name_values = fmt::format("../validation/results/values_bootstrap_{}.txt", replicas);
-
-        auto cpu_paths = convert_to_cpu(paths);
-        auto cpu_values = convert_to_cpu(values);
-
-        std::string name_structured = fmt::format("../validation/results/paths_values_bootstrap_{}.json", replicas);
-        save_paths_with_values(cpu_paths, cpu_values, name_structured);
-
-        cudaFree(d_bootstrap);
-    }
-    std::cout << "Resultados generados correctamente" << std::endl;
+    std::cout << "Validaciones listas.\n";
+    return 0;
 }

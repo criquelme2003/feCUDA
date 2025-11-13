@@ -4,7 +4,7 @@
 #include <float.h>
 #include <chrono>
 #include <vector>
-#include <cuda_utils.cuh>
+#include "utils/cuda_utils.cuh"
 #include <utils.cuh>
 #include <core/types.cuh>
 #include <headers.cuh>

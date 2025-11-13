@@ -1,11 +1,11 @@
 import json
-import math
 from collections import Counter
 from pathlib import Path
 from typing import Iterable, List, Tuple, Dict, Any
 
-RESULTS_DIR = Path("/home/carlos/feCUDA/validation/results")
-REFERENCE_DIR = Path("/home/carlos/feCUDA/validation/data")
+BASE_DIR = Path(__file__).resolve().parent
+RESULTS_DIR = BASE_DIR / "results"
+REFERENCE_DIR = BASE_DIR / "data"
 
 TOLERANCE_DECIMALS = 6  # ~1e-6 precision for value comparisons
 VALUE_RANGE = (0.0, 1.0)  # expected range for energies/threshold outputs
@@ -89,41 +89,6 @@ def summarize_counter(counter: Counter, limit: int = 5) -> List[str]:
     return summary
 
 
-def sanity_check_bootstrap(paths_file: Path) -> List[str]:
-    """Run simple consistency checks for bootstrap outputs."""
-    issues: List[str] = []
-    entries = load_structured_entries(paths_file)
-
-    for idx, entry in enumerate(entries):
-        order = entry["order"]
-        path = entry["path"]
-        value = entry["value"]
-
-        if len(path) != order + 4:
-            issues.append(
-                f"{paths_file.name}: entrada {idx} tiene longitud de camino {len(path)} "
-                f"pero orden {order} (esperado {order + 4})."
-            )
-
-        if any(coord < 0 for coord in path):
-            issues.append(
-                f"{paths_file.name}: entrada {idx} contiene coordenadas negativas {path}."
-            )
-
-        if not math.isfinite(value):
-            issues.append(
-                f"{paths_file.name}: entrada {idx} tiene valor no finito ({value})."
-            )
-
-        min_val, max_val = VALUE_RANGE
-        if value < min_val - 1e-6 or value > max_val + 1e-6:
-            issues.append(
-                f"{paths_file.name}: entrada {idx} valor fuera de rango [{min_val}, {max_val}] -> {value}."
-            )
-
-    return issues
-
-
 def validate_non_bootstrap():
     """Compare structured outputs between GPU results and reference data."""
     result_files = sorted(
@@ -164,26 +129,6 @@ def validate_non_bootstrap():
     return summary
 
 
-def validate_bootstrap():
-    """Run sanity checks for bootstrap result files."""
-    bootstrap_files = sorted(RESULTS_DIR.glob("paths_values_bootstrap_*.json"))
-    issues_total: List[str] = []
-
-    for bootstrap_file in bootstrap_files:
-        issues = sanity_check_bootstrap(bootstrap_file)
-        if issues:
-            issues_total.extend(issues)
-            print(f"[WARN] Se encontraron inconsistencias en {bootstrap_file.name}:")
-            for issue in issues[:5]:
-                print(f"    - {issue}")
-            if len(issues) > 5:
-                print(f"    ... ({len(issues) - 5} adicionales)")
-        else:
-            print(f"[OK] {bootstrap_file.name} pasó las validaciones básicas.")
-
-    return issues_total
-
-
 def main():
     print("Validando resultados determinísticos...")
     summary = validate_non_bootstrap()
@@ -195,14 +140,6 @@ def main():
         print(f"✖ Archivos con diferencias: {len(summary['failed'])}")
     if summary["missing_reference"]:
         print(f"⚠ Referencias faltantes: {len(summary['missing_reference'])}")
-
-    print("\nVerificando salidas de bootstrap...")
-    bootstrap_issues = validate_bootstrap()
-    if bootstrap_issues:
-        print(f"\nTotal de advertencias bootstrap: {len(bootstrap_issues)}")
-    else:
-        print("\nBootstrap sin inconsistencias detectadas.")
-
 
 if __name__ == "__main__":
     main()
