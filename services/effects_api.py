@@ -1,5 +1,8 @@
 """API REST para generar efectos iterativos usando la implementación CUDA.
 
+Sprint 2 vuelve a publicar solo operaciones básicas; las colas de jobs,
+el monitoreo detallado y dashboards web quedan documentados para Sprint 3.
+
 Ejecuta el servicio con:
     uvicorn services.effects_api:app --host 0.0.0.0 --port 8000
 
@@ -11,7 +14,7 @@ import ctypes
 import json
 import os
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 import numpy as np
 from fastapi import FastAPI, HTTPException
@@ -123,20 +126,28 @@ class EffectsRequest(BaseModel):
         return value
 
 
-class EffectsMetrics(BaseModel):
-    total_processing_ms: float
-    algorithm_ms: float
-    bootstrap_ms: float
-    bootstrap_replicas: int
-    gpu_memory_free_before_mb: float
-    gpu_memory_free_after_mb: float
-    gpu_memory_delta_mb: float
+class EffectEntry(BaseModel):
+    order: int
+    row: int
+    path: List[int]
+    value: float
+
+
+class EffectsSummary(BaseModel):
+    total_processing_ms: float = Field(..., ge=0)
+    algorithm_ms: float = Field(..., ge=0)
+    bootstrap_ms: float = Field(..., ge=0)
+    bootstrap_replicas: int = Field(..., ge=0)
 
 
 class EffectsResponse(BaseModel):
-    effects: List[dict]
+    effects: List[EffectEntry]
     total_entries: int
-    metrics: EffectsMetrics
+    summary: EffectsSummary
+    notes: Optional[str] = Field(
+        default=None,
+        description="Recordatorio de capacidades no implementadas aún (async jobs, métricas avanzadas).",
+    )
 
 
 # -----------------------------------------------------------------------------
@@ -144,6 +155,7 @@ class EffectsResponse(BaseModel):
 # -----------------------------------------------------------------------------
 
 
+# Sprint 2 expone únicamente las rutas básicas; colas async y métricas finas volverán en Sprint 3.
 app = FastAPI(title="Effects Generation API", version="1.1.0")
 
 app.add_middleware(

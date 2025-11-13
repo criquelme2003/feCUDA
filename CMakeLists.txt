@@ -16,7 +16,10 @@ set(ENV{CXX} g++-12)
 set(CMAKE_CUDA_ARCHITECTURES "75;80;86;89;90")
 project(FeCUDA CUDA CXX)
 
-include_directories(/usr/include)   
+option(FECUDA_ENABLE_MATHDX "Enable mathdx acceleration components" OFF)
+option(FECUDA_ENABLE_CUTENSOR "Enable cuTensor kernels" OFF)
+option(FECUDA_ENABLE_CUDNN "Enable cuDNN helpers" OFF)
+
 # Usar C++17 para mejor soporte de características modernas
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
@@ -34,10 +37,6 @@ include_directories(include/core)
 include_directories(include/algorithms)
 include_directories(include/utils)
 include_directories(include/kernels)
-
-# Directorios donde buscar bibliotecas compartidas
-link_directories(/usr/lib/x86_64-linux-gnu/)
-link_directories(/usr/lib/x86_64-linux-gnu/libcutensor/12)
 
 # Archivos fuente del proyecto - nueva estructura modular
 file(GLOB MAIN_SOURCES "src/main.cu")
@@ -72,15 +71,11 @@ include(CheckLanguage)
 check_language(CUDA)
 if(CMAKE_CUDA_COMPILER)
 enable_language(CUDA)
-find_package(CUDAToolkit)
-find_package(fmt)
+find_package(CUDAToolkit REQUIRED)
+find_package(fmt REQUIRED)
 find_package(Python3 COMPONENTS Interpreter Development NumPy REQUIRED)
 
-find_package(mathdx REQUIRED
-    COMPONENTS curanddx # Puedes añadir más componentes aquí
-    CONFIG
-    PATHS "${mathdx_ROOT}"
-)
+set(mathdx_ROOT "$ENV{HOME}/nvidia/mathdx/nvidia-mathdx-25.06.1/nvidia/mathdx/25.06/" CACHE PATH "Default mathdx root path")
 
 find_library(NVML_LIBRARY NAMES nvidia-ml
     PATHS /usr/lib/x86_64-linux-gnu /usr/lib
@@ -112,16 +107,48 @@ set_target_properties(fecuda_core PROPERTIES
 
 target_link_libraries(fecuda_core
     PUBLIC
+        CUDA::cudart
+        CUDA::cublas
         CUDA::curand
-        mathdx::curanddx
         Python3::Python
         Python3::NumPy
         fmt::fmt
-        cudnn
-        cutensor
-        cublas
-        ${CUDA_LIBRARIES}
 )
+
+if(FECUDA_ENABLE_MATHDX)
+    find_package(mathdx REQUIRED
+        COMPONENTS curanddx
+        CONFIG
+        PATHS "${mathdx_ROOT}"
+    )
+    target_link_libraries(fecuda_core PUBLIC mathdx::curanddx)
+else()
+    target_compile_definitions(fecuda_core PUBLIC FECUDA_MATHDX_DISABLED=1)
+endif()
+
+if(FECUDA_ENABLE_CUTENSOR)
+    find_library(CUTENSOR_LIBRARY NAMES cutensor
+        PATHS /usr/lib/x86_64-linux-gnu /usr/lib/x86_64-linux-gnu/libcutensor/12
+    )
+    if(NOT CUTENSOR_LIBRARY)
+        message(FATAL_ERROR "cuTensor habilitado pero no encontrado. Ajusta FECUDA_ENABLE_CUTENSOR=OFF o instala la librería.")
+    endif()
+    target_link_libraries(fecuda_core PUBLIC ${CUTENSOR_LIBRARY})
+else()
+    target_compile_definitions(fecuda_core PUBLIC FECUDA_CUTENSOR_DISABLED=1)
+endif()
+
+if(FECUDA_ENABLE_CUDNN)
+    find_library(CUDNN_LIBRARY NAMES cudnn
+        PATHS /usr/lib/x86_64-linux-gnu /usr/lib
+    )
+    if(NOT CUDNN_LIBRARY)
+        message(FATAL_ERROR "cuDNN habilitado pero no encontrado. Ajusta FECUDA_ENABLE_CUDNN=OFF o instala la librería.")
+    endif()
+    target_link_libraries(fecuda_core PUBLIC ${CUDNN_LIBRARY})
+else()
+    target_compile_definitions(fecuda_core PUBLIC FECUDA_CUDNN_DISABLED=1)
+endif()
 
 target_include_directories(fecuda_core
     PUBLIC

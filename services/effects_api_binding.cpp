@@ -105,10 +105,6 @@ const char *generate_effects_json(const float *data,
     TensorResult bootstrap_tensor;
     TensorResult *algorithm_input = &original_tensor;
 
-    size_t free_mem_before = 0;
-    size_t total_mem = 0;
-    cudaMemGetInfo(&free_mem_before, &total_mem);
-
     auto start_total = std::chrono::steady_clock::now();
     double bootstrap_ms = 0.0;
     double algorithm_ms = 0.0;
@@ -263,30 +259,22 @@ const char *generate_effects_json(const float *data,
         effects_stream << "]";
 
         auto end_total = std::chrono::steady_clock::now();
-        double total_ms = std::chrono::duration<double, std::milli>(end_total - start_total).count();
+        const double total_ms = std::chrono::duration<double, std::milli>(end_total - start_total).count();
 
-        size_t free_mem_after = 0;
-        size_t total_mem_after = 0;
-        cudaMemGetInfo(&free_mem_after, &total_mem_after);
-
-        double gpu_free_before_mb = static_cast<double>(free_mem_before) / (1024.0 * 1024.0);
-        double gpu_free_after_mb = static_cast<double>(free_mem_after) / (1024.0 * 1024.0);
-        double gpu_delta_mb = gpu_free_before_mb - gpu_free_after_mb;
-
+        // NOTE: Sprint 2 mantiene la API enfocada en efectos básicos;
+        // la telemetría granular y el despacho async regresarán en Sprint 3.
         std::ostringstream oss;
         oss.setf(std::ios::fixed);
         oss << "{\n"
             << "  \"effects\": " << effects_stream.str() << ",\n"
             << "  \"total_entries\": " << total_effects << ",\n"
-            << "  \"metrics\": {\n"
+            << "  \"summary\": {\n"
             << "    \"total_processing_ms\": " << std::setprecision(4) << total_ms << ",\n"
             << "    \"algorithm_ms\": " << std::setprecision(4) << algorithm_ms << ",\n"
             << "    \"bootstrap_ms\": " << std::setprecision(4) << bootstrap_ms << ",\n"
-            << "    \"bootstrap_replicas\": " << bootstrap_replicas << ",\n"
-            << "    \"gpu_memory_free_before_mb\": " << std::setprecision(2) << gpu_free_before_mb << ",\n"
-            << "    \"gpu_memory_free_after_mb\": " << std::setprecision(2) << gpu_free_after_mb << ",\n"
-            << "    \"gpu_memory_delta_mb\": " << std::setprecision(2) << gpu_delta_mb << "\n"
-            << "  }\n"
+            << "    \"bootstrap_replicas\": " << bootstrap_replicas << "\n"
+            << "  },\n"
+            << "  \"notes\": \"Advanced metrics, async jobs and GPU telemetry are planned for Sprint 3\"\n"
             << "}";
 
         const std::string json = oss.str();
