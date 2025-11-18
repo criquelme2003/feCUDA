@@ -8,13 +8,33 @@
 #include "kernels/kernels.cuh"
 #include "test/test.cuh"
 #include "../../include/utils.cuh"
-#include "temp.cuh"
 #include <headers.cuh>
 #include <random>
 #include <bootstrap.cuh>
 #include <chrono>
-#include <temp.cuh>
-#include <utils.cuh>
+#include <filesystem>
+
+namespace
+{
+    std::filesystem::path repo_relative(const std::filesystem::path &relative)
+    {
+        std::filesystem::path base(FECUDA_SOURCE_DIR);
+        if (!base.is_absolute())
+        {
+            base = std::filesystem::current_path() / base;
+        }
+
+        std::filesystem::path combined = base / relative;
+        try
+        {
+            return std::filesystem::weakly_canonical(combined);
+        }
+        catch (...)
+        {
+            return combined.lexically_normal();
+        }
+    }
+}
 
 void generate_results()
 {
@@ -40,9 +60,10 @@ void generate_results()
         return cpu_tensors;
     };
 
-    leer_matriz_3d_desde_archivo("../datasets_txt/CC.txt", cc, 10, 16, 16, 1);
+    const auto datasets_dir = repo_relative("datasets_txt");
+    leer_matriz_3d_desde_archivo((datasets_dir / "CC.txt").string().c_str(), cc, 10, 16, 16, 1);
     // leer_matriz_3d_desde_archivo("./datasets_txt/CE.txt", ce, 10, 16, 4, 1);
-    leer_matriz_3d_desde_archivo("../datasets_txt/EE.txt", ee, 10, 4, 4, 1);
+    leer_matriz_3d_desde_archivo((datasets_dir / "EE.txt").string().c_str(), ee, 10, 4, 4, 1);
     imprimir_tensor(ee);
 
     // Generar resultados con tensores
@@ -55,16 +76,17 @@ void generate_results()
         for (auto thr : thrs)
         {
             cudaDeviceReset();
-            std::string name_values = fmt::format("../validation/results/values_{}_{}.txt", names[i], thr);
+            const auto validation_results_dir = repo_relative("validation/results");
+            const auto name_values_path = validation_results_dir / fmt::format("values_{}_{}.txt", names[i], thr);
+            const auto name_paths_path = validation_results_dir / fmt::format("paths_{}_{}.txt", names[i], thr);
 
-            std::cout << "generando resultados para:" << name_values << std::endl;
+            std::cout << "generando resultados para:" << name_values_path << std::endl;
             std::vector<TensorResult> paths;
             std::vector<TensorResult> values;
             std::vector<TensorResult> pure_paths;
             std::vector<TensorResult> pure_values;
 
             iterative_maxmin_cuadrado(tens[i], thr, orden, paths, values, pure_paths, pure_values, true);
-            std::string name_paths = fmt::format("../validation/results/paths_{}_{}.txt", names[i], thr);
 
             auto cpu_paths = convert_to_cpu(paths);
             auto cpu_values = convert_to_cpu(values);
@@ -78,8 +100,8 @@ void generate_results()
                 }
             }
 
-            std::string name_structured = fmt::format("../validation/results/paths_values_{}_{}.json", names[i], thr);
-            save_paths_with_values(cpu_paths, cpu_values, name_structured);
+            const auto name_structured = validation_results_dir / fmt::format("paths_values_{}_{}.json", names[i], thr);
+            save_paths_with_values(cpu_paths, cpu_values, name_structured.string());
         }
     }
 
@@ -107,14 +129,15 @@ void generate_results()
         std::vector<TensorResult> pure_values;
 
         iterative_maxmin_cuadrado(t2, thr, orden, paths, values, pure_paths, pure_values, true);
-        std::string name_paths = fmt::format("../validation/results/paths_bootstrap_{}.txt", replicas);
-        std::string name_values = fmt::format("../validation/results/values_bootstrap_{}.txt", replicas);
+        const auto validation_results_dir = repo_relative("validation/results");
+        const auto name_paths = validation_results_dir / fmt::format("paths_bootstrap_{}.txt", replicas);
+        const auto name_values = validation_results_dir / fmt::format("values_bootstrap_{}.txt", replicas);
 
         auto cpu_paths = convert_to_cpu(paths);
         auto cpu_values = convert_to_cpu(values);
 
-        std::string name_structured = fmt::format("../validation/results/paths_values_bootstrap_{}.json", replicas);
-        save_paths_with_values(cpu_paths, cpu_values, name_structured);
+        const auto name_structured = validation_results_dir / fmt::format("paths_values_bootstrap_{}.json", replicas);
+        save_paths_with_values(cpu_paths, cpu_values, name_structured.string());
 
         cudaFree(d_bootstrap);
     }

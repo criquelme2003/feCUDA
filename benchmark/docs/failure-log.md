@@ -1,3 +1,0 @@
-# Intentos fallidos y lecciones
-
-

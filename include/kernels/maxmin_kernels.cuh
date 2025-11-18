@@ -24,29 +24,9 @@ __global__ void max_min_kernel(
     float *C_max,   // [batch, M, N]
     const int M, const int K, const int N, const int batch_size);
 
-__global__ void max_min_kernel_v2(
-    const float *A, // [batch, M, K]
-    const float *B, // [batch, K, N]
-    float *C_min,   // [batch, M, K, N]
-    float *C_max,   // [batch, M, N]
-    const int M, const int K, const int N, const int batch_size);
-
-__global__ void max_min_lineal_kernel(
-    const float *A, // [batch, M, K]
-    const float *B, // [batch, K, N]
-    float *C_min,   // [batch, M, K, N]
-    float *C_max,   // [batch, M, N]
-    const int M, const int K, const int N, const int batch_size);
-
 // Kernel para operaciones auxiliares
 __global__ void find_path_matches_kernel(
     const float *paths, const float *targets,
     int *matches, int num_paths, int path_length, int num_targets);
-
-// Kernel de transposición optimizada
-__global__ void transpose_kernel_optimized(
-    const float *__restrict__ input, // [batch, K, N]
-    float *__restrict__ output,      // [batch, N, K]
-    int K, int N, int batch_size);
 
 #endif // MAXMIN_KERNELS_CUH
