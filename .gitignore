@@ -1,3 +1,4 @@
+
 # Ignorar carpeta de build
 /build/
 /forgeffects/
@@ -31,7 +32,7 @@ fecuda_main
 forgeffects
 *.pyc
 *.json
+!bench/results/index.json
 *.log
 
-!bench/results/index.json
 
