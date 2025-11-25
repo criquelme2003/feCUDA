@@ -17,6 +17,7 @@ Makefile
 
 # Configuración local de VS Code
 .vscode/
+!.vscode/extensions.json
 *.txt
 
 # Archivos binarios y objetos

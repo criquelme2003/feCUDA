@@ -1,0 +1,1 @@
+[Comparativa de benchmarks](https://bench-web-sk1k.vercel.app/)
