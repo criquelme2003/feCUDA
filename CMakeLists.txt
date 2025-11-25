@@ -36,7 +36,9 @@ include_directories(include/utils)
 include_directories(include/kernels)
 
 # Directorios donde buscar bibliotecas compartidas
-link_directories(/usr/lib/x86_64-linux-gnu/)
+# Preferir las librerías de la versión de CUDA que usamos para compilar para no mezclar runtimes del sistema
+link_directories(/usr/local/cuda-13.0/targets/x86_64-linux/lib)
+link_directories(/usr/local/cuda-13.0/lib64)
 link_directories(/usr/lib/x86_64-linux-gnu/libcutensor/12)
 
 # Archivos fuente del proyecto - nueva estructura modular
@@ -79,6 +81,10 @@ find_package(mathdx REQUIRED
     PATHS "${mathdx_ROOT}"
 )
 
+set(CUDA_TOOLKIT_LIB_DIR "/usr/local/cuda-13.0/targets/x86_64-linux/lib")
+set(CUDA_CUDADEVRT_LIB "${CUDA_TOOLKIT_LIB_DIR}/libcudadevrt.a")
+set(CUDA_CUDART_STATIC_LIB "${CUDA_cudart_static_LIBRARY}")
+
 add_library(fecuda_core STATIC
     ${CORE_SOURCES}
     ${ALGORITHM_SOURCES}
@@ -98,6 +104,8 @@ set_target_properties(fecuda_core PROPERTIES
 target_link_libraries(fecuda_core
     PUBLIC
         CUDA::curand
+        ${CUDA_CUDADEVRT_LIB}
+        ${CUDA_CUDART_STATIC_LIB}
         mathdx::curanddx
         Python3::Python
         Python3::NumPy
@@ -105,7 +113,6 @@ target_link_libraries(fecuda_core
         cudnn
         cutensor
         cublas
-        ${CUDA_LIBRARIES}
 )
 target_compile_definitions(fecuda_core
     PUBLIC
