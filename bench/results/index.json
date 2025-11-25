@@ -1,3 +1,4 @@
 {
- "test":"test"   
+  "cpu_bench": "bench/results/cpu_bench/metrics.csv",
+  "gpu_bench": "bench/results/gpu_bench/metrics.csv"
 }
