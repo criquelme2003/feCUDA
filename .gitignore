@@ -32,3 +32,6 @@ forgeffects
 *.pyc
 *.json
 *.log
+
+!bench/results/index.json
+
