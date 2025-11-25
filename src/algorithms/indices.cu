@@ -5,6 +5,8 @@
 #include <chrono>
 #include <vector>
 #include <cstring>
+#include <cmath>
+#include <cstdlib>
 #include <utils.cuh>
 #include <types.cuh>
 
@@ -77,17 +79,10 @@ __global__ void strainer(float *min_res,
 void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
              TensorResult &result_tensor_filtered, TensorResult &result_tensor_values,
              float threshold, bool keep_in_device){
+    const bool use_gpu = false; // CPU por defecto
     // Inicializar resultados como vacíos
     result_tensor_filtered = TensorResult();
     result_tensor_values = TensorResult();
-
-    // Verificar estado previo del dispositivo CUDA
-    cudaError_t sync_status = cudaDeviceSynchronize();
-    if (sync_status != cudaSuccess)
-    {
-        printf("Error previo en indices.cu (estado CUDA): %s\n", cudaGetErrorString(sync_status));
-        return;
-    }
 
     // Extraer dimensiones
     int batch = min_result.batch;
@@ -99,6 +94,88 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
     if (batch != maxmin_prima.batch || M != maxmin_prima.M || N != maxmin_prima.N)
     {
         printf("Error: Las dimensiones no coinciden entre min_result y maxmin_prima\n");
+        return;
+    }
+
+    if (!use_gpu)
+    {
+        const TensorResult host_min = min_result.is_device_ptr ? copy_tensor_to_cpu(min_result) : min_result;
+        const TensorResult host_max = maxmin_prima.is_device_ptr ? copy_tensor_to_cpu(maxmin_prima) : maxmin_prima;
+
+        std::vector<float> values;
+        std::vector<float> indices;
+        values.reserve(static_cast<size_t>(batch) * M * N);
+        indices.reserve(static_cast<size_t>(batch) * M * N * K * 4);
+
+        for (int b = 0; b < batch; ++b)
+        {
+            for (int m = 0; m < M; ++m)
+            {
+                for (int n = 0; n < N; ++n)
+                {
+                    const size_t idx3d = (static_cast<size_t>(b) * M + m) * N + n;
+                    const float maxmin_value = host_max.data[idx3d];
+                    if (maxmin_value > threshold)
+                    {
+                        const size_t base_idx = (static_cast<size_t>(b) * M * N + m * N + n) * K;
+                        float max_val = -FLT_MAX;
+                        for (int k = 0; k < K; ++k)
+                        {
+                            const float current_val = host_min.data[base_idx + k];
+                            if (current_val > max_val)
+                            {
+                                max_val = current_val;
+                            }
+                        }
+
+                        for (int k = 0; k < K; ++k)
+                        {
+                            const float current_val = host_min.data[base_idx + k];
+                            if (fabsf(current_val - max_val) < 1e-6f)
+                            {
+                                indices.push_back(static_cast<float>(b));
+                                indices.push_back(static_cast<float>(m));
+                                indices.push_back(static_cast<float>(k));
+                                indices.push_back(static_cast<float>(n));
+                                values.push_back(maxmin_value);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        const size_t output_count = values.size();
+        if (output_count == 0)
+        {
+            return;
+        }
+
+        float *h_values = static_cast<float *>(malloc(output_count * sizeof(float)));
+        float *h_indices = static_cast<float *>(malloc(output_count * 4 * sizeof(float)));
+        if (!h_values || !h_indices)
+        {
+            if (h_values)
+                free(h_values);
+            if (h_indices)
+                free(h_indices);
+            printf("Error: No se pudo alocar memoria host para resultados (CPU)\n");
+            return;
+        }
+
+        std::memcpy(h_values, values.data(), output_count * sizeof(float));
+        std::memcpy(h_indices, indices.data(), output_count * 4 * sizeof(float));
+
+        result_tensor_filtered = TensorResult(h_indices, false, 1, static_cast<int>(output_count), 4, 1, true);
+        result_tensor_values = TensorResult(h_values, false, 1, 1, static_cast<int>(output_count), 1, true);
+        return;
+    }
+
+    // Verificar estado previo del dispositivo CUDA
+    cudaError_t sync_status = cudaDeviceSynchronize();
+    if (sync_status != cudaSuccess)
+    {
+        printf("Error previo en indices.cu (estado CUDA): %s\n", cudaGetErrorString(sync_status));
         return;
     }
 

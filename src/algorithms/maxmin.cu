@@ -4,12 +4,88 @@
 #include <float.h>
 #include <chrono>
 #include <algorithm>
+#include <cmath>
+#include <cstdlib>
 #include <maxmin_kernels.cuh>
 #include <device_launch_parameters.h>
 #include <core/types.cuh>
 #include <utils.cuh>
 
 #include <headers.cuh>
+
+// Implementación en CPU que replica la lógica del kernel max_min_kernel sin paralelización.
+static void maxmin_cpu(const TensorResult &tensor1, const TensorResult &tensor2,
+                       TensorResult &max_result, TensorResult &min_result)
+{
+    max_result = TensorResult();
+    min_result = TensorResult();
+
+    if (tensor1.K != 1 || tensor2.K != 1)
+    {
+        printf("Error: maxmin_kernel_v1 solo acepta tensores 3D (K=1)\n");
+        return;
+    }
+
+    const int batch = tensor1.batch;
+    const int M = tensor1.M;
+    const int K = tensor1.N; // tensor1.N actúa como K
+    const int N = tensor2.N;
+
+    if (tensor2.batch != batch || tensor2.M != K)
+    {
+        printf("Error: Dimensiones incompatibles entre tensor1 y tensor2 para maxmin\n");
+        return;
+    }
+
+    // Asegurar datos en CPU
+    TensorResult host_a = tensor1.is_device_ptr ? copy_tensor_to_cpu(tensor1) : tensor1;
+    TensorResult host_b = tensor2.is_device_ptr ? copy_tensor_to_cpu(tensor2) : tensor2;
+    const float *A = host_a.data;
+    const float *B = host_b.data;
+
+    const size_t size_C_min = static_cast<size_t>(batch) * M * N * K;
+    const size_t size_C_max = static_cast<size_t>(batch) * M * N;
+
+    float *h_C_min = static_cast<float *>(malloc(size_C_min * sizeof(float)));
+    float *h_C_max = static_cast<float *>(malloc(size_C_max * sizeof(float)));
+
+    if (!h_C_min || !h_C_max)
+    {
+        if (h_C_min)
+            free(h_C_min);
+        if (h_C_max)
+            free(h_C_max);
+        printf("Error: No se pudo alocar memoria host para maxmin (CPU)\n");
+        return;
+    }
+
+    for (int b = 0; b < batch; ++b)
+    {
+        for (int m = 0; m < M; ++m)
+        {
+            for (int n = 0; n < N; ++n)
+            {
+                float max_val = -FLT_MAX;
+                const size_t base_min = (static_cast<size_t>(b) * M * N + m * N + n) * K;
+                for (int k = 0; k < K; ++k)
+                {
+                    const size_t idx_a = (static_cast<size_t>(b) * M + m) * K + k;
+                    const size_t idx_b = (static_cast<size_t>(b) * K + k) * N + n;
+                    const float lane_min = std::fmin(A[idx_a], B[idx_b]);
+                    h_C_min[base_min + k] = lane_min;
+                    if (lane_min > max_val)
+                    {
+                        max_val = lane_min;
+                    }
+                }
+                h_C_max[static_cast<size_t>(b) * M * N + m * N + n] = max_val;
+            }
+        }
+    }
+
+    max_result = TensorResult(h_C_max, false, batch, M, N, 1, true);
+    min_result = TensorResult(h_C_min, false, batch, M, N, K, true);
+}
 
 __global__ void maxmin_prima_indices_kernel(
     const float *__restrict__ A,
@@ -131,6 +207,12 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
             TensorResult &max_result, TensorResult &min_result,
             bool keep_in_device)
 {
+    const bool force_gpu = false; // CPU por defecto; habilitar GPU solo si se reintroduce una bandera explícita
+    if (!force_gpu)
+    {
+        maxmin_cpu(tensor1, tensor2, max_result, min_result);
+        return;
+    }
 
     // Validar que los tensores sean 3D (K=1) como espera el kernel
     if (tensor1.K != 1 || tensor2.K != 1)

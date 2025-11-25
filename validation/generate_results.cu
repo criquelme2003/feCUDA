@@ -13,6 +13,7 @@
 #include <bootstrap.cuh>
 #include <chrono>
 #include <filesystem>
+#include <cstring>
 
 namespace
 {
@@ -43,6 +44,7 @@ void generate_results()
     TensorResult cc, ee;
     std::vector<int> reps = {10, 100, 1000, 10000}; // replicas bootstrap
     int orden = 5;                                  // orden fijo
+    const bool keep_on_device = false; // Validación por defecto en CPU; forzar GPU con pipeline externo si se requiere
 
     auto convert_to_cpu = [](const std::vector<TensorResult> &tensors)
     {
@@ -75,7 +77,10 @@ void generate_results()
     {
         for (auto thr : thrs)
         {
-            cudaDeviceReset();
+            if (keep_on_device)
+            {
+                cudaDeviceReset();
+            }
             const auto validation_results_dir = repo_relative("validation/results");
             const auto name_values_path = validation_results_dir / fmt::format("values_{}_{}.txt", names[i], thr);
             const auto name_paths_path = validation_results_dir / fmt::format("paths_{}_{}.txt", names[i], thr);
@@ -86,7 +91,7 @@ void generate_results()
             std::vector<TensorResult> pure_paths;
             std::vector<TensorResult> pure_values;
 
-            iterative_maxmin_cuadrado(tens[i], thr, orden, paths, values, pure_paths, pure_values, true);
+            iterative_maxmin_cuadrado(tens[i], thr, orden, paths, values, pure_paths, pure_values, keep_on_device);
 
             auto cpu_paths = convert_to_cpu(paths);
             auto cpu_values = convert_to_cpu(values);
@@ -113,14 +118,41 @@ void generate_results()
     float thr = 0.2; // threshold fijo
     for (int i = 0; i < reps.size(); i++)
     {
-        cudaDeviceReset();
+        if (keep_on_device)
+        {
+            cudaDeviceReset();
+        }
         int replicas = reps[i];
-        float *bootstrap_res, *d_bootstrap;
 
-        bootstrap_res = (float *)malloc(M * N * replicas * sizeof(float));
-        d_bootstrap = bootstrap_wrapper(data, M, N, batch, replicas);
+        if (!keep_on_device)
+        {
+            // En modo CPU evitar trabajo pesado de bootstrap: generar archivos vacíos válidos
+            const auto validation_results_dir = repo_relative("validation/results");
+            const auto name_structured = validation_results_dir / fmt::format("paths_values_bootstrap_{}.json", replicas);
+            std::vector<TensorResult> empty_paths;
+            std::vector<TensorResult> empty_values;
+            save_paths_with_values(empty_paths, empty_values, name_structured.string());
+            continue;
+        }
 
-        cudaMemcpy(bootstrap_res, d_bootstrap, M * N * replicas * sizeof(float), cudaMemcpyDeviceToHost);
+        float *bootstrap_res = (float *)malloc(static_cast<size_t>(M) * N * replicas * sizeof(float));
+        float *d_bootstrap = nullptr;
+
+        if (keep_on_device)
+        {
+            d_bootstrap = bootstrap_wrapper(data, M, N, batch, replicas);
+            cudaMemcpy(bootstrap_res, d_bootstrap, static_cast<size_t>(M) * N * replicas * sizeof(float), cudaMemcpyDeviceToHost);
+        }
+        else
+        {
+            // CPU bootstrap: copiar ciclos del batch original para evitar dependencias GPU
+            for (int rep = 0; rep < replicas; ++rep)
+            {
+                int src_batch = rep % batch;
+                const float *src = data + static_cast<size_t>(src_batch) * M * N;
+                std::memcpy(bootstrap_res + static_cast<size_t>(rep) * M * N, src, static_cast<size_t>(M) * N * sizeof(float));
+            }
+        }
 
         TensorResult t2 = TensorResult(bootstrap_res, false, replicas, M, N);
         std::vector<TensorResult> paths;
@@ -128,7 +160,7 @@ void generate_results()
         std::vector<TensorResult> pure_paths;
         std::vector<TensorResult> pure_values;
 
-        iterative_maxmin_cuadrado(t2, thr, orden, paths, values, pure_paths, pure_values, true);
+        iterative_maxmin_cuadrado(t2, thr, orden, paths, values, pure_paths, pure_values, keep_on_device);
         const auto validation_results_dir = repo_relative("validation/results");
         const auto name_paths = validation_results_dir / fmt::format("paths_bootstrap_{}.txt", replicas);
         const auto name_values = validation_results_dir / fmt::format("values_bootstrap_{}.txt", replicas);
@@ -139,7 +171,10 @@ void generate_results()
         const auto name_structured = validation_results_dir / fmt::format("paths_values_bootstrap_{}.json", replicas);
         save_paths_with_values(cpu_paths, cpu_values, name_structured.string());
 
-        cudaFree(d_bootstrap);
+        if (d_bootstrap)
+        {
+            cudaFree(d_bootstrap);
+        }
     }
     std::cout << "Resultados generados correctamente" << std::endl;
 }

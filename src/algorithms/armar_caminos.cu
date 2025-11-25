@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <float.h>
 #include <chrono>
+#include <cstdlib>
 #include "utils.cuh"
 #include "types.cuh"
 
@@ -62,6 +63,115 @@ __global__ void find_path_matches_kernel(float *previous_paths, float *result_te
             output_values[output_idx] = result_values[curr_idx];
         }
     }
+}
+
+// Implementación CPU equivalente a find_path_matches_kernel (sin paralelización)
+static void armar_caminos_cpu(const TensorResult &previous_paths, const TensorResult &result_tensor,
+                              const TensorResult &result_values, TensorResult &paths,
+                              TensorResult &matched_values, int iteration)
+{
+    paths = TensorResult();
+    matched_values = TensorResult();
+
+    if (previous_paths.data == nullptr || result_tensor.data == nullptr || result_values.data == nullptr)
+    {
+        printf("Error: Uno de los tensores de entrada es nulo\n");
+        return;
+    }
+
+    const int num_prev_paths = previous_paths.M;
+    const int prev_cols = previous_paths.N;
+    const int num_current_tensor = result_tensor.M;
+    const int current_cols = result_tensor.N;
+    const int num_values = result_values.N;
+    const int new_cols = 4 + iteration;
+
+    if (num_current_tensor != num_values)
+    {
+        printf("Error: Número de elementos en result_tensor (%d) no coincide con result_values (%d)\n",
+               num_current_tensor, num_values);
+        return;
+    }
+
+    if (prev_cols <= iteration + 2)
+    {
+        printf("Error: previous_paths no tiene columnas suficientes para la iteración %d\n", iteration);
+        return;
+    }
+
+    // Asegurar datos en CPU
+    const TensorResult host_prev = previous_paths.is_device_ptr ? copy_tensor_to_cpu(previous_paths) : previous_paths;
+    const TensorResult host_curr = result_tensor.is_device_ptr ? copy_tensor_to_cpu(result_tensor) : result_tensor;
+    const TensorResult host_vals = result_values.is_device_ptr ? copy_tensor_to_cpu(result_values) : result_values;
+
+    std::vector<float> out_paths;
+    std::vector<float> out_values;
+    out_paths.reserve(static_cast<size_t>(num_prev_paths) * num_current_tensor * new_cols);
+    out_values.reserve(static_cast<size_t>(num_prev_paths) * num_current_tensor);
+
+    for (int prev_idx = 0; prev_idx < num_prev_paths; ++prev_idx)
+    {
+        const float p_batch = host_prev.data[prev_idx * prev_cols];
+        const float p_fila = host_prev.data[prev_idx * prev_cols + 1];
+        const float p_intermedio = host_prev.data[prev_idx * prev_cols + iteration + 2];
+
+        for (int curr_idx = 0; curr_idx < num_current_tensor; ++curr_idx)
+        {
+            const float c_batch = host_curr.data[curr_idx * current_cols];
+            const float c_fila = host_curr.data[curr_idx * current_cols + 1];
+            const float c_intermedio = host_curr.data[curr_idx * current_cols + 2];
+            const float c_columna = host_curr.data[curr_idx * current_cols + 3];
+
+            if (p_batch == c_batch && p_fila == c_fila && p_intermedio == c_intermedio)
+            {
+                // Copiar camino previo
+                out_paths.insert(out_paths.end(),
+                                 host_prev.data + prev_idx * prev_cols,
+                                 host_prev.data + (prev_idx + 1) * prev_cols);
+                out_paths.push_back(c_columna);
+                out_values.push_back(host_vals.data[curr_idx]);
+            }
+        }
+    }
+
+    const int match_count = static_cast<int>(out_values.size());
+    if (match_count == 0)
+    {
+        printf("Error: No se encontraron matches\n");
+        return;
+    }
+
+    float *h_output_paths = static_cast<float *>(malloc(static_cast<size_t>(match_count) * new_cols * sizeof(float)));
+    float *h_output_values = static_cast<float *>(malloc(static_cast<size_t>(match_count) * sizeof(float)));
+
+    if (!h_output_paths || !h_output_values)
+    {
+        if (h_output_paths)
+            free(h_output_paths);
+        if (h_output_values)
+            free(h_output_values);
+        printf("Error: No se pudo alocar memoria host para resultados\n");
+        return;
+    }
+
+    std::memcpy(h_output_paths, out_paths.data(), static_cast<size_t>(match_count) * new_cols * sizeof(float));
+    std::memcpy(h_output_values, out_values.data(), static_cast<size_t>(match_count) * sizeof(float));
+
+    paths.data = h_output_paths;
+    paths.is_device_ptr = false;
+    paths.owns_memory = true;
+    paths.batch = previous_paths.batch;
+    paths.M = match_count;
+    paths.N = new_cols;
+    paths.K = 1;
+
+    matched_values.data = h_output_values;
+    matched_values.is_device_ptr = false;
+    matched_values.owns_memory = true;
+    matched_values.batch = previous_paths.batch;
+    matched_values.M = 1;
+    matched_values.N = match_count;
+    matched_values.K = 1;
 }
 
 void armar_caminos_original(const TensorResult &previous_paths, const TensorResult &result_tensor,
@@ -292,6 +402,14 @@ void armar_caminos_batch(const TensorResult &previous_paths, const TensorResult 
                          const TensorResult &result_values, TensorResult &paths,
                          TensorResult &matched_values, int iteration, int batch_size, bool keep_in_device)
 {
+    const bool use_gpu = false; // CPU por defecto
+
+    if (!use_gpu)
+    {
+        armar_caminos_cpu(previous_paths, result_tensor, result_values, paths, matched_values, iteration);
+        return;
+    }
+
     // Validaciones básicas
     if (previous_paths.data == nullptr || result_tensor.data == nullptr || result_values.data == nullptr)
     {

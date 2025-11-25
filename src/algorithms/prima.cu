@@ -1,5 +1,6 @@
 #include <core/types.cuh>
 #include <utils.cuh>
+#include <cstdlib>
 
 // Kernel para calcular prima = maxmin_conjugado - gen_tensor
 __global__ void calculate_prima_kernel(float *maxmin_conjugado, float *gen_tensor,
@@ -15,6 +16,7 @@ __global__ void calculate_prima_kernel(float *maxmin_conjugado, float *gen_tenso
 void calculate_prima(const TensorResult &maxmin_conjugado, const TensorResult &gen_tensor,
                      TensorResult &prima, bool keep_in_device)
 {
+    const bool use_gpu = false; // CPU por defecto
     // Verificar que las dimensiones coincidan
     if (maxmin_conjugado.batch != gen_tensor.batch ||
         maxmin_conjugado.M != gen_tensor.M ||
@@ -23,10 +25,38 @@ void calculate_prima(const TensorResult &maxmin_conjugado, const TensorResult &g
         printf("Error: Dimensiones no coinciden para calcular prima\n");
         return;
     }
-    
+
     int total_elements = maxmin_conjugado.batch * maxmin_conjugado.M * maxmin_conjugado.N;
-    size_t size = total_elements * sizeof(float);
-    
+    size_t size = static_cast<size_t>(total_elements) * sizeof(float);
+
+    // Camino CPU: replica la resta elemento a elemento sin usar CUDA.
+    if (!use_gpu)
+    {
+        const TensorResult host_maxmin = maxmin_conjugado.is_device_ptr ? copy_tensor_to_cpu(maxmin_conjugado) : maxmin_conjugado;
+        const TensorResult host_gen = gen_tensor.is_device_ptr ? copy_tensor_to_cpu(gen_tensor) : gen_tensor;
+
+        float *h_prima = static_cast<float *>(malloc(size));
+        if (!h_prima)
+        {
+            printf("Error: No se pudo alocar memoria host para prima (CPU)\n");
+            return;
+        }
+
+        for (int idx = 0; idx < total_elements; ++idx)
+        {
+            h_prima[idx] = host_maxmin.data[idx] - host_gen.data[idx];
+        }
+
+        prima.data = h_prima;
+        prima.is_device_ptr = false;
+        prima.owns_memory = true;
+        prima.batch = maxmin_conjugado.batch;
+        prima.M = maxmin_conjugado.M;
+        prima.N = maxmin_conjugado.N;
+        prima.K = maxmin_conjugado.K;
+        return;
+    }
+
     float *d_maxmin_conjugado, *d_gen_tensor, *d_prima;
     
     // Alocar memoria device para prima

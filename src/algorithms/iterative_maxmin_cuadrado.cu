@@ -5,6 +5,7 @@
 #include <chrono>
 #include <vector>
 #include <string.h>
+#include <cstdlib>
 #include <cuda_utils.cuh>
 #include <utils.cuh>
 #include <core/types.cuh>
@@ -17,6 +18,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                                std::vector<TensorResult> &pure_values_paths,
                                bool keep_in_device)
 {
+    const bool run_on_gpu = false; // CPU por defecto
     // Verificar estado del dispositivo CUDA
 
     // Validaciones
@@ -84,7 +86,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
     }
 
     // Copiar tensor original (asignar ownership)
-    TensorResult original_tensor = copy_tensor(tensor);
+    TensorResult original_tensor = run_on_gpu ? copy_tensor(tensor) : copy_tensor_to_cpu(tensor);
 
     // Inicializar gen_tensor como copia del tensor original
     TensorResult gen_tensor = copy_tensor(original_tensor);
@@ -99,7 +101,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
     {
         // Calcular min_result y maxmin_conjugado
         TensorResult min_result, maxmin_conjugado;
-        maxmin(gen_tensor, original_tensor, maxmin_conjugado, min_result, keep_in_device);
+        maxmin(gen_tensor, original_tensor, maxmin_conjugado, min_result, run_on_gpu);
 
                 // Marcar ownership correcto
         if (maxmin_conjugado.data)
@@ -112,7 +114,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
         calculate_prima(maxmin_conjugado, gen_tensor, prima, keep_in_device);
         // Calcular indices
         TensorResult result_tensor, result_values;
-        indices(min_result, prima, result_tensor, result_values, thr, keep_in_device);
+        indices(min_result, prima, result_tensor, result_values, thr, run_on_gpu);
 
         // Para vectores de almacenamiento (siempre CPU para evitar problemas con std::vector)
         TensorResult pure_tensor_copy = copy_tensor_to_cpu(result_tensor);
@@ -152,7 +154,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
             TensorResult previous_paths;
             if (i == 1)
             {
-                if (keep_in_device)
+                if (run_on_gpu)
                 {
                     previous_paths = copy_tensor_to_gpu(pure_tensor_paths[0]); // CPU → GPU
                 }
@@ -170,7 +172,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
             armar_caminos_batch(previous_paths, // previous_paths: caminos previos
                                 result_tensor,  // current_paths: nuevos caminos encontrados
                                 result_values,  // current_values: valores correspondientes
-                                paths, values, i, 1000, keep_in_device);
+                                paths, values, i, 1000, run_on_gpu);
 
             // Debug para armar_caminos
             if (paths.data == nullptr || paths.M == 0)
