@@ -1,0 +1,42 @@
+name: Generate bench index
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  generate-index:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write  # permite hacer commit/push con GITHUB_TOKEN
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Generate bench index.json
+        run: python scripts/generate_bench_index.py
+
+      - name: Commit & push changes (if needed)
+        run: |
+          if git diff --quiet; then
+            echo "No changes in index.json"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add bench/results/index.json
+          git commit -m "chore: auto-update bench index [skip ci]"
+          git push

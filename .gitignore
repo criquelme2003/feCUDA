@@ -1,6 +1,7 @@
 # Ignorar carpeta de build
 /build/
 /forgeffects/
+/bench_web/
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
