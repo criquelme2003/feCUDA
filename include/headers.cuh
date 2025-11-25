@@ -1,6 +1,10 @@
 #ifndef ALGORITHMS_CUH
 #define ALGORITHMS_CUH
 
+#ifndef FECUDA_SOURCE_DIR
+#define FECUDA_SOURCE_DIR "."
+#endif
+
 #include "types.cuh"
 #include "maxmin_kernels.cuh"
 #include "simple_logger.hpp"

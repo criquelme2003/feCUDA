@@ -30,3 +30,4 @@ fecuda_main
 forgeffects
 *.pyc
 *.json
+*.log

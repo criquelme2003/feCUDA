@@ -64,12 +64,6 @@ TensorResult copy_tensor_to_gpu(const TensorResult &src);
 // Función para calentar el sistema CUDA
 void cuda_warmup();
 
-// Función transpose
-__global__ void transpose_kernel_optimized(
-    const float *__restrict__ input, // [batch, K, N]
-    float *__restrict__ output,      // [batch, N, K]
-    int K, int N, int batch_size);
-
 __device__ __host__ int nextPow2(int n);
 
 void save_tensor_4d_as_file(float *tensor, int B, int M, int N, int K,

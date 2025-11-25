@@ -110,6 +110,17 @@ void armar_caminos_original(const TensorResult &previous_paths, const TensorResu
     size_t output_paths_size = max_output_size * new_cols * sizeof(float);
     size_t output_values_size = max_output_size * sizeof(float);
 
+    // Requerimiento total aproximado (paths + values + entradas + contador)
+    size_t required_bytes = output_paths_size + output_values_size + prev_size + curr_size + values_size + sizeof(int);
+    size_t free_mem = 0, total_mem = 0;
+    cudaError_t mem_status = cudaMemGetInfo(&free_mem, &total_mem);
+    if (mem_status == cudaSuccess && required_bytes > static_cast<size_t>(free_mem * 0.8))
+    {
+        printf("Error: memoria insuficiente en armar_caminos (necesita ~%.2f MB, libre %.2f MB)\n",
+               required_bytes / (1024.0 * 1024.0), free_mem / (1024.0 * 1024.0));
+        return;
+    }
+
     // Alocar memoria en device
     float *d_previous_paths, *d_result_tensor, *d_result_values;
     float *d_output_paths, *d_output_values;
