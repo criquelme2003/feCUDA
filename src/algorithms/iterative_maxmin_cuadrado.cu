@@ -99,7 +99,22 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
     {
         // Calcular min_result y maxmin_conjugado
         TensorResult min_result, maxmin_conjugado;
-        maxmin(gen_tensor, original_tensor, maxmin_conjugado, min_result, keep_in_device);
+
+        bool keep_on_device = keep_in_device;
+        if (gen_tensor.batch == 1 && gen_tensor.M == gen_tensor.N)
+        {
+            size_t free_mem = 0, total_mem = 0;
+            if (cudaMemGetInfo(&free_mem, &total_mem) == cudaSuccess && free_mem > 0)
+            {
+                const size_t cmin_bytes = static_cast<size_t>(gen_tensor.batch) * gen_tensor.M * gen_tensor.N * gen_tensor.N * sizeof(float);
+                if (cmin_bytes > static_cast<size_t>(free_mem * 0.6))
+                {
+                    keep_on_device = false; // mover C_min/C_max a host para evitar OOM
+                }
+            }
+        }
+
+        maxmin(gen_tensor, original_tensor, maxmin_conjugado, min_result, keep_on_device);
 
                 // Marcar ownership correcto
         if (maxmin_conjugado.data)

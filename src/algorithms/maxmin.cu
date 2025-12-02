@@ -184,9 +184,25 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
     cudaMemcpy(d_B, h_B, size_B, cudaMemcpyHostToDevice);
 
     // Configurar grid y bloques para el kernel
-    dim3 blockSize(nextPow2(K)); // la potencia de 2 mas cercana threads por bloque
-    dim3 gridSize(N, M, batch);  // Grid de (N, M, batch)
-    size_t shared_mem_size = K * sizeof(float);
+    unsigned int block_threads = nextPow2(static_cast<unsigned int>(K));
+    block_threads = std::min(block_threads, 1024u);
+    if (K > static_cast<int>(block_threads))
+    {
+        printf("Error: K=%d excede los hilos por bloque soportados (1024)\n", K);
+        cudaFree(d_A);
+        cudaFree(d_B);
+        cudaFree(d_C_min);
+        cudaFree(d_C_max);
+        if (liberar_A)
+            free(h_A);
+        if (liberar_B)
+            free(h_B);
+        return;
+    }
+
+    dim3 blockSize(block_threads); // la potencia de 2 mas cercana threads por bloque (capada en 1024)
+    dim3 gridSize(N, M, batch);    // Grid de (N, M, batch)
+    size_t shared_mem_size = static_cast<size_t>(block_threads) * sizeof(float);
 
     // Ejecutar kernel
     max_min_kernel<<<gridSize, blockSize, shared_mem_size>>>(

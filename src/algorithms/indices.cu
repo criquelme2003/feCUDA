@@ -7,6 +7,7 @@
 #include <cstring>
 #include <utils.cuh>
 #include <types.cuh>
+#include <algorithm>
 
 __global__ void strainer(float *min_res,
                          float *maxmin_prima,
@@ -15,7 +16,8 @@ __global__ void strainer(float *min_res,
                          float threshold,
                          int batch,
                          int M, int N, int K,
-                         int *output_count)
+                         int *output_count,
+                         int n_offset)
 {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int total_elements_3d = batch * M * N; // Total elementos en maxmin_prima (3D)
@@ -36,7 +38,7 @@ __global__ void strainer(float *min_res,
             // Buscar en min_res en la misma posición (b, m, n) pero en todas las K
             // min_res tiene dimensiones [batch, M, N, K]
 
-            int base_idx = b * (M * N * K) + m * (N * K) + n * K;
+        int base_idx = b * (M * N * K) + m * (N * K) + n * K;
             // Buscar maximo en min_res
             float max_val = -FLT_MAX;
             for (int k = 0; k < K; k++)
@@ -64,7 +66,7 @@ __global__ void strainer(float *min_res,
                     indices[output_pos * 4 + 0] = (float)b; // batch
                     indices[output_pos * 4 + 1] = (float)m; // M
                     indices[output_pos * 4 + 2] = (float)k; // K (donde está el máximo)
-                    indices[output_pos * 4 + 3] = (float)n; // N
+                    indices[output_pos * 4 + 3] = (float)(n + n_offset); // N global
 
                     // Guardar el valor máximo en values
                     values[output_pos] = maxmin_value;
@@ -73,6 +75,219 @@ __global__ void strainer(float *min_res,
         }
     }
 }
+
+namespace
+{
+    // Estima chunk_n máximo dado el free_mem disponible. Devuelve al menos 1.
+    int compute_chunk_n_for_batch1(int M, int N, int K, size_t free_mem_bytes)
+    {
+        // Para un chunk de tamaño chunk_n, los buffers principales son:
+        // min_chunk (M * chunk_n * K), values (M * chunk_n * K),
+        // indices (4 * M * chunk_n * K) -> total aprox 6 * M * chunk_n * K floats.
+        const double bytes_per_unit_n = 6.0 * static_cast<double>(M) * static_cast<double>(K) * sizeof(float);
+        if (bytes_per_unit_n <= 0.0)
+        {
+            return 1;
+        }
+        const double max_chunk_n = static_cast<double>(free_mem_bytes) * 0.6 / bytes_per_unit_n;
+        int chunk_n = static_cast<int>(max_chunk_n);
+        if (chunk_n < 1)
+            chunk_n = 1;
+        chunk_n = std::min(chunk_n, N);
+        return chunk_n;
+    }
+
+    // Procesa en columnas (chunk_n) cuando batch=1 para reducir consumo de memoria.
+    bool indices_chunked_batch1(const TensorResult &min_result, const TensorResult &maxmin_prima,
+                                TensorResult &result_tensor_filtered, TensorResult &result_tensor_values,
+                                float threshold)
+    {
+        const int batch = min_result.batch;
+        const int M = min_result.M;
+        const int N = min_result.N;
+        const int K = min_result.K;
+
+        if (batch != 1 || M <= 0 || N <= 0 || K <= 0)
+        {
+            return false;
+        }
+
+        size_t free_mem = 0;
+        size_t total_mem = 0;
+        if (cudaMemGetInfo(&free_mem, &total_mem) != cudaSuccess || free_mem == 0)
+        {
+            free_mem = 256 * 1024 * 1024; // fallback conservador
+        }
+        int chunk_n = compute_chunk_n_for_batch1(M, N, K, free_mem);
+        if (chunk_n <= 0)
+        {
+            return false;
+        }
+
+        std::vector<float> h_values;
+        std::vector<float> h_indices;
+        h_values.reserve(static_cast<size_t>(M) * N); // estimación mínima
+        h_indices.reserve(static_cast<size_t>(M) * N * 4);
+
+        // Buffers temporales host para copiar slices cuando vienen de host
+        const bool min_on_device = min_result.is_device_ptr;
+        const bool max_on_device = maxmin_prima.is_device_ptr;
+
+        for (int n_start = 0; n_start < N; n_start += chunk_n)
+        {
+            const int current_chunk_n = std::min(chunk_n, N - n_start);
+            const int chunk_elems_min = M * current_chunk_n * K;
+            const int chunk_elems_max = M * current_chunk_n;
+            const int chunk_elems_3d = M * current_chunk_n;
+            const size_t bytes_min = static_cast<size_t>(chunk_elems_min) * sizeof(float);
+            const size_t bytes_max = static_cast<size_t>(chunk_elems_max) * sizeof(float);
+
+            float *d_min_chunk = nullptr;
+            float *d_max_chunk = nullptr;
+            float *d_values = nullptr;
+            float *d_indices = nullptr;
+            int *d_output_count = nullptr;
+
+            if (cudaMalloc(&d_min_chunk, bytes_min) != cudaSuccess ||
+                cudaMalloc(&d_max_chunk, bytes_max) != cudaSuccess ||
+                cudaMalloc(&d_values, bytes_min) != cudaSuccess ||                           // mismo tamaño que min
+                cudaMalloc(&d_indices, static_cast<size_t>(chunk_elems_min) * 4 * sizeof(float)) != cudaSuccess ||
+                cudaMalloc(&d_output_count, sizeof(int)) != cudaSuccess)
+            {
+                cudaFree(d_min_chunk);
+                cudaFree(d_max_chunk);
+                cudaFree(d_values);
+                cudaFree(d_indices);
+                cudaFree(d_output_count);
+                return false;
+            }
+
+            cudaMemset(d_output_count, 0, sizeof(int));
+
+            // Copiar slice de maxmin_prima (shape [M, N]) para columnas [n_start, n_start+current_chunk_n)
+            if (max_on_device)
+            {
+                for (int m = 0; m < M; ++m)
+                {
+                    const size_t offset = static_cast<size_t>(m) * N + n_start;
+                    const float *src = maxmin_prima.data + offset;
+                    float *dst = d_max_chunk + static_cast<size_t>(m) * current_chunk_n;
+                    cudaMemcpy(dst, src, static_cast<size_t>(current_chunk_n) * sizeof(float), cudaMemcpyDeviceToDevice);
+                }
+            }
+            else
+            {
+                for (int m = 0; m < M; ++m)
+                {
+                    const size_t offset = static_cast<size_t>(m) * N + n_start;
+                    const float *src = maxmin_prima.data + offset;
+                    float *dst = d_max_chunk + static_cast<size_t>(m) * current_chunk_n;
+                    cudaMemcpy(dst, src, static_cast<size_t>(current_chunk_n) * sizeof(float), cudaMemcpyHostToDevice);
+                }
+            }
+
+            // Copiar slice de min_result (shape [M, N, K]) para columnas del chunk
+            if (min_on_device)
+            {
+                for (int m = 0; m < M; ++m)
+                {
+                    const size_t offset = static_cast<size_t>(m) * N * K + static_cast<size_t>(n_start) * K;
+                    const float *src = min_result.data + offset;
+                    float *dst = d_min_chunk + static_cast<size_t>(m) * current_chunk_n * K;
+                    cudaMemcpy(dst, src, static_cast<size_t>(current_chunk_n) * K * sizeof(float), cudaMemcpyDeviceToDevice);
+                }
+            }
+            else
+            {
+                for (int m = 0; m < M; ++m)
+                {
+                    const size_t offset = static_cast<size_t>(m) * N * K + static_cast<size_t>(n_start) * K;
+                    const float *src = min_result.data + offset;
+                    float *dst = d_min_chunk + static_cast<size_t>(m) * current_chunk_n * K;
+                    cudaMemcpy(dst, src, static_cast<size_t>(current_chunk_n) * K * sizeof(float), cudaMemcpyHostToDevice);
+                }
+            }
+
+            int block_size = 256;
+            int grid_size = (chunk_elems_3d + block_size - 1) / block_size;
+            const size_t shared_mem_size = static_cast<size_t>(block_size) * (sizeof(float) + sizeof(int));
+
+            strainer<<<grid_size, block_size, shared_mem_size>>>(
+                d_min_chunk,
+                d_max_chunk,
+                d_values,
+                d_indices,
+                threshold,
+                1,
+                M,
+                current_chunk_n,
+                K,
+                d_output_count,
+                n_start);
+
+            CHECK_CUDA(cudaGetLastError());
+            CHECK_CUDA(cudaDeviceSynchronize());
+
+            int output_count = 0;
+            CHECK_CUDA(cudaMemcpy(&output_count, d_output_count, sizeof(int), cudaMemcpyDeviceToHost));
+            if (output_count > 0)
+            {
+                const size_t values_bytes = static_cast<size_t>(output_count) * sizeof(float);
+                const size_t indices_bytes = static_cast<size_t>(output_count) * 4 * sizeof(float);
+                const size_t values_offset = h_values.size();
+                const size_t indices_offset = h_indices.size();
+                h_values.resize(values_offset + output_count);
+                h_indices.resize(indices_offset + static_cast<size_t>(output_count) * 4);
+                CHECK_CUDA(cudaMemcpy(h_values.data() + values_offset, d_values, values_bytes, cudaMemcpyDeviceToHost));
+                CHECK_CUDA(cudaMemcpy(h_indices.data() + indices_offset, d_indices, indices_bytes, cudaMemcpyDeviceToHost));
+            }
+
+            cudaFree(d_min_chunk);
+            cudaFree(d_max_chunk);
+            cudaFree(d_values);
+            cudaFree(d_indices);
+            cudaFree(d_output_count);
+        }
+
+        if (h_values.empty())
+        {
+            result_tensor_filtered = TensorResult();
+            result_tensor_values = TensorResult();
+            return true;
+        }
+
+        // Construir TensorResult en CPU
+        float *indices_buf = static_cast<float *>(malloc(h_indices.size() * sizeof(float)));
+        float *values_buf = static_cast<float *>(malloc(h_values.size() * sizeof(float)));
+        if (!indices_buf || !values_buf)
+        {
+            if (indices_buf)
+                free(indices_buf);
+            if (values_buf)
+                free(values_buf);
+            return false;
+        }
+        std::memcpy(indices_buf, h_indices.data(), h_indices.size() * sizeof(float));
+        std::memcpy(values_buf, h_values.data(), h_values.size() * sizeof(float));
+
+        result_tensor_filtered.data = indices_buf;
+        result_tensor_filtered.is_device_ptr = false;
+        result_tensor_filtered.owns_memory = true;
+        result_tensor_filtered.batch = 1;
+        result_tensor_filtered.M = static_cast<int>(h_values.size());
+        result_tensor_filtered.N = 4;
+        result_tensor_filtered.K = 1;
+
+        result_tensor_values.data = values_buf;
+        result_tensor_values.is_device_ptr = false;
+        result_tensor_values.owns_memory = true;
+        result_tensor_values.batch = 1;
+        result_tensor_values.M = 1;
+        result_tensor_values.N = static_cast<int>(h_values.size());
+        result_tensor_values.K = 1;
+        return true;
+    }
+} // namespace
 
 void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
              TensorResult &result_tensor_filtered, TensorResult &result_tensor_values,
@@ -113,6 +328,15 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
     {
         printf("Advertencia: cudaMemGetInfo falló en indices.cu (%s)\n", cudaGetErrorString(meminfo_status));
         free_memory = total_memory = 0;
+    }
+
+    // Ruta optimizada para batch=1 con chunking por columnas para reducir memoria
+    if (batch == 1)
+    {
+        if (indices_chunked_batch1(min_result, maxmin_prima, result_tensor_filtered, result_tensor_values, threshold))
+        {
+            return;
+        }
     }
 
     auto bytes_needed_for = [&](int batch_count) -> size_t
@@ -217,7 +441,7 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
 
             int block_size = 256;
             int grid_size = (chunk_elems_3d + block_size - 1) / block_size;
-            strainer<<<grid_size, block_size>>>(d_min_res, d_maxmin_prima, d_values, d_indices, threshold, current_batch, M, N, K, d_output_count);
+            strainer<<<grid_size, block_size>>>(d_min_res, d_maxmin_prima, d_values, d_indices, threshold, current_batch, M, N, K, d_output_count, 0);
             cudaError_t sync = cudaDeviceSynchronize();
             if (sync != cudaSuccess)
             {

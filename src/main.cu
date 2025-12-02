@@ -8,6 +8,9 @@
 #include "kernels/kernels.cuh"
 #include "test/test.cuh"
 #include "../../include/utils.cuh"
+#include "algorithms/mst_paths.cuh"
+#include <utils/graph_generator.cuh>
+#include <utils/eta_metrics.cuh>
 #include <headers.cuh>
 #include <random>
 #include <time.h>
@@ -19,6 +22,7 @@
 #include <limits>
 #include <cmath>
 #include <string>
+#include <fstream>
 
 namespace
 {
@@ -58,6 +62,18 @@ namespace
         int iterations = 1;
         unsigned int seed = 0;
         bool seed_provided = false;
+        // Generador de grafos
+        bool graph_mode = false;
+        GraphRegime regime = GraphRegime::Sparse;
+        double avg_degree = 0.5;
+        double max_degree = 4.0;
+        double dense_p = 0.2;
+        float epsilon = 0.6f;
+        unsigned int graph_seed = 0;
+        bool graph_seed_provided = false;
+        bool simulate_graphs = false;
+        std::vector<int> scale_Ns;
+        bool use_mst = false;
     };
 
     BenchConfig parse_bench_args(int argc, char **argv)
@@ -147,6 +163,75 @@ namespace
                 config.seed_provided = true;
                 continue;
             }
+            if (arg == "--graph")
+            {
+                config.graph_mode = true;
+                config.synthetic = true;
+                config.dataset_path = "graph";
+                continue;
+            }
+            if (arg == "--regime")
+            {
+                config.regime = parse_graph_regime(require_value("--regime"));
+                continue;
+            }
+            if (arg == "--avg-degree")
+            {
+                config.avg_degree = std::stod(require_value("--avg-degree"));
+                continue;
+            }
+            if (arg == "--max-degree")
+            {
+                config.max_degree = std::stod(require_value("--max-degree"));
+                continue;
+            }
+            if (arg == "--dense-p")
+            {
+                config.dense_p = std::stod(require_value("--dense-p"));
+                continue;
+            }
+            if (arg == "--epsilon")
+            {
+                config.epsilon = std::stof(require_value("--epsilon"));
+                continue;
+            }
+            if (arg == "--graph-seed")
+            {
+                config.graph_seed = static_cast<unsigned int>(std::stoul(require_value("--graph-seed")));
+                config.graph_seed_provided = true;
+                continue;
+            }
+            if (arg == "--simulate-graphs")
+            {
+                config.simulate_graphs = true;
+                config.graph_mode = true;
+                config.synthetic = true;
+                config.dataset_path = "graph";
+                continue;
+            }
+            if (arg == "--use-mst")
+            {
+                config.use_mst = true;
+                continue;
+            }
+            if (arg == "--scale-N")
+            {
+                std::string list = require_value("--scale-N");
+                size_t start = 0;
+                while (start < list.size())
+                {
+                    size_t comma = list.find(',', start);
+                    std::string token = list.substr(start, comma == std::string::npos ? std::string::npos : comma - start);
+                    if (!token.empty())
+                    {
+                        config.scale_Ns.push_back(std::stoi(token));
+                    }
+                    if (comma == std::string::npos)
+                        break;
+                    start = comma + 1;
+                }
+                continue;
+            }
         }
         return config;
     }
@@ -154,6 +239,8 @@ namespace
     struct BenchMetrics
     {
         std::vector<double> durations_ms;
+        std::vector<EtaStats> eta_stats;
+        std::vector<GraphGenerationStats> graph_generation;
 
         double mean() const
         {
@@ -258,6 +345,105 @@ namespace
         }
         return TensorResult(data, false, config.batch, config.M, config.N, 1, true);
     }
+
+    std::string regime_to_string(GraphRegime regime)
+    {
+        switch (regime)
+        {
+        case GraphRegime::Sparse:
+            return "sparse";
+        case GraphRegime::Supercritical:
+            return "supercritical";
+        case GraphRegime::Dense:
+            return "dense";
+        }
+        return "unknown";
+    }
+
+    TensorResult create_graph_tensor(const BenchConfig &config, int iteration, GraphGenerationStats &out_stats)
+    {
+        if (config.M != config.N)
+        {
+            throw std::runtime_error("Para grafos cuadrados se requiere M == N");
+        }
+        if (config.epsilon <= 0.5f || config.epsilon > 1.0f)
+        {
+            throw std::runtime_error("epsilon debe ser > 0.5 y <= 1.0 en modo grafo");
+        }
+        GraphGeneratorConfig gconfig;
+        gconfig.batch = config.batch;
+        gconfig.M = config.M;
+        gconfig.N = config.N;
+        gconfig.regime = config.regime;
+        gconfig.avg_degree = config.avg_degree;
+        gconfig.max_degree = config.max_degree;
+        gconfig.dense_p = config.dense_p;
+        gconfig.epsilon = config.epsilon;
+        if (config.graph_seed_provided)
+        {
+            gconfig.seed = config.graph_seed + static_cast<unsigned int>(iteration);
+            gconfig.seed_provided = true;
+        }
+        else if (config.seed_provided)
+        {
+            gconfig.seed = config.seed + static_cast<unsigned int>(iteration);
+            gconfig.seed_provided = true;
+        }
+
+        TensorResult tensor;
+        out_stats = generate_graph_tensor(gconfig, tensor);
+        return tensor;
+    }
+
+    void append_result_csv(const BenchConfig &config, int iteration, double elapsed_ms,
+                           const EtaStats &eta_stats, const GraphGenerationStats *graph_stats_ptr)
+    {
+        try
+        {
+            const std::filesystem::path out_dir = repo_relative("results");
+            std::filesystem::create_directories(out_dir);
+            const std::filesystem::path csv_path = out_dir / "graph_sim.csv";
+            const bool exists = std::filesystem::exists(csv_path);
+            std::ofstream ofs(csv_path, std::ios::app);
+            if (!ofs)
+            {
+                std::cerr << "WARN no se pudo abrir " << csv_path << " para escritura\n";
+                return;
+            }
+            if (!exists)
+            {
+                ofs << "label,iteration,regime,M,N,batch,threshold,order,epsilon,avg_degree,max_degree,dense_p,target_p,empirical_p,empirical_avg_degree,eta0_max,eta0_mean,eta0_p95,eta0_std,eta_samples,elapsed_ms\n";
+            }
+            const GraphGenerationStats empty_stats{};
+            const GraphGenerationStats &gs = graph_stats_ptr ? *graph_stats_ptr : empty_stats;
+            ofs << config.label << ','
+                << iteration << ','
+                << regime_to_string(config.regime) << ','
+                << config.M << ','
+                << config.N << ','
+                << config.batch << ','
+                << config.threshold << ','
+                << config.order << ','
+                << config.epsilon << ','
+                << config.avg_degree << ','
+                << config.max_degree << ','
+                << config.dense_p << ','
+                << gs.target_p << ','
+                << gs.empirical_p << ','
+                << gs.empirical_avg_degree << ','
+                << eta_stats.eta0_max << ','
+                << eta_stats.eta0_mean << ','
+                << eta_stats.eta0_p95 << ','
+                << eta_stats.eta0_std << ','
+                << eta_stats.samples << ','
+                << elapsed_ms
+                << '\n';
+        }
+        catch (const std::exception &)
+        {
+            std::cerr << "WARN fallo al escribir resultados de simulación\n";
+        }
+    }
 }
 
 bool run_bench_case(const BenchConfig &config, BenchMetrics &metrics)
@@ -296,6 +482,8 @@ bool run_bench_case(const BenchConfig &config, BenchMetrics &metrics)
         TensorResult *source_ptr = nullptr;
         TensorResult bootstrap_tensor;
         TensorResult *t2_ptr = nullptr;
+        GraphGenerationStats graph_stats{};
+        EtaStats eta_stats{};
 
         auto iteration_start = std::chrono::high_resolution_clock::now();
 
@@ -303,7 +491,22 @@ bool run_bench_case(const BenchConfig &config, BenchMetrics &metrics)
         {
             if (config.synthetic)
             {
-                synthetic_tensor = create_random_tensor(config, i);
+                if (config.graph_mode)
+                {
+                    synthetic_tensor = create_graph_tensor(config, i, graph_stats);
+                    std::cout << "GRAPH_GEN label=" << config.label
+                              << " iteration=" << i
+                              << " regime=" << regime_to_string(config.regime)
+                              << " target_p=" << graph_stats.target_p
+                              << " empirical_p=" << graph_stats.empirical_p
+                              << " empirical_avg_degree=" << graph_stats.empirical_avg_degree
+                              << " epsilon=" << config.epsilon
+                              << std::endl;
+                }
+                else
+                {
+                    synthetic_tensor = create_random_tensor(config, i);
+                }
                 source_ptr = &synthetic_tensor;
             }
             else
@@ -330,24 +533,44 @@ bool run_bench_case(const BenchConfig &config, BenchMetrics &metrics)
                 bootstrap_tensor = TensorResult(bootstrap_res, false, config.replicas, source_ptr->M, source_ptr->N);
                 t2_ptr = &bootstrap_tensor;
             }
-            printf("dims: %dx%dx%d",t2_ptr->M,t2_ptr->N,t2_ptr->batch);
-            std::vector<TensorResult> paths;
-            std::vector<TensorResult> values;
-            std::vector<TensorResult> pure_paths;
-            std::vector<TensorResult> pure_values;
-            iterative_maxmin_cuadrado(*t2_ptr, config.threshold, config.order, paths, values, pure_paths, pure_values, true);
-            auto cleanup_vector = [](std::vector<TensorResult> &tensors)
+            if (config.use_mst)
             {
-                for (auto &tensor : tensors)
+                if (!compute_eta_stats_mst(*t2_ptr, eta_stats))
                 {
-                    safe_tensor_cleanup(tensor);
+                    throw std::runtime_error("MST computation failed");
                 }
-                tensors.clear();
-            };
-            cleanup_vector(paths);
-            cleanup_vector(values);
-            cleanup_vector(pure_paths);
-            cleanup_vector(pure_values);
+            }
+            else
+            {
+                printf("dims: %dx%dx%d", t2_ptr->M, t2_ptr->N, t2_ptr->batch);
+                std::vector<TensorResult> paths;
+                std::vector<TensorResult> values;
+                std::vector<TensorResult> pure_paths;
+                std::vector<TensorResult> pure_values;
+                iterative_maxmin_cuadrado(*t2_ptr, config.threshold, config.order, paths, values, pure_paths, pure_values, true);
+                eta_stats = compute_eta_stats(paths);
+                auto cleanup_vector = [](std::vector<TensorResult> &tensors)
+                {
+                    for (auto &tensor : tensors)
+                    {
+                        safe_tensor_cleanup(tensor);
+                    }
+                    tensors.clear();
+                };
+                cleanup_vector(paths);
+                cleanup_vector(values);
+                cleanup_vector(pure_paths);
+                cleanup_vector(pure_values);
+            }
+
+            std::cout << "ETA_STATS label=" << config.label
+                      << " iteration=" << i
+                      << " eta0_max=" << eta_stats.eta0_max
+                      << " eta0_mean=" << eta_stats.eta0_mean
+                      << " eta0_p95=" << eta_stats.eta0_p95
+                      << " eta0_std=" << eta_stats.eta0_std
+                      << " samples=" << eta_stats.samples
+                      << std::endl;
             if (!config.skip_bootstrap)
             {
                 safe_tensor_cleanup(*t2_ptr);
@@ -378,7 +601,16 @@ bool run_bench_case(const BenchConfig &config, BenchMetrics &metrics)
         check_cuda(cudaDeviceSynchronize(), "cudaDeviceSynchronize");
         auto iteration_end = std::chrono::high_resolution_clock::now();
         const double elapsed_ms = std::chrono::duration<double, std::milli>(iteration_end - iteration_start).count();
+        if (config.graph_mode)
+        {
+            metrics.graph_generation.push_back(graph_stats);
+        }
+        metrics.eta_stats.push_back(eta_stats);
         metrics.durations_ms.push_back(elapsed_ms);
+        if (config.graph_mode || config.simulate_graphs)
+        {
+            append_result_csv(config, i, elapsed_ms, eta_stats, config.graph_mode ? &graph_stats : nullptr);
+        }
         std::cout << "BENCH_ITER label=" << config.label << " iteration=" << i << " elapsed_ms=" << elapsed_ms << std::endl;
 
         if (d_bootstrap)
@@ -408,11 +640,63 @@ int main(int args, char *argv[])
         return 1;
     }
 
+    if (bench_config.simulate_graphs)
+    {
+        if (bench_config.epsilon <= 0.5f || bench_config.epsilon > 1.0f)
+        {
+            std::cerr << "BENCH_ERROR reason=invalid_epsilon value=" << bench_config.epsilon << std::endl;
+            return 1;
+        }
+        if (bench_config.scale_Ns.empty())
+        {
+            if (bench_config.M > 0 && bench_config.M == bench_config.N)
+            {
+                bench_config.scale_Ns.push_back(bench_config.M);
+            }
+            else if (bench_config.N > 0)
+            {
+                bench_config.scale_Ns.push_back(bench_config.N);
+            }
+            else
+            {
+                std::cerr << "BENCH_ERROR reason=missing_N_for_simulation" << std::endl;
+                return 1;
+            }
+        }
+        for (int n_value : bench_config.scale_Ns)
+        {
+            if (n_value <= 0)
+                continue;
+            BenchConfig cfg = bench_config;
+            cfg.M = n_value;
+            cfg.N = n_value;
+            cfg.label = bench_config.label + "_N" + std::to_string(n_value);
+            BenchMetrics metrics;
+            if (!run_bench_case(cfg, metrics))
+            {
+                return 1;
+            }
+            std::cout << "BENCH_SUMMARY label=" << cfg.label
+                      << " iterations=" << metrics.durations_ms.size()
+                      << " mean_ms=" << metrics.mean()
+                      << " min_ms=" << metrics.min()
+                      << " max_ms=" << metrics.max()
+                      << " std_ms=" << metrics.stddev()
+                      << std::endl;
+        }
+        return 0;
+    }
+
     if (bench_config.enabled)
     {
         if (bench_config.dataset_path.empty() || bench_config.batch <= 0 || bench_config.M <= 0 || bench_config.N <= 0)
         {
             std::cerr << "BENCH_ERROR missing_required_parameters" << std::endl;
+            return 1;
+        }
+        if (bench_config.graph_mode && (bench_config.epsilon <= 0.5f || bench_config.epsilon > 1.0f))
+        {
+            std::cerr << "BENCH_ERROR reason=invalid_epsilon value=" << bench_config.epsilon << std::endl;
             return 1;
         }
         BenchMetrics metrics;
