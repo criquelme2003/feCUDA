@@ -1,20 +1,12 @@
 #include <cuda_runtime.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <float.h>
-#include <chrono>
-#include "utils.cuh"
-#include "types.cuh"
+#include <algorithm>
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
+#include <core/types.cuh>
+#include <utils.cuh>
 
-// MACRO para debug de memory leaks específicos
-#define MEMORY_CHECKPOINT(name)                                                                                                             \
-    do                                                                                                                                      \
-    {                                                                                                                                       \
-        size_t free_mem, total_mem;                                                                                                         \
-        cudaMemGetInfo(&free_mem, &total_mem);                                                                                              \
-        printf("[%s] Memoria libre: %.1f MB, Memoria total: %.1f MB\n", name, free_mem / (1024.0 * 1024.0), total_mem / (1024.0 * 1024.0)); \
-        cudaDeviceSynchronize();                                                                                                            \
-    } while (0)
 
 __global__ void find_path_matches_kernel(float *previous_paths, float *result_tensor,
                                          float *result_values, float *output_paths,
@@ -114,6 +106,7 @@ void armar_caminos_original(const TensorResult &previous_paths, const TensorResu
     size_t required_bytes = output_paths_size + output_values_size + prev_size + curr_size + values_size + sizeof(int);
     size_t free_mem = 0, total_mem = 0;
     cudaError_t mem_status = cudaMemGetInfo(&free_mem, &total_mem);
+    
     if (mem_status == cudaSuccess && required_bytes > static_cast<size_t>(free_mem * 0.8))
     {
         printf("Error: memoria insuficiente en armar_caminos (necesita ~%.2f MB, libre %.2f MB)\n",

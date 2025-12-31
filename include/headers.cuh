@@ -1,27 +1,13 @@
 #ifndef ALGORITHMS_CUH
 #define ALGORITHMS_CUH
 
-#ifndef FECUDA_SOURCE_DIR
-#define FECUDA_SOURCE_DIR "."
-#endif
-
-#include "types.cuh"
-#include "maxmin_kernels.cuh"
-#include "simple_logger.hpp"
+#include "core/types.cuh"
 #include <vector>
-#include <string>
 
 // Funciones exportadas desde archivos .cu
 void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
-            TensorResult &max_result, TensorResult &min_result,
+            TensorResult &max_result, TensorResult &min_result,cudaEvent_t &start, cudaEvent_t &end,
             bool keep_in_device = true);
-
-void maxmin_prima_indices(const TensorResult &tensor1, const TensorResult &tensor2,
-                          TensorResult &max_result,
-                          TensorResult &result_tensor_filtered,
-                          TensorResult &result_tensor_values,
-                          float threshold = 0.4f,
-                          bool keep_in_device = true);
 
 // Función indices
 void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,

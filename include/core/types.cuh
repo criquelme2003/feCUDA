@@ -1,12 +1,10 @@
 #ifndef TYPES_CUH
 #define TYPES_CUH
 
-#include <cutensor.h>
-#include <cudnn.h>
-#include <string>
-#include <memory>
-#include <cstring>
 #include <cuda_runtime.h>
+#include <cstdlib>
+#include <cstring>
+#include <new>
 
 // Estructura para mantener información completa del tensor
 struct TensorResult

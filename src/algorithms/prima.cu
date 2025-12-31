@@ -1,4 +1,5 @@
 #include <core/types.cuh>
+#include <cstdio>
 #include <utils.cuh>
 
 // Kernel para calcular prima = maxmin_conjugado - gen_tensor

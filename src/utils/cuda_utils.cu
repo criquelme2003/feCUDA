@@ -1,110 +1,23 @@
 #include "../../include/utils/cuda_utils.cuh"
-#include "../../include/core/types.cuh"
-#include "../../include/utils/logging.cuh"
-#include <cuda_runtime.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "../../include/utils.cuh"
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 namespace CudaUtils
 {
 
     void cuda_cleanup_and_check()
     {
-        // Sincronizar para asegurar que todas las operaciones han terminado
         cudaError_t syncError = cudaDeviceSynchronize();
         if (syncError != cudaSuccess)
         {
-            LOG_WARNING("Error durante sincronización: ", cudaGetErrorString(syncError));
+            std::fprintf(stderr, "cudaDeviceSynchronize failed: %s\n", cudaGetErrorString(syncError));
         }
-
-        // Obtener información de memoria
-        size_t free_memory, total_memory;
-        cudaError_t memError = cudaMemGetInfo(&free_memory, &total_memory);
-        if (memError == cudaSuccess)
-        {
-            LOG_INFO("Memoria GPU - Libre: ", free_memory / (1024.0 * 1024.0),
-                     " MB, Total: ", total_memory / (1024.0 * 1024.0),
-                     " MB, Usada: ", (total_memory - free_memory) / (1024.0 * 1024.0), " MB");
-        }
-
-        LOG_INFO("Dispositivo CUDA sincronizado");
-    }
-
-    void cuda_warmup()
-    {
-        LOG_INFO("Calentando sistema CUDA...");
-
-        // Verificar estado del dispositivo CUDA
-        cudaError_t deviceError = cudaDeviceSynchronize();
-        if (deviceError != cudaSuccess)
-        {
-            LOG_WARNING("El dispositivo CUDA no está disponible[warmup]: ", cudaGetErrorString(deviceError));
-            return;
-        }
-
-        // Crear un tensor pequeño para warm-up
-        int warmup_size = 16;
-        size_t data_size = warmup_size * warmup_size * sizeof(float);
-
-        float *h_data = (float *)malloc(data_size);
-        if (h_data == nullptr)
-        {
-            LOG_WARNING("No se pudo asignar memoria para warm-up");
-            return;
-        }
-
-        // Llenar con datos dummy
-        for (int i = 0; i < warmup_size * warmup_size; i++)
-        {
-            h_data[i] = 1.0f + (i % 10) * 0.1f;
-        }
-
-        free(h_data);
-
-        // Mostrar información de memoria después del warm-up
-        size_t free_memory, total_memory;
-        cudaError_t memError = cudaMemGetInfo(&free_memory, &total_memory);
-        if (memError == cudaSuccess)
-        {
-            LOG_INFO("Warm-up completado. Memoria GPU libre: ", free_memory / (1024.0 * 1024.0), " MB");
-        }
-        else
-        {
-            LOG_INFO("Warm-up completado.");
-        }
-    }
-
-    bool check_device_capabilities()
-    {
-        int device_count;
-        cudaGetDeviceCount(&device_count);
-
-        if (device_count == 0)
-        {
-            LOG_WARNING("No se encontraron dispositivos CUDA");
-            return false;
-        }
-
-        for (int i = 0; i < device_count; i++)
-        {
-            cudaDeviceProp prop;
-            cudaGetDeviceProperties(&prop, i);
-
-            LOG_INFO("Dispositivo ", i, ": ", prop.name);
-            LOG_INFO("  Compute Capability: ", prop.major, ".", prop.minor);
-            LOG_INFO("  Memoria Global: ", prop.totalGlobalMem / (1024 * 1024), " MB");
-            LOG_INFO("  Max threads por bloque: ", prop.maxThreadsPerBlock);
-            LOG_INFO("  Max dimensiones de bloque: ", prop.maxThreadsDim[0],
-                     " x ", prop.maxThreadsDim[1], " x ", prop.maxThreadsDim[2]);
-            LOG_INFO("  Max dimensiones de grid: ", prop.maxGridSize[0],
-                     " x ", prop.maxGridSize[1], " x ", prop.maxGridSize[2]);
-        }
-
-        return true;
     }
 
 } // namespace CudaUtils
+
 
 // Función para limpiar memoria de TensorResult de forma segura
 void safe_tensor_cleanup(TensorResult &tensor)

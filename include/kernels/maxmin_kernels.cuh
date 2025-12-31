@@ -3,8 +3,6 @@
 
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include "core/types.cuh"
-
 /**
  * KERNEL MAXMIN OPTIMIZADO CON MEMORIA COMPARTIDA
  *
@@ -23,10 +21,5 @@ __global__ void max_min_kernel(
     float *C_min,   // [batch, M, K, N]
     float *C_max,   // [batch, M, N]
     const int M, const int K, const int N, const int batch_size);
-
-// Kernel para operaciones auxiliares
-__global__ void find_path_matches_kernel(
-    const float *paths, const float *targets,
-    int *matches, int num_paths, int path_length, int num_targets);
 
 #endif // MAXMIN_KERNELS_CUH

@@ -1,12 +1,12 @@
 #include <cuda_runtime.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <float.h>
-#include <chrono>
-#include <vector>
+#include <algorithm>
+#include <cmath>
+#include <cstdio>
 #include <cstring>
+#include <vector>
+#include <core/types.cuh>
 #include <utils.cuh>
-#include <types.cuh>
 
 __global__ void strainer(float *min_res,
                          float *maxmin_prima,
@@ -58,7 +58,7 @@ __global__ void strainer(float *min_res,
                 {
                     // Obtener posición en el array de salida usando atomic add
                     int output_pos = atomicAdd(output_count, 1);
-
+                    
                     // Guardar índices 4D [b, m, k, n] en el array indices
                     // Cada elemento ocupa 4 posiciones en el array indices
                     indices[output_pos * 4 + 0] = (float)b; // batch

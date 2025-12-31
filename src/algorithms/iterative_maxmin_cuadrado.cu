@@ -1,14 +1,11 @@
 #include <cuda_runtime.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <float.h>
-#include <chrono>
+#include <cstdio>
+#include <cstdlib>
+#include <utility>
 #include <vector>
-#include <string.h>
-#include <cuda_utils.cuh>
-#include <utils.cuh>
-#include <core/types.cuh>
 #include <headers.cuh>
+#include <utils.cuh>
+#include <utils/cuda_utils.cuh>
 
 void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                                std::vector<TensorResult> &result_tensor_paths,
@@ -34,39 +31,6 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
 
     // Validar memoria disponible antes de iniciar
     {
-        size_t host_required = static_cast<size_t>(tensor.batch) * tensor.M * tensor.M * tensor.M * sizeof(float);
-        unsigned long long mem_available_kb = 0;
-        FILE *f = fopen("/proc/meminfo", "r");
-        if (f)
-        {
-            char line[256];
-            while (fgets(line, sizeof(line), f))
-            {
-                if (strncmp(line, "MemAvailable:", 13) == 0)
-                {
-                    unsigned long long kb = 0;
-                    if (sscanf(line + 13, "%llu", &kb) == 1)
-                    {
-                        mem_available_kb = kb;
-                    }
-                    break;
-                }
-            }
-            fclose(f);
-        }
-        if (mem_available_kb > 0)
-        {
-            unsigned long long available_bytes = mem_available_kb * 1024ULL;
-            double req_mb = host_required / (1024.0 * 1024.0);
-            double avail_mb = available_bytes / (1024.0 * 1024.0);
-            printf("iterative_maxmin_cuadrado: MemAvailable=%.2f MB, host_required=%.2f MB\n", avail_mb, req_mb);
-            if (host_required > available_bytes * 0.8)
-            {
-                printf("iterative_maxmin_cuadrado: RAM insuficiente. Necesita ~%.2f MB, disponible ~%.2f MB\n",
-                       req_mb, avail_mb);
-                return;
-            }
-        }
 
         size_t gpu_required = static_cast<size_t>(tensor.M) * tensor.M * sizeof(float);
         size_t free_mem = 0, total_mem = 0;
@@ -84,7 +48,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
     }
 
     // Copiar tensor original (asignar ownership)
-    TensorResult original_tensor = copy_tensor(tensor);
+    TensorResult original_tensor = tensor;
 
     // Inicializar gen_tensor como copia del tensor original
     TensorResult gen_tensor = copy_tensor(original_tensor);
@@ -99,7 +63,8 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
     {
         // Calcular min_result y maxmin_conjugado
         TensorResult min_result, maxmin_conjugado;
-        maxmin(gen_tensor, original_tensor, maxmin_conjugado, min_result, keep_in_device);
+        
+        // maxmin(gen_tensor, original_tensor, maxmin_conjugado, min_result, keep_in_device);
 
                 // Marcar ownership correcto
         if (maxmin_conjugado.data)
