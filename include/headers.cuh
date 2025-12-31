@@ -13,15 +13,10 @@
 
 // Funciones exportadas desde archivos .cu
 void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
-            TensorResult &max_result, TensorResult &min_result,
-            bool keep_in_device = true);
+            TensorResult &max_result, TensorResult &min_result,cudaEvent_t &start, cudaEvent_t &end,
+            bool keep_in_device);
 
-void maxmin_prima_indices(const TensorResult &tensor1, const TensorResult &tensor2,
-                          TensorResult &max_result,
-                          TensorResult &result_tensor_filtered,
-                          TensorResult &result_tensor_values,
-                          float threshold = 0.4f,
-                          bool keep_in_device = true);
+
 
 // Función indices
 void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,

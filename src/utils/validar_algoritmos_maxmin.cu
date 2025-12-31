@@ -57,9 +57,11 @@ void validar_algoritmos_maxmin(const char *nombre_algoritmo)
         // Ejecutar algoritmo maxmin
         printf("🚀 Ejecutando algoritmo %s...\n", nombre_algoritmo);
         auto inicio = std::chrono::high_resolution_clock::now();
-
+        cudaEvent_t start,end;
+        cudaEventCreate(&start);
+        cudaEventCreate(&end);
         TensorResult max_result, min_result;
-        maxmin(tensor_entrada, tensor_entrada, max_result, min_result, false);
+        maxmin(tensor_entrada, tensor_entrada, max_result, min_result,start,end, false);
 
         auto fin = std::chrono::high_resolution_clock::now();
         double tiempo_ms = std::chrono::duration<double, std::milli>(fin - inicio).count();

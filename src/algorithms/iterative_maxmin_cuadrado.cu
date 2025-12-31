@@ -18,7 +18,9 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                                bool keep_in_device)
 {
     // Verificar estado del dispositivo CUDA
-
+    cudaEvent_t start,end;
+    cudaEventCreate(&start);
+    cudaEventCreate(&end);
     // Validaciones
     if (thr < 0.0f || thr > 1.0f)
     {
@@ -99,7 +101,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
     {
         // Calcular min_result y maxmin_conjugado
         TensorResult min_result, maxmin_conjugado;
-        maxmin(gen_tensor, original_tensor, maxmin_conjugado, min_result, keep_in_device);
+        maxmin(gen_tensor, original_tensor, maxmin_conjugado, min_result, start, end, keep_in_device);
 
                 // Marcar ownership correcto
         if (maxmin_conjugado.data)

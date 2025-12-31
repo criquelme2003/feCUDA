@@ -1,0 +1,84 @@
+{
+  "cases": [
+    {
+      "label": "static_0_B100_M4",
+      "dataset": "synthetic",
+      "synthetic": true,
+      "batch": 100,
+      "M": 4,
+      "N": 4
+    },
+    {
+      "label": "static_1_B500_M8",
+      "dataset": "synthetic",
+      "synthetic": true,
+      "batch": 500,
+      "M": 8,
+      "N": 8
+    },
+    {
+      "label": "static_2_B1000_M12",
+      "dataset": "synthetic",
+      "synthetic": true,
+      "batch": 1000,
+      "M": 12,
+      "N": 12
+    },
+    {
+      "label": "static_3_B30_M16",
+      "dataset": "synthetic",
+      "synthetic": true,
+      "batch": 30,
+      "M": 16,
+      "N": 16
+    },
+    {
+      "label": "static_4_B5000_M24",
+      "dataset": "synthetic",
+      "synthetic": true,
+      "batch": 5000,
+      "M": 24,
+      "N": 24
+    },
+    {
+      "label": "static_5_B8000_M32",
+      "dataset": "synthetic",
+      "synthetic": true,
+      "batch": 8000,
+      "M": 32,
+      "N": 32
+    },
+    {
+      "label": "static_6_B12000_M40",
+      "dataset": "synthetic",
+      "synthetic": true,
+      "batch": 12000,
+      "M": 40,
+      "N": 40
+    },
+    {
+      "label": "static_7_B15_M56",
+      "dataset": "synthetic",
+      "synthetic": true,
+      "batch": 15,
+      "M": 56,
+      "N": 56
+    },
+    {
+      "label": "static_8_B18000_M72",
+      "dataset": "synthetic",
+      "synthetic": true,
+      "batch": 18000,
+      "M": 72,
+      "N": 72
+    },
+    {
+      "label": "static_9_B20000_M96",
+      "dataset": "synthetic",
+      "synthetic": true,
+      "batch": 20000,
+      "M": 96,
+      "N": 96
+    }
+  ]
+}

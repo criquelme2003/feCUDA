@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.18)
 # Configurar compiladores explícitamente
 set(CMAKE_C_COMPILER gcc-12)
 set(CMAKE_CXX_COMPILER g++-12)
-set(CMAKE_CUDA_COMPILER /usr/local/cuda-13.0/bin/nvcc)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
 
 # Forzar que NVCC use GCC-12
 set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -ccbin g++-12")
@@ -35,11 +35,6 @@ include_directories(include/algorithms)
 include_directories(include/utils)
 include_directories(include/kernels)
 
-# Directorios donde buscar bibliotecas compartidas
-# Preferir las librerías de la versión de CUDA que usamos para compilar para no mezclar runtimes del sistema
-link_directories(/usr/local/cuda-13.0/targets/x86_64-linux/lib)
-link_directories(/usr/local/cuda-13.0/lib64)
-link_directories(/usr/lib/x86_64-linux-gnu/libcutensor/12)
 
 # Archivos fuente del proyecto - nueva estructura modular
 file(GLOB MAIN_SOURCES "src/main.cu")
@@ -81,9 +76,32 @@ find_package(mathdx REQUIRED
     PATHS "${mathdx_ROOT}"
 )
 
-set(CUDA_TOOLKIT_LIB_DIR "/usr/local/cuda-13.0/targets/x86_64-linux/lib")
-set(CUDA_CUDADEVRT_LIB "${CUDA_TOOLKIT_LIB_DIR}/libcudadevrt.a")
-set(CUDA_CUDART_STATIC_LIB "${CUDA_cudart_static_LIBRARY}")
+# Directorios donde buscar bibliotecas compartidas
+# Preferir las librerías de la versión de CUDA que usamos para compilar para no mezclar runtimes del sistema
+if(CUDAToolkit_LIBRARY_ROOT)
+    link_directories(${CUDAToolkit_LIBRARY_ROOT}/targets/x86_64-linux/lib)
+    link_directories(${CUDAToolkit_LIBRARY_ROOT}/lib64)
+endif()
+
+unset(CUTENSOR_LIBRARY CACHE)
+find_library(CUTENSOR_LIBRARY NAMES cutensor PATHS /usr/lib/x86_64-linux-gnu)
+if(NOT CUTENSOR_LIBRARY AND EXISTS /usr/lib/x86_64-linux-gnu/libcutensor.so)
+    set(CUTENSOR_LIBRARY /usr/lib/x86_64-linux-gnu/libcutensor.so CACHE FILEPATH "Path to cutensor library" FORCE)
+endif()
+if(NOT CUTENSOR_LIBRARY)
+    message(WARNING "cutensor library not found; building without cutensor linkage")
+endif()
+
+if(TARGET CUDA::cudadevrt)
+    set(CUDA_CUDADEVRT_LIB CUDA::cudadevrt)
+else()
+    set(CUDA_TOOLKIT_LIB_DIR "${CUDAToolkit_LIBRARY_ROOT}/targets/x86_64-linux/lib")
+    set(CUDA_CUDADEVRT_LIB "${CUDA_TOOLKIT_LIB_DIR}/libcudadevrt.a")
+endif()
+
+if(TARGET CUDA::cudart_static)
+    set(CUDA_CUDART_STATIC_LIB CUDA::cudart_static)
+endif()
 
 add_library(fecuda_core STATIC
     ${CORE_SOURCES}
@@ -111,9 +129,11 @@ target_link_libraries(fecuda_core
         Python3::NumPy
         fmt::fmt
         cudnn
-        cutensor
         cublas
 )
+if(CUTENSOR_LIBRARY)
+    target_link_libraries(fecuda_core PUBLIC ${CUTENSOR_LIBRARY})
+endif()
 target_compile_definitions(fecuda_core
     PUBLIC
         FECUDA_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
