@@ -1,4 +1,5 @@
 {
+  "20251230_233229_static": "bench/results/20251230_233229_static/metrics.csv",
   "cpu_bench": "bench/results/cpu_bench/metrics.csv",
   "gpu_bench": "bench/results/gpu_bench/metrics.csv"
 }
