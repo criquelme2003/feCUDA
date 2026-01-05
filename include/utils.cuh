@@ -22,21 +22,33 @@
             exit(EXIT_FAILURE);                                                 \
         }                                                                       \
     }
+#define CHECK_KERNEL()                                                      \
+    {                                                                        \
+        cudaError_t err = cudaGetLastError();                                \
+        if (err != cudaSuccess) {                                            \
+            std::cerr << "CUDA kernel launch error at "                      \
+                      << __FILE__ << ":" << __LINE__ << " : "               \
+                      << cudaGetErrorString(err) << std::endl;              \
+            exit(EXIT_FAILURE);                                              \
+        }                                                                    \
+    }
+
+    
 
 #define CHECK_CURAND(x) do { if((x)!=CURAND_STATUS_SUCCESS) { \
     printf("Error at %s:%d\n",__FILE__,__LINE__);\
     return EXIT_FAILURE;}} while(0)
 
 
-// Función para limpiar memoria de TensorResult de forma segura
-void safe_tensor_cleanup(TensorResult &tensor);
+// Función para limpiar memoria de TensorResult<> de forma segura
+void safe_tensor_cleanup(TensorResult<> &tensor);
 
 // Función para crear una copia del tensor en memoria host
-TensorResult copy_tensor(const TensorResult &src);
-TensorResult copy_tensor_to_cpu(const TensorResult &src);
-TensorResult copy_tensor_to_gpu(const TensorResult &src);
+TensorResult<> copy_tensor(const TensorResult<> &src);
+TensorResult<> copy_tensor_to_cpu(const TensorResult<> &src);
+TensorResult<> copy_tensor_to_gpu(const TensorResult<> &src);
 
-void calculate_prima(const TensorResult &maxmin_conjugado, const TensorResult &gen_tensor,TensorResult &prima, bool keep_in_device = false);
+void calculate_prima(const TensorResult<> &maxmin_conjugado, const TensorResult<> &gen_tensor,TensorResult<> &prima, bool keep_in_device = false);
 
 // template<typename F1,typename F2,typename... Op_args>
 // void batchedOp( 
@@ -86,7 +98,7 @@ void batchedOp(
     op(args...);
 
     if(req_gpu_mem < free_gpu_mem){
-        // specific cuts by arg (only TensorResult types)
+        // specific cuts by arg (only TensorResult<> types)
         int count = 0;
         for (const auto p : {args...})
         {
@@ -99,5 +111,8 @@ void batchedOp(
 
 
 };
+
+
+
 
 #endif

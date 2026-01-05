@@ -7,11 +7,11 @@
 #include <utils.cuh>
 #include <utils/cuda_utils.cuh>
 
-void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
-                               std::vector<TensorResult> &result_tensor_paths,
-                               std::vector<TensorResult> &result_values_paths,
-                               std::vector<TensorResult> &pure_tensor_paths,
-                               std::vector<TensorResult> &pure_values_paths,
+void iterative_maxmin_cuadrado(const TensorResult<> &tensor, float thr, int order,
+                               std::vector<TensorResult<>> &result_tensor_paths,
+                               std::vector<TensorResult<>> &result_values_paths,
+                               std::vector<TensorResult<>> &pure_tensor_paths,
+                               std::vector<TensorResult<>> &pure_values_paths,
                                bool keep_in_device)
 {
     // Verificar estado del dispositivo CUDA
@@ -48,10 +48,10 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
     }
 
     // Copiar tensor original (asignar ownership)
-    TensorResult original_tensor = tensor;
+    TensorResult<> original_tensor = tensor;
 
     // Inicializar gen_tensor como copia del tensor original
-    TensorResult gen_tensor = copy_tensor(original_tensor);
+    TensorResult<> gen_tensor = copy_tensor(original_tensor);
 
     // Limpiar vectores de salida
     result_tensor_paths.clear();
@@ -62,7 +62,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
     for (int i = 0; i < order - 1; i++)
     {
         // Calcular min_result y maxmin_conjugado
-        TensorResult min_result, maxmin_conjugado;
+        TensorResult<> min_result, maxmin_conjugado;
         
         // maxmin(gen_tensor, original_tensor, maxmin_conjugado, min_result, keep_in_device);
 
@@ -73,15 +73,15 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
             min_result.owns_memory = true;
 
         // Calcular prima
-        TensorResult prima;
+        TensorResult<> prima;
         calculate_prima(maxmin_conjugado, gen_tensor, prima, keep_in_device);
         // Calcular indices
-        TensorResult result_tensor, result_values;
+        TensorResult<> result_tensor, result_values;
         indices(min_result, prima, result_tensor, result_values, thr, keep_in_device);
 
         // Para vectores de almacenamiento (siempre CPU para evitar problemas con std::vector)
-        TensorResult pure_tensor_copy = copy_tensor_to_cpu(result_tensor);
-        TensorResult pure_values_copy = copy_tensor_to_cpu(result_values);
+        TensorResult<> pure_tensor_copy = copy_tensor_to_cpu(result_tensor);
+        TensorResult<> pure_values_copy = copy_tensor_to_cpu(result_values);
         pure_tensor_paths.push_back(std::move(pure_tensor_copy));
         pure_values_paths.push_back(std::move(pure_values_copy));
 
@@ -114,7 +114,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
         if (i >= 1)
         {
             // CORRECCIÓN 3: Usar índices correctos para previous_paths
-            TensorResult previous_paths;
+            TensorResult<> previous_paths;
             if (i == 1)
             {
                 if (keep_in_device)
@@ -131,7 +131,7 @@ void iterative_maxmin_cuadrado(const TensorResult &tensor, float thr, int order,
                 previous_paths = copy_tensor(result_tensor_paths[i - 2]); // Mantiene ubicación
             }
 
-            TensorResult paths, values;
+            TensorResult<> paths, values;
             armar_caminos_batch(previous_paths, // previous_paths: caminos previos
                                 result_tensor,  // current_paths: nuevos caminos encontrados
                                 result_values,  // current_values: valores correspondientes

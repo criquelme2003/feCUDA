@@ -31,15 +31,18 @@ target_link_libraries(fecuda_main
     CUDA::curand
 )
 
+target_compile_definitions(fecuda_main PUBLIC FOO=1)
+
+
 set_target_properties(fecuda_main PROPERTIES
     CUDA_SEPARABLE_COMPILATION ON
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
 )
 
-# target_compile_options(fecuda_main PRIVATE
-#   $<$<COMPILE_LANGUAGE:CUDA>:-G>
-# )
+target_compile_options(fecuda_main PRIVATE
+  $<$<COMPILE_LANGUAGE:CUDA>:-G>
+)
 
 target_compile_options(fecuda_main PRIVATE
   $<$<COMPILE_LANGUAGE:CUDA>: -lineinfo>

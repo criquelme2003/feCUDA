@@ -1,20 +1,26 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
-#include <float.h>
 #include <cstdio>
 #include <cstdlib>
 #include <core/types.cuh>
 #include <kernels/maxmin_kernels.cuh>
 #include <utils.cuh>
- 
+#include <cuda_fp16.h>
 
 /*
-REVISAR SI O SI DIMENSIONES DE LANZAMIENTO Y ACCESO DE MEMORIA COALESCIDO
+
+TODO: LIMITAR GRID SIZE Y ADAPTAR KERNEL PARA RECORRER MÁS DE UN K. 
 */
 
-// Versión mejorada de maxmin que usa TensorResult y retorna tanto max como min
-void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
-            TensorResult &max_result, TensorResult &min_result,cudaEvent_t &start, cudaEvent_t &end,
+// Versión mejorada de maxmin que usa TensorResult<> y retorna tanto max como min
+
+long long ceil_div_128(__int128 n, long long d) {
+    return (long long)((n + d - 1) / d);
+}
+
+template <typename T>
+void maxmin(const TensorResult<T> &tensor1, const TensorResult<T> &tensor2,
+            TensorResult<T> &max_result, TensorResult<T> &min_result, cudaEvent_t &start, cudaEvent_t &end,
             bool keep_in_device)
 {
 
@@ -31,94 +37,89 @@ void maxmin(const TensorResult &tensor1, const TensorResult &tensor2,
     int M = tensor1.M;
     int K = tensor1.N; // En el contexto del kernel, N del tensor1 es K
     int N = tensor2.N;
-    
-    
 
     // Tamaños de memoria
-    size_t size_A = batch * M * K * sizeof(float);
-    size_t size_B = batch * K * N * sizeof(float);
-    size_t size_C_min = batch * M * N * K * sizeof(float);
-    size_t size_C_max = batch * M * N * sizeof(float);
-
+    size_t size_C_min = batch * M * N * K * sizeof(T);
+    size_t size_C_max = batch * M * N * sizeof(T);
+    
     // Alocar memoria en device
-    float *d_A, *d_B, *d_C_min, *d_C_max;
-    CHECK_CUDA(cudaMalloc(&d_A, size_A));
-    CHECK_CUDA(cudaMalloc(&d_B, size_B));
+    T *d_A, *d_B, *d_C_min, *d_C_max;
     CHECK_CUDA(cudaMalloc(&d_C_min, size_C_min));
     CHECK_CUDA(cudaMalloc(&d_C_max, size_C_max));
-
-    // Preparar datos host si es necesario
-    float *h_A = tensor1.data;
-    float *h_B = tensor2.data;
-    bool liberar_A = false, liberar_B = false;
-
+    
+    
     if (tensor1.is_device_ptr)
     {
-        h_A = (float *)malloc(size_A);
-        CHECK_CUDA(cudaMemcpy(h_A, tensor1.data, size_A, cudaMemcpyDeviceToHost));
-        liberar_A = true;
+        d_A = tensor1.data;
+    }else{
+        size_t size_A = batch * M * K * sizeof(T);
+        CHECK_CUDA(cudaMalloc(&d_A, size_A));
+        CHECK_CUDA(cudaMemcpy(d_A,tensor1.data, size_A, cudaMemcpyHostToDevice));  
     }
 
     if (tensor2.is_device_ptr)
     {
-        h_B = (float *)malloc(size_B);
-        CHECK_CUDA(cudaMemcpy(h_B, tensor2.data, size_B, cudaMemcpyDeviceToHost));
-        liberar_B = true;
+        d_B = tensor2.data;
+    }else{
+        size_t size_B = batch * K * N * sizeof(T);
+        CHECK_CUDA(cudaMalloc(&d_B, size_B));
+        CHECK_CUDA(cudaMemcpy(d_B, tensor2.data, size_B, cudaMemcpyHostToDevice));
     }
+
 
     // Copiar datos al device
-    CHECK_CUDA(cudaMemcpy(d_A, h_A, size_A, cudaMemcpyHostToDevice));
-    CHECK_CUDA(cudaMemcpy(d_B, h_B, size_B, cudaMemcpyHostToDevice));
 
+    constexpr int WARPS_PER_BLOCK = 4;
+    int blockSize = WARPS_PER_BLOCK * 32;
+    int k_launch_size = (static_cast<int>((K + 31) / 32)) * 32;
     
-    // Configurar grid y bloques para el kernel
-    //dim3 blockSize(nextPow2(K)); // la potencia de 2 mas cercana threads por bloque
-    //dim3 gridSize(N, M, batch);  // Grid de (N, M, batch)
+
+
+    __int128 total =
+        (__int128)M * (__int128)N * (__int128)batch * (__int128)k_launch_size;
+
+    long long grid_ll = ceil_div_128(total, blockSize);
     
-    int  blockSize = min(max(256,nextPow2(K)),1024);
-    int k_by_block = blockSize / K;
-    blockSize = k_by_block * K;
-    int total_elements = M * N * batch * K;
-    int gridSize = ((M * N * batch * K) + (k_by_block * K) - 1) / (k_by_block * K);
+    
+    printf("total elements: %lld\n", total);
+    printf("grid_ll: %lld\n", grid_ll);
 
-    size_t shared_mem_size = blockSize * sizeof(float);
-
-    std::cout << "dims: (" << gridSize << ","
-              << blockSize << ", shared memory:"
-              << shared_mem_size << ", k by block:"
-              << k_by_block << 
-              std::endl;
-
-    // Ejecutar kernel
-    cudaEventRecord(start);
-    max_min_kernel<<<gridSize, blockSize, shared_mem_size>>>(d_A, d_B, d_C_min, d_C_max, M, K, N, batch);
-    cudaEventRecord(end);
-    cudaDeviceSynchronize();
-
-    cudaError_t le = cudaGetLastError();
-    if(le != cudaSuccess){
-        std::cerr << "Error in maxmin kernel: " << cudaGetErrorString(le) << std::endl;
-        exit(EXIT_FAILURE);
+    if (grid_ll > INT_MAX) {
+        printf("grid too large: %lld\n", (long long)grid_ll);
+        exit(1);
     }
+    
+    int gridSize = (int)grid_ll;
+    std::cout << "dims: (" << gridSize
+              << ", " << blockSize
+              << ", ksize: " << k_launch_size
+              << ")" << std::endl;
+    // Ejecutar kernel
+    
+    CHECK_CUDA(cudaEventRecord(start));
+    cub_max_min_kernel<T,WARPS_PER_BLOCK>
+        <<<gridSize, blockSize>>>(d_A, d_B, d_C_min, d_C_max, M, K, N, batch);
+    CHECK_CUDA(cudaEventRecord(end));
+    CHECK_KERNEL()
+
 
     // Crear tensor resultado para C_max (solo retornamos C_max para validación)
-    float *h_C_max = (float *)malloc(size_C_max);
-    float *h_C_min = (float *)malloc(size_C_min); // Si se quiere retornar min también
-    
+    T *h_C_max = (T *)malloc(size_C_max);
+    T *h_C_min = (T *)malloc(size_C_min); // Si se quiere retornar min también
+
     CHECK_CUDA(cudaMemcpy(h_C_max, d_C_max, size_C_max, cudaMemcpyDeviceToHost));
     CHECK_CUDA(cudaMemcpy(h_C_min, d_C_min, size_C_min, cudaMemcpyDeviceToHost));
 
-    max_result = TensorResult(h_C_max, false, batch, M, N, 1, true);
-    min_result = TensorResult(h_C_min, false, batch, M, N, K, true);
+    max_result = TensorResult<T>(h_C_max, false, batch, M, N, 1, true);
+    min_result = TensorResult<T>(h_C_min, false, batch, M, N, K, true);
     // Limpiar memoria
-    cudaFree(d_A);
-    cudaFree(d_B);
-    cudaFree(d_C_min);
-    cudaFree(d_C_max);
-    if (liberar_A)
-        free(h_A);
-    if (liberar_B)
-        free(h_B);
+    CHECK_CUDA(cudaFree(d_C_min));
+    CHECK_CUDA(cudaFree(d_C_max));
 
     return;
 }
+
+
+template void maxmin<float>(const TensorResult<float> &, const TensorResult<float> &, TensorResult<float> &, TensorResult<float> &, cudaEvent_t&, cudaEvent_t&, bool);
+
+template void maxmin<__half>(const TensorResult<__half> &, const TensorResult<__half> &, TensorResult<__half> &, TensorResult<__half> &, cudaEvent_t&, cudaEvent_t&, bool);

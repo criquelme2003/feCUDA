@@ -13,8 +13,8 @@ __global__ void calculate_prima_kernel(float *maxmin_conjugado, float *gen_tenso
     }
 }
 
-void calculate_prima(const TensorResult &maxmin_conjugado, const TensorResult &gen_tensor,
-                     TensorResult &prima, bool keep_in_device)
+void calculate_prima(const TensorResult<> &maxmin_conjugado, const TensorResult<> &gen_tensor,
+                     TensorResult<> &prima, bool keep_in_device)
 {
     // Verificar que las dimensiones coincidan
     if (maxmin_conjugado.batch != gen_tensor.batch ||
@@ -61,7 +61,7 @@ void calculate_prima(const TensorResult &maxmin_conjugado, const TensorResult &g
                                                       d_prima, total_elements);
     CHECK_CUDA(cudaDeviceSynchronize());
     
-    // Configurar TensorResult de salida según keep_in_device
+    // Configurar TensorResult<> de salida según keep_in_device
     if (keep_in_device)
     {
         // Mantener en GPU

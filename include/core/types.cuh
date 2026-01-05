@@ -5,26 +5,28 @@
 #include <cstdlib>
 #include <cstring>
 #include <new>
+#include <cuda_fp16.h>
 
 // Estructura para mantener información completa del tensor
+template<typename T = float>
 struct TensorResult
 {
-    float *data;        // Puntero a los datos
+    T *data;        // Puntero a los datos
     bool is_device_ptr; // Indica si los datos están en device o host
     bool owns_memory;   // Indica si este TensorResult es dueño de la memoria
     int batch, M, N, K; // Dimensiones del tensor (K para dimensiones adicionales)
 
-    // Constructor completo con ownership
-    TensorResult(float *d, bool is_dev, int b, int m, int n, int k = 1, bool owns = true)
-        : data(d), is_device_ptr(is_dev), owns_memory(owns), batch(b), M(m), N(n), K(k)
-    {
-    }
 
+    // Constructor completo con ownership
+    TensorResult(T *d, bool is_dev, int b, int m, int n, int k = 1, bool owns = true)
+        : data(d), is_device_ptr(is_dev), owns_memory(owns), batch(b), M(m), N(n), K(k){}
+
+    
     // Constructor por defecto
     TensorResult() : data(nullptr), is_device_ptr(false), owns_memory(false), batch(0), M(0), N(0), K(0) {}
 
     // Constructor de copia (disable ownership por defecto)
-    TensorResult(const TensorResult &other)
+    TensorResult(const TensorResult<T> &other)
         : data(other.data), is_device_ptr(other.is_device_ptr), owns_memory(false),
           batch(other.batch), M(other.M), N(other.N), K(other.K)
     {
@@ -32,7 +34,7 @@ struct TensorResult
     }
 
     // Move constructor (transferir ownership y puntero)
-    TensorResult(TensorResult &&other) noexcept
+    TensorResult(TensorResult<T> &&other) noexcept
         : data(other.data), is_device_ptr(other.is_device_ptr), owns_memory(other.owns_memory),
           batch(other.batch), M(other.M), N(other.N), K(other.K)
     {
@@ -42,7 +44,7 @@ struct TensorResult
     }
 
     // Operador de asignación
-    TensorResult &operator=(const TensorResult &other)
+    TensorResult<T> &operator=(const TensorResult<T> &other)
     {
         if (this != &other)
         {
@@ -62,7 +64,7 @@ struct TensorResult
     }
 
     // Move assignment
-    TensorResult &operator=(TensorResult &&other) noexcept
+    TensorResult<T> &operator=(TensorResult<T> &&other) noexcept
     {
         if (this != &other)
         {
@@ -85,11 +87,7 @@ struct TensorResult
     // Destructor seguro
     ~TensorResult()
     {
-        if (data && owns_memory)
-        {
-
             cleanup();
-        }
     }
 
     // Función para limpiar memoria
@@ -119,33 +117,33 @@ struct TensorResult
     // Función para obtener el tamaño en bytes
     size_t size_bytes() const
     {
-        return static_cast<size_t>(batch) * M * N * K * sizeof(float);
+        return static_cast<size_t>(batch) * M * N * K * sizeof(T);
     }
 
     // Función para clonar este tensor usando C++
-    TensorResult clone() const
+    TensorResult<T> clone() const
     {
         if (!data)
-            return TensorResult();
+            return TensorResult<T>();
 
-        const size_t size = batch * M * N * K * sizeof(float);
-        float *new_data = nullptr;
+        const size_t size = batch * M * N * K * sizeof(T);
+        T *new_data = nullptr;
 
         if (is_device_ptr)
         {
             cudaMalloc(&new_data, size);
             cudaMemcpy(new_data, data, size, cudaMemcpyDeviceToDevice);
-            return TensorResult(new_data, true, batch, M, N, K, true);
+            return TensorResult<T>(new_data, true, batch, M, N, K, true);
         }
         else
         {
-            new_data = static_cast<float *>(std::malloc(size));
+            new_data = static_cast<T *>(std::malloc(size));
             if (!new_data)
             {
                 throw std::bad_alloc();
             }
             memcpy(new_data, data, size);
-            return TensorResult(new_data, false, batch, M, N, K, true);
+            return TensorResult<T>(new_data, false, batch, M, N, K, true);
         }
     }
 

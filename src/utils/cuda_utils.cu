@@ -19,8 +19,8 @@ namespace CudaUtils
 } // namespace CudaUtils
 
 
-// Función para limpiar memoria de TensorResult de forma segura
-void safe_tensor_cleanup(TensorResult &tensor)
+// Función para limpiar memoria de TensorResult<> de forma segura
+void safe_tensor_cleanup(TensorResult<> &tensor)
 {
     if (tensor.data && tensor.owns_memory)
     {
@@ -39,9 +39,9 @@ void safe_tensor_cleanup(TensorResult &tensor)
 }
 
 // Función para crear una copia del tensor en memoria host
-TensorResult copy_tensor(const TensorResult &src)
+TensorResult<> copy_tensor(const TensorResult<> &src)
 {
-    TensorResult dst;
+    TensorResult<> dst;
     size_t size = src.batch * src.M * src.N * src.K * sizeof(float);
     
     if (src.is_device_ptr)
@@ -71,9 +71,9 @@ TensorResult copy_tensor(const TensorResult &src)
 
 
 // Función para forzar copia en CPU
-TensorResult copy_tensor_to_cpu(const TensorResult &src)
+TensorResult<> copy_tensor_to_cpu(const TensorResult<> &src)
 {
-    TensorResult dst;
+    TensorResult<> dst;
     size_t size = src.batch * src.M * src.N * src.K * sizeof(float);
     
     dst.data = (float *)malloc(size);
@@ -98,9 +98,9 @@ TensorResult copy_tensor_to_cpu(const TensorResult &src)
 }
 
 // Función para forzar copia en GPU
-TensorResult copy_tensor_to_gpu(const TensorResult &src)
+TensorResult<> copy_tensor_to_gpu(const TensorResult<> &src)
 {
-    TensorResult dst;
+    TensorResult<> dst;
     size_t size = src.batch * src.M * src.N * src.K * sizeof(float);
     
     CHECK_CUDA(cudaMalloc(&dst.data, size));

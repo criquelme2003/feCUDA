@@ -56,9 +56,9 @@ __global__ void find_path_matches_kernel(float *previous_paths, float *result_te
     }
 }
 
-void armar_caminos_original(const TensorResult &previous_paths, const TensorResult &result_tensor,
-                            const TensorResult &result_values, TensorResult &paths,
-                            TensorResult &matched_values, int iteration, bool keep_in_device)
+void armar_caminos_original(const TensorResult<> &previous_paths, const TensorResult<> &result_tensor,
+                            const TensorResult<> &result_values, TensorResult<> &paths,
+                            TensorResult<> &matched_values, int iteration, bool keep_in_device)
 {
     // Validaciones
     if (previous_paths.data == nullptr)
@@ -186,7 +186,7 @@ void armar_caminos_original(const TensorResult &previous_paths, const TensorResu
             CHECK_CUDA(cudaMemcpy(d_output_paths_final, d_output_paths, final_paths_size, cudaMemcpyDeviceToDevice));
             CHECK_CUDA(cudaMemcpy(d_output_values_final, d_output_values, final_values_size, cudaMemcpyDeviceToDevice));
 
-            // Configurar TensorResult en GPU
+            // Configurar TensorResult<> en GPU
             paths.data = d_output_paths_final;
             paths.is_device_ptr = true;
             paths.owns_memory = true;
@@ -225,7 +225,7 @@ void armar_caminos_original(const TensorResult &previous_paths, const TensorResu
                 CHECK_CUDA(cudaMemcpy(h_output_paths, d_output_paths, final_paths_size, cudaMemcpyDeviceToHost));
                 CHECK_CUDA(cudaMemcpy(h_output_values, d_output_values, final_values_size, cudaMemcpyDeviceToHost));
 
-                // Configurar TensorResult en CPU
+                // Configurar TensorResult<> en CPU
                 paths.data = h_output_paths;
                 paths.is_device_ptr = false;
                 paths.owns_memory = true;
@@ -248,7 +248,7 @@ void armar_caminos_original(const TensorResult &previous_paths, const TensorResu
     {
         printf("Error: No se encontraron matches\n");
 
-        // Configurar TensorResult vacíos
+        // Configurar TensorResult<> vacíos
         paths.data = nullptr;
         paths.is_device_ptr = false;
         paths.owns_memory = false;
@@ -281,9 +281,9 @@ void armar_caminos_original(const TensorResult &previous_paths, const TensorResu
 }
 
 // SOLUCIÓN 1: Procesamiento por lotes (batches)
-void armar_caminos_batch(const TensorResult &previous_paths, const TensorResult &result_tensor,
-                         const TensorResult &result_values, TensorResult &paths,
-                         TensorResult &matched_values, int iteration, int batch_size, bool keep_in_device)
+void armar_caminos_batch(const TensorResult<> &previous_paths, const TensorResult<> &result_tensor,
+                         const TensorResult<> &result_values, TensorResult<> &paths,
+                         TensorResult<> &matched_values, int iteration, int batch_size, bool keep_in_device)
 {
     // Validaciones básicas
     if (previous_paths.data == nullptr || result_tensor.data == nullptr || result_values.data == nullptr)
@@ -313,7 +313,7 @@ void armar_caminos_batch(const TensorResult &previous_paths, const TensorResult 
         int current_batch_size = std::min(batch_size, num_prev_paths - batch_start);
 
         // Crear sub-tensor para este lote
-        TensorResult batch_paths;
+        TensorResult<> batch_paths;
         batch_paths.data = previous_paths.data + (batch_start * prev_cols);
         batch_paths.is_device_ptr = previous_paths.is_device_ptr;
         batch_paths.owns_memory = false;
@@ -323,7 +323,7 @@ void armar_caminos_batch(const TensorResult &previous_paths, const TensorResult 
         batch_paths.K = previous_paths.K;
 
         // Procesar este lote - usar keep_in_device para el lote si acumulamos en GPU
-        TensorResult batch_result_paths, batch_result_values;
+        TensorResult<> batch_result_paths, batch_result_values;
         armar_caminos_original(batch_paths, result_tensor, result_values,
                                batch_result_paths, batch_result_values, iteration, accumulate_on_gpu);
 

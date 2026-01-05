@@ -3,6 +3,10 @@
 
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
+#include <cub/cub.cuh>
+#include <utils.cuh>
+#include <cuda_fp16.h>
+
 /**
  * KERNEL MAXMIN OPTIMIZADO CON MEMORIA COMPARTIDA
  *
@@ -22,4 +26,26 @@ __global__ void max_min_kernel(
     float *C_max,   // [batch, M, N]
     const int M, const int K, const int N, const int batch_size);
 
-#endif // MAXMIN_KERNELS_CUH
+template <typename T, int WARPS_PER_BLOCK>
+__global__ void cub_max_min_kernel(
+    const T *__restrict__ A, // [batch, M, K]
+    const T *__restrict__ B, // [batch, K, N]
+    T *__restrict__ C_min,   // [batch, M, K, N]
+    T *__restrict__ C_max,   // [batch, M, N]
+    const int M, const int K, const int N, const int batch_size);
+
+extern template __global__ void cub_max_min_kernel<__half,4>(
+    const __half*, // [batch, M, K]
+    const __half*, // [batch, M, K]
+    __half*,       // [batch, M, K]
+    __half*,       // [batch, M, K]
+    const int, const int, const int, const int);
+
+extern template __global__ void cub_max_min_kernel<float,4>(
+    const float*, // [batch, M, K]
+    const float*, // [batch, M, K]
+    float*,       // [batch, M, K]
+    float*,       // [batch, M, K]
+    const int, const int, const int, const int);
+
+#endif 

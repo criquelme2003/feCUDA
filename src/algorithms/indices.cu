@@ -74,12 +74,12 @@ __global__ void strainer(float *min_res,
     }
 }
 
-void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
-             TensorResult &result_tensor_filtered, TensorResult &result_tensor_values,
+void indices(const TensorResult<> &min_result, const TensorResult<> &maxmin_prima,
+             TensorResult<> &result_tensor_filtered, TensorResult<> &result_tensor_values,
              float threshold, bool keep_in_device){
     // Inicializar resultados como vacíos
-    result_tensor_filtered = TensorResult();
-    result_tensor_values = TensorResult();
+    result_tensor_filtered = TensorResult<>();
+    result_tensor_values = TensorResult<>();
 
     // Verificar estado previo del dispositivo CUDA
     cudaError_t sync_status = cudaDeviceSynchronize();
@@ -284,8 +284,8 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
         CHECK_CUDA(cudaMemcpy(d_values_final, h_values_accum.data(), static_cast<size_t>(total_output_count) * sizeof(float), cudaMemcpyHostToDevice));
         CHECK_CUDA(cudaMemcpy(d_indices_final, h_indices_accum.data(), static_cast<size_t>(total_output_count) * 4 * sizeof(float), cudaMemcpyHostToDevice));
 
-        result_tensor_filtered = TensorResult(d_indices_final, true, 1, total_output_count, 4, 1, true);
-        result_tensor_values = TensorResult(d_values_final, true, 1, 1, total_output_count, 1, true);
+        result_tensor_filtered = TensorResult<>(d_indices_final, true, 1, total_output_count, 4, 1, true);
+        result_tensor_values = TensorResult<>(d_values_final, true, 1, 1, total_output_count, 1, true);
     }
     else
     {
@@ -300,7 +300,7 @@ void indices(const TensorResult &min_result, const TensorResult &maxmin_prima,
         }
         std::memcpy(h_values, h_values_accum.data(), static_cast<size_t>(total_output_count) * sizeof(float));
         std::memcpy(h_indices, h_indices_accum.data(), static_cast<size_t>(total_output_count) * 4 * sizeof(float));
-        result_tensor_filtered = TensorResult(h_indices, false, 1, total_output_count, 4, 1, true);
-        result_tensor_values = TensorResult(h_values, false, 1, 1, total_output_count, 1, true);
+        result_tensor_filtered = TensorResult<>(h_indices, false, 1, total_output_count, 4, 1, true);
+        result_tensor_values = TensorResult<>(h_values, false, 1, 1, total_output_count, 1, true);
     }
 }
