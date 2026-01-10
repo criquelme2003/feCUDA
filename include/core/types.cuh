@@ -1,168 +1,166 @@
 #ifndef TYPES_CUH
 #define TYPES_CUH
 
-#include <cuda_runtime.h>
+#include "../../include/utils.cuh"
+#include <algorithm>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <new>
 #include <cuda_fp16.h>
+#include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
+#include <driver_types.h>
+#include <exception>
+#include <iostream>
+#include <iterator>
+#include <limits.h>
+#include <limits>
+#include <vector>
 
-// Estructura para mantener información completa del tensor
-template<typename T = float>
-struct TensorResult
-{
-    T *data;        // Puntero a los datos
-    bool is_device_ptr; // Indica si los datos están en device o host
-    bool owns_memory;   // Indica si este TensorResult es dueño de la memoria
-    int batch, M, N, K; // Dimensiones del tensor (K para dimensiones adicionales)
+enum class MemorySpace { Host, Device };
 
-
-    // Constructor completo con ownership
-    TensorResult(T *d, bool is_dev, int b, int m, int n, int k = 1, bool owns = true)
-        : data(d), is_device_ptr(is_dev), owns_memory(owns), batch(b), M(m), N(n), K(k){}
-
-    
-    // Constructor por defecto
-    TensorResult() : data(nullptr), is_device_ptr(false), owns_memory(false), batch(0), M(0), N(0), K(0) {}
-
-    // Constructor de copia (disable ownership por defecto)
-    TensorResult(const TensorResult<T> &other)
-        : data(other.data), is_device_ptr(other.is_device_ptr), owns_memory(false),
-          batch(other.batch), M(other.M), N(other.N), K(other.K)
-    {
-        // Por defecto, las copias NO poseen la memoria para evitar double free
-    }
-
-    // Move constructor (transferir ownership y puntero)
-    TensorResult(TensorResult<T> &&other) noexcept
-        : data(other.data), is_device_ptr(other.is_device_ptr), owns_memory(other.owns_memory),
-          batch(other.batch), M(other.M), N(other.N), K(other.K)
-    {
-        other.data = nullptr;
-        other.owns_memory = false;
-        other.batch = other.M = other.N = other.K = 0;
-    }
-
-    // Operador de asignación
-    TensorResult<T> &operator=(const TensorResult<T> &other)
-    {
-        if (this != &other)
-        {
-            // Liberar memoria propia si la tenemos
-            cleanup();
-
-            // Copiar datos (sin ownership por defecto)
-            data = other.data;
-            is_device_ptr = other.is_device_ptr;
-            owns_memory = false; // Por seguridad, no transferir ownership
-            batch = other.batch;
-            M = other.M;
-            N = other.N;
-            K = other.K;
-        }
-        return *this;
-    }
-
-    // Move assignment
-    TensorResult<T> &operator=(TensorResult<T> &&other) noexcept
-    {
-        if (this != &other)
-        {
-            cleanup();
-            data = other.data;
-            is_device_ptr = other.is_device_ptr;
-            owns_memory = other.owns_memory;
-            batch = other.batch;
-            M = other.M;
-            N = other.N;
-            K = other.K;
-
-            other.data = nullptr;
-            other.owns_memory = false;
-            other.batch = other.M = other.N = other.K = 0;
-        }
-        return *this;
-    }
-
-    // Destructor seguro
-    ~TensorResult()
-    {
-            cleanup();
-    }
-
-    // Función para limpiar memoria
-    void cleanup()
-    {
-        if (data && owns_memory)
-        {
-            if (is_device_ptr)
-            {
-                cudaFree(data);
-            }
-            else
-            {
-                std::free(data);
-            }
-        }
-        data = nullptr;
-        owns_memory = false;
-    }
-
-    // Función para transferir ownership
-    void transfer_ownership(bool should_own)
-    {
-        owns_memory = should_own;
-    }
-
-    // Función para obtener el tamaño en bytes
-    size_t size_bytes() const
-    {
-        return static_cast<size_t>(batch) * M * N * K * sizeof(T);
-    }
-
-    // Función para clonar este tensor usando C++
-    TensorResult<T> clone() const
-    {
-        if (!data)
-            return TensorResult<T>();
-
-        const size_t size = batch * M * N * K * sizeof(T);
-        T *new_data = nullptr;
-
-        if (is_device_ptr)
-        {
-            cudaMalloc(&new_data, size);
-            cudaMemcpy(new_data, data, size, cudaMemcpyDeviceToDevice);
-            return TensorResult<T>(new_data, true, batch, M, N, K, true);
-        }
-        else
-        {
-            new_data = static_cast<T *>(std::malloc(size));
-            if (!new_data)
-            {
-                throw std::bad_alloc();
-            }
-            memcpy(new_data, data, size);
-            return TensorResult<T>(new_data, false, batch, M, N, K, true);
-        }
-    }
-
-    // Función para obtener el número total de elementos
-    size_t total_elements() const
-    {
-        return static_cast<size_t>(batch) * M * N * K;
-    }
+struct TensorResultDims {
+  int b = 0;
+  int m = 0;
+  int n = 0;
+  int k = 0;
+  int getTotal() { return b * m * n * k; }
 };
 
-inline unsigned int nextPow2(unsigned int x)
-{
-    --x;
-    x |= x >> 1;
-    x |= x >> 2;
-    x |= x >> 4;
-    x |= x >> 8;
-    x |= x >> 16;
-    return ++x;
+// Estructura para mantener información completa del tensor
+template <typename T = float> struct TensorResult {
+private:
+  T *data; // Puntero a los datos
+  TensorResultDims
+      dims; // Dimensiones del tensor (K para dimensiones adicionales)
+  MemorySpace space;
+
+public:
+  // Constructor completo con ownership
+  TensorResult(MemorySpace memory_space, int b, int m, int n, int k = 1,
+               bool owns = true)
+      : data(nullptr), space(memory_space), dims({b, m, n, k}) {
+    allocateData();
+  }
+
+  // Reservar memoria para el tensor
+  void allocateData() {
+
+    // Controlar dimensiones
+    std::vector<int> ds = {dims.b, dims.m, dims.n, dims.k};
+
+    for (int ix = 0; ix < ds.size(); ix++) {
+      std::vector<int> ds_copy(ds);
+
+      ds_copy.erase(ds_copy.begin() + ix);
+
+      int mult = 1;
+      for (auto el : ds_copy) {
+        mult *= el;
+      }
+      int dest = ds[ix];
+      if (dest > std::numeric_limits<int>::max() / mult) {
+        std::string error_ms =
+            "ERROR in TensorResult constructor: dims out of <int> bounds";
+        std::cerr << error_ms << std::endl;
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    T *ptr;
+    size_t siz = dims.getTotal() * sizeof(T);
+
+    if (space == MemorySpace::Device) {
+      CHECK_CUDA(cudaMalloc(&ptr, siz));
+    } else {
+      ptr = static_cast<T *>(std::malloc(siz));
+    }
+
+    data = ptr;
+  }
+
+  // Constructor por defecto
+  TensorResult()
+      : data(nullptr), space(MemorySpace::Host), dims({0, 0, 0, 0}) {}
+
+  ~TensorResult() {
+    if (!data)
+      return;
+
+    if (space == MemorySpace::Device) {
+      CHECK_CUDA(cudaFree(data));
+    }
+
+    else {
+      std::free(data);
+    }
+  }
+
+  // Función para obtener el tamaño en bytes
+  size_t size_bytes() { return dims.getTotal() * sizeof(T); }
+
+  // Getters para compatibilidad con código antiguo
+  T *getData() const { return data; }
+  int getBatch() const { return dims.b; }
+  int getM() const { return dims.m; }
+  int getN() const { return dims.n; }
+  int getK() const { return dims.k; }
+
+  bool isDevicePtr() const { return space == MemorySpace::Device; }
+  MemorySpace getMemorySpace() const { return space; }
+
+  TensorResult clone() const {
+    TensorResult out(space, dims.b, dims.m, dims.n, dims.k, true);
+
+    if (space == MemorySpace::Device) {
+      CHECK_CUDA(
+          cudaMemcpy(out.data, data, size_bytes(), cudaMemcpyDeviceToDevice));
+    } else
+      std::memcpy(out.data, data, size_bytes());
+
+    return out;
+  }
+  TensorResult(const TensorResult &) = delete;
+  TensorResult &operator=(const TensorResult &) = delete;
+
+  // Función para obtener el número total de elementos
+  int total_elements() { return dims.getTotal(); }
+
+  void move_to_device() {
+    if (space == MemorySpace::Device)
+      return;
+
+    T *dev;
+    CHECK_CUDA(cudaMalloc(&dev, size_bytes()));
+    CHECK_CUDA(cudaMemcpy(dev, data, size_bytes(), cudaMemcpyHostToDevice));
+
+    std::free(data);
+    data = dev;
+    space = MemorySpace::Device;
+  }
+
+  void move_to_host() {
+    if (space == MemorySpace::Host)
+      return;
+
+    T *host;
+    host = static_cast<T *>(size_bytes());
+    CHECK_CUDA(cudaMemcpy(host, data, size_bytes(), cudaMemcpyDeviceToHost));
+
+    CHECK_CUDA(cudaFree(data));
+    data = host;
+    space = MemorySpace::Host;
+  }
+};
+
+inline unsigned int nextPow2(unsigned int x) {
+  --x;
+  x |= x >> 1;
+  x |= x >> 2;
+  x |= x >> 4;
+  x |= x >> 8;
+  x |= x >> 16;
+  return ++x;
 }
 
 #endif

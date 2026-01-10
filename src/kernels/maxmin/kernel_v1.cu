@@ -141,7 +141,7 @@ __global__ void cub_max_min_kernel(
         reduction_results[warp] = out;
 
         __syncthreads();
-        if (k == 0 && out_id >= batch_size * M * N)
+        if (k == 0 &  (local_id + k_launch_size) < blockDim.x)
         {
             T k_max = -INFINITY;
             int base_k = local_K * required_warps_per_K;

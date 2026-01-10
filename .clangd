@@ -1,0 +1,42 @@
+CompileFlags:
+  Remove:
+    - "-forward-unknown-to-host-compiler"
+    - "--options-file"
+    - "-arch=native"
+    - "-rdc=true"
+    - "-G"
+    - "-lineinfo"
+    - "-gencode"
+    - "arch=compute_86,code=sm_86"
+
+  Add:
+    - "-x"
+    - "cuda"
+    - "-D__CUDACC__"
+    - "-D__CUDA_ARCH__=860"
+    - "-std=c++17"
+    - "--no-cuda-version-check"
+    - "-Iinclude"
+    - "-Iinclude/core"
+    - "-Iinclude/kernels"
+    - "-Iinclude/utils"
+    - "-Isrc"
+    - "-I/usr/local/cuda/include"
+    - "-fcolor-diagnostics"
+    - "-ferror-limit=0"
+
+InlayHints:
+  Enabled: true
+  ParameterHints: true
+  TypeHints: true
+
+Hover:
+  ShowAKA: true
+
+Diagnostics:
+  ClangTidy:
+    CheckOptions:
+      readability-identifier-naming.FunctionCase: camelBack
+  Suppress:
+    - "unknown_attr"
+    - "unknown_type_name"

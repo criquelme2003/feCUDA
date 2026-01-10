@@ -9,14 +9,14 @@
 
 //------------------------------------------------
 template <typename T>
-void maxmin(const TensorResult<T> &tensor1, const TensorResult<T> &tensor2,
+void maxmin( TensorResult<T> &tensor1,  TensorResult<T> &tensor2,
             TensorResult<T> &max_result, TensorResult<T> &min_result, cudaEvent_t &start, cudaEvent_t &end,
             bool keep_in_device = true);
 
 
-extern template void maxmin<float>(const TensorResult<float> &, const TensorResult<float> &, TensorResult<float> &, TensorResult<float> &, cudaEvent_t&, cudaEvent_t&, bool);
+extern template void maxmin<float>( TensorResult<float> &,  TensorResult<float> &, TensorResult<float> &, TensorResult<float> &, cudaEvent_t&, cudaEvent_t&, bool);
 
-extern template void maxmin<__half>(const TensorResult<__half> &, const TensorResult<__half> &, TensorResult<__half> &, TensorResult<__half> &, cudaEvent_t&, cudaEvent_t&, bool);
+extern template void maxmin<__half>( TensorResult<__half> &,  TensorResult<__half> &, TensorResult<__half> &, TensorResult<__half> &, cudaEvent_t&, cudaEvent_t&, bool);
 
 //------------------------------------------------
 

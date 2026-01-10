@@ -4,7 +4,6 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include <cub/cub.cuh>
-#include <utils.cuh>
 #include <cuda_fp16.h>
 
 /**

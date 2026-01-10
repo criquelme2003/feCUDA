@@ -35,5 +35,6 @@ forgeffects
 *.json
 !bench/results/index.json
 *.log
+.cache*
 
 
