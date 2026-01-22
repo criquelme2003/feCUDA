@@ -14,6 +14,7 @@
                               std::to_string(__LINE__) + ": " +                \
                               cudaGetErrorString(err);                         \
       std::cerr << error_msg << std::endl;                                     \
+      cudaDeviceReset();                                                       \
       exit(EXIT_FAILURE);                                                      \
     }                                                                          \
   }

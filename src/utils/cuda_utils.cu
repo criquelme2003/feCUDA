@@ -1,4 +1,3 @@
-#include "../../include/utils/cuda_utils.cuh"
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>

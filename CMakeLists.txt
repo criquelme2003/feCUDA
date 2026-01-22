@@ -1,53 +1,63 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.28)
 
-if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES OR CMAKE_CUDA_ARCHITECTURES STREQUAL "")
-    set(CMAKE_CUDA_ARCHITECTURES "native" CACHE STRING "CUDA architectures" FORCE)
-endif()
-
-# Usar Clang como compilador C/C++
-set(CMAKE_C_COMPILER clang)
-set(CMAKE_CXX_COMPILER clang++)
-
-project(FeCUDA CUDA CXX)
+project(FeCUDA LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CUDA_STANDARD 17)
-set(CMAKE_CUDA_STANDARD_REQUIRED ON)
+set(CMAKE_CUDA_ARCHITECTURES 75)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
-find_package(CUDAToolkit REQUIRED)
+set(CMAKE_CXX_COMPILER g++)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda-13.1/bin/nvcc)
 
-file(GLOB MAIN_SOURCES "src/main.cu")
+find_package(CUDAToolkit REQUIRED)
+find_package(pybind11 CONFIG REQUIRED)
+find_package(Python REQUIRED COMPONENTS Interpreter Development)
+
 file(GLOB ALGORITHM_SOURCES "src/algorithms/*.cu")
 file(GLOB UTILS_SOURCES "src/utils/*.cu")
 file(GLOB_RECURSE KERNEL_SOURCES "src/kernels/*.cu")
 
+# ===== Ejecutable =====
 add_executable(fecuda_main
-    ${MAIN_SOURCES}
-    ${ALGORITHM_SOURCES}
-    ${UTILS_SOURCES}
-    ${KERNEL_SOURCES}
+  src/main.cu
+  ${ALGORITHM_SOURCES}
+  ${UTILS_SOURCES}
+  ${KERNEL_SOURCES}
+)
+
+target_include_directories(fecuda_main
+  PRIVATE include
+  /home/carlos/dlpack/include
 )
 
 target_link_libraries(fecuda_main
-    CUDA::curand
+  CUDA::curand
+  Python::Python
+
 )
 
-target_compile_definitions(fecuda_main PUBLIC FOO=1)
-
-
-set_target_properties(fecuda_main PROPERTIES
-    CUDA_SEPARABLE_COMPILATION ON
-    CXX_STANDARD 17
-    CXX_STANDARD_REQUIRED YES
+# ===== Módulo Python =====
+pybind11_add_module(forgethreads
+  src/bindings.cu
+  ${ALGORITHM_SOURCES}
+  ${UTILS_SOURCES}
+  ${KERNEL_SOURCES}
 )
 
-target_compile_options(fecuda_main PRIVATE
-  $<$<COMPILE_LANGUAGE:CUDA>:-G>
+target_include_directories(forgethreads
+  PRIVATE include
+  /home/carlos/dlpack/include
+
+)
+target_link_libraries(forgethreads
+  PRIVATE
+  CUDA::curand
+  Python::Python
 )
 
-target_compile_options(fecuda_main PRIVATE
-  $<$<COMPILE_LANGUAGE:CUDA>: -lineinfo>
+install(
+  TARGETS forgethreads
+  LIBRARY DESTINATION lib/python3.12/site-packages
+
 )
