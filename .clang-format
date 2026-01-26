@@ -1,0 +1,28 @@
+BasedOnStyle: LLVM
+Language: Cpp
+
+# Llaves estilo Allman (lo que ya querías)
+BreakBeforeBraces: Allman
+
+# Indentación clara
+IndentWidth: 4
+ContinuationIndentWidth: 4
+
+# Llamadas y parámetros
+BinPackArguments: false
+BinPackParameters: false
+AllowAllArgumentsOnNextLine: false
+
+# No alinear raro después de (
+AlignAfterOpenBracket: BlockIndent
+
+# Evita que intente compactar llamadas largas
+PenaltyBreakBeforeFirstCallParameter: 1000
+PenaltyBreakComment: 300
+
+# CUDA-friendly (reduce daño colateral)
+AllowShortFunctionsOnASingleLine: Empty
+AlwaysBreakAfterDefinitionReturnType: None
+
+# Mantener cortes previsibles
+ColumnLimit: 100

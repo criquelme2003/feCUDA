@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
+set(EXPORT_COMPILE_COMMANDS ON)
 project(FeCUDA LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -7,11 +8,16 @@ set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_ARCHITECTURES 75)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
+set(CMAKE_BUILD_TYPE Debug)
+
 set(CMAKE_CXX_COMPILER g++)
 set(CMAKE_CUDA_COMPILER /usr/local/cuda-13.1/bin/nvcc)
 
 find_package(CUDAToolkit REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
+
+set(Python_EXECUTABLE ${CMAKE_SOURCE_DIR}/.venv/bin/python)
+
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 
 file(GLOB ALGORITHM_SOURCES "src/algorithms/*.cu")
@@ -36,6 +42,23 @@ target_link_libraries(fecuda_main
   Python::Python
 
 )
+set(CMAKE_BUILD_TYPE RelWithDebInfo)
+
+target_compile_options(fecuda_main
+  PRIVATE
+  $<$<COMPILE_LANGUAGE:CUDA>:
+  -lineinfo
+  >
+)
+
+target_compile_options(fecuda_main
+  PRIVATE
+  $<$<COMPILE_LANGUAGE:CXX>:
+  -g
+  -O0
+  >
+)
+
 
 # ===== Módulo Python =====
 pybind11_add_module(forgethreads
@@ -59,5 +82,9 @@ target_link_libraries(forgethreads
 install(
   TARGETS forgethreads
   LIBRARY DESTINATION lib/python3.12/site-packages
+)
 
+install(
+  TARGETS fecuda_main
+  LIBRARY DESTINATION lib/python3.12/site-packages
 )

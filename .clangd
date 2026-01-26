@@ -1,0 +1,19 @@
+CompileFlags:
+  CompilationDatabase: build
+
+  Add:
+    - "-xcuda"
+    - "-I/usr/local/cuda/include"
+    - "-I/home/carlos/dlpack/include"
+    - "-I/home/carlos/miniconda3/bin/python3 "
+    - "-DPY_SSIZE_T_CLEAN"
+    - "-DPYBIND11_NO_ASSERT_GIL_HELD_INCREF_DECREF"
+  Remove:
+    - "-Werror"
+    - "-forward-unknown-to-host-compiler"
+    - "--generate-code*" 
+    - "-rdc=true"
+    - "-Xcompiler*"
+    - "-Xcudafe*"
+    - "-compiler-options*"
+    - "--options-file"

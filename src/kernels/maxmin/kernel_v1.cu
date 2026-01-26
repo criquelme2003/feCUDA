@@ -11,7 +11,7 @@ __global__ void maxmin_threshold_kernel(
     T *__restrict__ values,    // min values
     int *__restrict__ counter, // atomic counter
     T thr,
-    int B, int M, int N, int K, int batch_id = -1)
+    int B, int M, int N, int K, int batch_id)
 {
   int b = batch_id >= 0 ? batch_id : blockIdx.z;
   int m = blockIdx.y;
@@ -81,7 +81,7 @@ template __global__ void maxmin_threshold_kernel<float>(
     float *__restrict__ values,   // min values
     int *__restrict__ counter,    // atomic counter
     float thr,
-    int B, int M, int N, int K);
+    int B, int M, int N, int K,int batch_id);
 
 // template __global__ void maxmin_threshold_kernel<__half>(
 //     const __half *__restrict__ X,  // gen_tensor [B,M,K]
