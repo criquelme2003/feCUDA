@@ -88,22 +88,20 @@ void test_dims(std::vector<int> ms, std::vector<int> batch_sizes)
 
             TensorResult<__half> t2 = t1.clone();
             auto start_cpu = std::chrono::high_resolution_clock::now();
-            maxmin<__half>(t1, t2, 0.4, 1);
+            maxmin(t1, t2, 0.4, 1);
             auto end_cpu = std::chrono::high_resolution_clock::now();
 
             auto duration =
                 std::chrono::duration_cast<std::chrono::milliseconds>(end_cpu - start_cpu);
 
             std::cout << "Execution time CPU: " << duration.count() << " ms" << std::endl;
-
-
         }
     }
 }
 
 int main()
 {
-    std::vector<int> batch_sizes = {10000};
-    std::vector<int> ms = {10, 100, 1000};
-    test_dims( ms, batch_sizes);
+    std::vector<int> batch_sizes = {10};
+    std::vector<int> ms = {16,16,16,16};
+    test_dims(ms, batch_sizes);
 }

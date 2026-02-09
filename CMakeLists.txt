@@ -47,7 +47,7 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 target_compile_options(fecuda_main
   PRIVATE
   $<$<COMPILE_LANGUAGE:CUDA>:
-  -lineinfo
+  -G
   >
 )
 

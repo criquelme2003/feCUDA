@@ -8,8 +8,7 @@
 // Funciones exportadas desde archivos .cu
 
 //------------------------------------------------
-template <typename T>
-std::vector<std::tuple<int4 *, T *,int>> maxmin(TensorResult<T> &tensor1, TensorResult<T> &tensor2, T thr, int order);
+std::vector<std::tuple<int4 *, __half *,int>> maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2, __half thr, int order);
 
 //------------------------------------------------
 

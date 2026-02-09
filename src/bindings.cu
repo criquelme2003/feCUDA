@@ -3,6 +3,8 @@
 #include <dlpack/dlpack.h>
 #include <driver_types.h>
 #include <pybind11/pybind11.h>
+
+
 namespace py = pybind11;
 
 DLDataType float_dtype()
@@ -26,7 +28,6 @@ template <typename T> struct DlpackTensorCuda
     std::vector<int64_t> shape;
     std::vector<int64_t> strides;
     DLDataType dtype;
-    bool consumed = false;
 
     DlpackTensorCuda(T *ptr, std::vector<int64_t> shape_, DLDataType dtype_)
         : data(ptr), shape(shape_), dtype(dtype_)
@@ -44,57 +45,85 @@ template <typename T> struct DlpackTensorCuda
 
     static void deleter(DLManagedTensor *self)
     {
-        // ⚠️ IMPORTANTE: esta memoria es CUDA
-        cudaFree(self->dl_tensor.data);
+        // std::cout << "¡! BINDING Destructor Called" << std::endl;
+
+        // // ⚠️ IMPORTANTE: esta memoria es CUDA
+
+        // cudaFree(self->dl_tensor.data);
+        // delete self;
+        // // Comentado porque el free se invoca desde el owner (python)
+        // // printf("Deleted from managed (CUDA)\n");
+
+        if (self->dl_tensor.data && self->dl_tensor.device.device_type == kDLCUDA)
+        {
+            cudaFree(self->dl_tensor.data);
+        }
+        // Liberar shape si se asignó por separado
+        if (self->manager_ctx)
+        {
+            auto *ctx = static_cast<DlpackTensorCuda *>(self->manager_ctx);
+            delete ctx;
+        }
         delete self;
-        printf("Deleted from managed (CUDA)\n");
     }
 
     py::capsule __dlpack__(py::object stream = py::none())
     {
-        if (consumed)
-            throw std::runtime_error("DLPack tensor already consumed");
 
-        consumed = true;
+        // Asignar shape dinámicamente
+        int64_t *shape_copy = new int64_t[shape.size()];
+        std::copy(shape.begin(), shape.end(), shape_copy);
+
+        int64_t *strides_copy = new int64_t[strides.size()];
+        std::copy(strides.begin(), strides.end(), strides_copy);
 
         auto *managed = new DLManagedTensor();
         managed->dl_tensor.data = data;
         managed->dl_tensor.device = DLDevice{kDLCUDA, 0};
         managed->dl_tensor.ndim = shape.size();
         managed->dl_tensor.dtype = dtype;
-        managed->dl_tensor.shape = shape.data();
-        managed->dl_tensor.strides = strides.data();
+        managed->dl_tensor.shape = shape_copy;     // ✅ Copia independiente
+        managed->dl_tensor.strides = strides_copy; // ✅ Copia independiente
         managed->dl_tensor.byte_offset = 0;
-        managed->manager_ctx = nullptr;
-        managed->deleter = &DlpackTensorCuda::deleter;
+        managed->manager_ctx = this;
+
+        managed->deleter = [](DLManagedTensor *self)
+        {
+            if (!self)
+                return;
+            if (self->dl_tensor.device.device_type == kDLCUDA)
+            {
+                cudaFree(self->dl_tensor.data);
+            }
+            delete[] self->dl_tensor.shape;
+            delete[] self->dl_tensor.strides;
+            delete self;
+        };
 
         return py::capsule(managed, "dltensor");
     }
 };
 
 py::tuple maxmin_dlpack(TensorResult<__half> &t1, TensorResult<__half> &t2, float thr, int order)
-// py::tuple maxmin_dlpack(py::capsule t_1, py::capsule t_2, __half thr, int order)
 {
-    // auto t1 = new TensorResult<__half>(t_1);
-    // auto t2 = new TensorResult<__half>(t_2);
     __half hthr = __float2half(thr);
-    auto results = maxmin<__half>(t1, t2, hthr, order);
 
+    // std::vector<__half> h_vals = t1.to_host_vector();
+
+    // int nums = h_vals.size();
+    // for (int i = 0; i < std::min(nums, 10); i++)
+    // {
+    //     std::cout << i << " value: " << __half2float(h_vals[i]) << std::endl;
+    // }
+    // exit(0);
+
+    auto results = maxmin(t1, t2, hthr, order);
     // Por ahora usamos la primera iteración
     auto [d_paths, d_values, h_total_count] = results[0];
     std::cout << "paths finded: " << h_total_count << std::endl;
 
-    __half *h_paths = (__half *)malloc(sizeof(__half) * h_total_count);
-
-    cudaMemcpy(h_paths, d_paths, sizeof(__half) * h_total_count,cudaMemcpyDeviceToHost);
-
-
-    for (int i = 0; i < h_total_count;i++){
-        std::cout <<i <<" value: " << __half2float(h_paths[i]) << std::endl;
-    }
-
-        // 🔹 Suponemos h_total_count conocido
-        int64_t count = h_total_count;
+    // 🔹 Suponemos h_total_count conocido
+    int64_t count = h_total_count;
 
     auto paths = new DlpackTensorCuda<int4>(
         d_paths,
@@ -102,8 +131,9 @@ py::tuple maxmin_dlpack(TensorResult<__half> &t1, TensorResult<__half> &t2, floa
         int4_dtype()
     );
 
-    auto values = new DlpackTensorCuda<__half>(d_values, {count}, half_dtype());
+    auto values = new DlpackTensorCuda<__half>(d_values, {count}, t1.managed->dl_tensor.dtype);
 
+    CHECK_CUDA(cudaDeviceSynchronize());
     return py::make_tuple(paths, values);
 }
 

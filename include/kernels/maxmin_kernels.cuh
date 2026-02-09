@@ -18,15 +18,19 @@
  * - Memoria compartida: K * sizeof(float)
  */
 
-template <typename T>
 __global__ void maxmin_threshold_kernel(
-    T *__restrict__ X,         // gen_tensor [B,M,K]
-    const T *__restrict__ X0,  // original_tensor [B,K,N]
-    int4 *__restrict__ paths,  // output paths
-    T *__restrict__ values,    // min values
-    int *__restrict__ counter, // atomic counter
-    T thr,
-    int B, int M, int N, int K,int batch_id);
+    __half *__restrict__ X,        // gen_tensor [B,M,K]
+    const __half *__restrict__ X0, // original_tensor [B,K,N]
+    int4 *__restrict__ paths,      // output paths
+    __half *__restrict__ values,   // min values
+    int *__restrict__ counter,     // atomic counter
+    __half thr,
+    int B,
+    int M,
+    int N,
+    int K,
+    int batch_id
+);
 
 // extern template __global__ void maxmin_threshold_kernel<__half>(
 //     const __half *__restrict__ X,  // gen_tensor [B,M,K]

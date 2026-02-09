@@ -17,7 +17,6 @@
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
 
-
 enum class MemorySpace
 {
     Host,
@@ -59,9 +58,9 @@ template <typename T = float> struct TensorResult
     TensorResultDims dims; // Dimensiones del tensor (K para dimensiones adicionales)
     MemorySpace space;
     bool released = false;
-    DLManagedTensor *managed = nullptr;
 
   public:
+    DLManagedTensor *managed = nullptr;
     // Constructor completo con ownership
     TensorResult(MemorySpace memory_space, int b, int m, int n, int k = 1, bool owns = true)
         : data(nullptr), space(memory_space), dims({b, m, n, k})
@@ -159,7 +158,7 @@ template <typename T = float> struct TensorResult
 
     ~TensorResult()
     {
-        // std::cout << "¡! Destructor Called" << std::endl;
+        std::cout << "¡! Destructor Called" << std::endl;
 
         if (released)
         {
@@ -173,6 +172,7 @@ template <typename T = float> struct TensorResult
 
             // 👈 ESTE es el camino correcto con DLPack
             managed->deleter(managed);
+            managed->deleter = nullptr;
             managed = nullptr;
             // std::cout << "Deleted from managed (consumer)" << std::endl;
             return;
@@ -191,6 +191,7 @@ template <typename T = float> struct TensorResult
         else
             std::free(data);
 
+        std::free(managed->dl_tensor.strides);
         // std::cout << "Deleted from tensor class" << std::endl;
     }
 
@@ -336,7 +337,7 @@ template <typename T = float> struct TensorResult
         };
 
         // 4️⃣ Transferimos ownership
-        data = nullptr;
+        //data = nullptr;
         released = true;
 
         // 5️⃣ Capsule con NOMBRE CORRECTO
@@ -377,7 +378,8 @@ template <typename T = float> struct TensorResult
         auto v = to_host_vector();
         for (int i = 0; i < std::min(10, (int)v.size()); ++i)
             std::cout << static_cast<float>(v[i]) << " ";
-        if((int)v.size() > 10) {
+        if ((int)v.size() > 10)
+        {
             std::cout << " ...";
         }
         std::cout << "\n";

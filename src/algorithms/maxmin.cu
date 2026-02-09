@@ -12,28 +12,8 @@
 #define MAX_GRID_SIZE 10000
 #define MAX_PATHS_PER_ITER 100000
 
-__global__ void
-checkExist2(__half *A, const __half *B, const __half *Cmax, const __half *Cmin, int K, int te)
-{
-    int t = blockIdx.x * blockDim.x + threadIdx.x;
-    int stride = gridDim.x * blockDim.x;
-
-    for (int id = t; id < te; id += stride)
-    {
-
-        int check = __half2int_rn(A[id]) + __half2int_rn(B[id]) + __half2int_rn(Cmax[id]);
-
-        for (int k = 0; k < K && id + k < te; k++)
-        {
-            check += __half2int_rn(Cmin[id + k]);
-        }
-        A[id] = __half(check);
-    }
-}
-
-template <typename T>
-std::vector<std::tuple<int4 *, T *, int>>
-maxmin(TensorResult<T> &tensor1, TensorResult<T> &tensor2, T thr, int order)
+std::vector<std::tuple<int4 *, __half *, int>>
+maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2, __half thr, int order)
 {
 
     // Validar que los tensores sean 3D (K=1) como espera el kernel (WRAPPER
@@ -44,7 +24,8 @@ maxmin(TensorResult<T> &tensor1, TensorResult<T> &tensor2, T thr, int order)
         printf(" Order > 1 not implemented\n");
         exit(0);
     }
-    std::vector<std::tuple<int4 *, T *, int>> ret;
+
+    std::vector<std::tuple<int4 *, __half *, int>> ret;
 
     if (tensor1.getK() != 1 || tensor2.getK() != 1)
     {
@@ -60,17 +41,17 @@ maxmin(TensorResult<T> &tensor1, TensorResult<T> &tensor2, T thr, int order)
     int N = tensor2.getN();
 
     // Alocar memoria en device
-    T *d_A, *d_B;
+    __half *d_A, *d_B;
 
     tensor1.move_to_device();
     tensor2.move_to_device();
-    d_A = tensor1.getData();
-    d_B = tensor2.getData();
+    d_A = (__half *)tensor1.getData();
+    d_B = (__half *)tensor2.getData();
 
-    for (int iteration = 0; iteration <= (order - 1); iteration++)
+    for (int iteration = 0; iteration < order; iteration++)
     {
         int4 *d_global_paths;
-        T *d_global_values;
+        __half *d_global_values;
         int h_total_count = 0;
 
         if ((B * M * N * K) < MAX_PATHS_PER_ITER)
@@ -79,14 +60,14 @@ maxmin(TensorResult<T> &tensor1, TensorResult<T> &tensor2, T thr, int order)
             int *d_counter;
             dim3 block(128); // >= K
             dim3 grid(N, M, B);
-            size_t shmem = 128 * sizeof(T);
+            size_t shmem = 128 * sizeof(__half);
             cudaMalloc(&d_counter, sizeof(int));
             cudaMemset(d_counter, 0, sizeof(int));
 
             cudaMalloc(&d_global_paths, MAX_PATHS_PER_ITER * sizeof(int4));
-            cudaMalloc(&d_global_values, MAX_PATHS_PER_ITER * sizeof(T));
+            cudaMalloc(&d_global_values, MAX_PATHS_PER_ITER * sizeof(__half));
 
-            maxmin_threshold_kernel<T><<<grid, block, shmem>>>(
+            maxmin_threshold_kernel<<<grid, block, shmem>>>(
                 d_A,
                 d_B,
                 d_global_paths,
@@ -106,13 +87,14 @@ maxmin(TensorResult<T> &tensor1, TensorResult<T> &tensor2, T thr, int order)
             int temp = 0;
             cudaMemcpy(&temp, d_counter, sizeof(int), cudaMemcpyDeviceToHost);
             h_total_count = temp;
+            cudaFree(d_counter);
         }
         else // Para quienes puedan superar el maximo de paths por kernel, se ejecuta un lanzamiento
              // por batches
         {
             std::cout << "[MAXMIN C++] EXECUTING BATCHED ALGORITHM" << std::endl;
 
-            std::vector<T *> d_values_acc;
+            std::vector<__half *> d_values_acc;
             std::vector<int4 *> d_paths_acc;
             std::vector<int> h_counter_acc;
             int mppi = M * K * N;
@@ -121,23 +103,23 @@ maxmin(TensorResult<T> &tensor1, TensorResult<T> &tensor2, T thr, int order)
 
             dim3 block(128); // >= K
             dim3 grid(N, M, 1);
-            size_t shmem = 128 * sizeof(T);
+            size_t shmem = 128 * sizeof(__half);
 
             int *d_counter;
             cudaMalloc(&d_counter, sizeof(int));
             for (int b_ = 0; b_ < B; b_++)
             {
                 int4 *d_paths;
-                T *d_values;
+                __half *d_values;
                 cudaMemset(d_counter, 0, sizeof(int));
 
                 cudaMalloc(&d_paths, mppi * sizeof(int4));
-                cudaMalloc(&d_values, mppi * sizeof(T));
+                cudaMalloc(&d_values, mppi * sizeof(__half));
 
-                T *localA = d_A + (b_ * sizeA);
+                __half *localA = d_A + (b_ * sizeA);
 
-                T *localB = d_B + (b_ * sizeB);
-                maxmin_threshold_kernel<T><<<grid, block, shmem>>>(
+                __half *localB = d_B + (b_ * sizeB);
+                maxmin_threshold_kernel<<<grid, block, shmem>>>(
                     localA,
                     localB,
                     d_paths,
@@ -165,9 +147,9 @@ maxmin(TensorResult<T> &tensor1, TensorResult<T> &tensor2, T thr, int order)
             cudaFree(d_counter);
 
             cudaMalloc(&d_global_paths, h_total_count * sizeof(int4));
-            cudaMalloc(&d_global_values, h_total_count * sizeof(T));
+            cudaMalloc(&d_global_values, h_total_count * sizeof(__half));
 
-            for (int c = 0; c <= B; c++)
+            for (int c = 0; c < B; c++)
             {
                 int offset = 0;
                 if (c > 0)
@@ -175,17 +157,19 @@ maxmin(TensorResult<T> &tensor1, TensorResult<T> &tensor2, T thr, int order)
                     offset = h_counter_acc[c - 1];
                 }
 
+                int count_here = h_counter_acc[c] - offset;
+
                 cudaMemcpy(
                     d_global_paths + offset,
                     d_paths_acc[c],
-                    h_counter_acc[c] * sizeof(int4),
+                    count_here * sizeof(int4),
                     cudaMemcpyDeviceToDevice
                 );
 
                 cudaMemcpy(
                     d_global_values + offset,
                     d_values_acc[c],
-                    h_counter_acc[c] * sizeof(T),
+                    count_here * sizeof(__half),
                     cudaMemcpyDeviceToDevice
                 );
 
@@ -194,17 +178,11 @@ maxmin(TensorResult<T> &tensor1, TensorResult<T> &tensor2, T thr, int order)
             }
         }
 
-        CHECK_CUDA(cudaDeviceSynchronize())
         // CHECK_CUDA(cudaEventRecord(end));
         std::cout << "[MAXMIN C++] Paths finded: " << h_total_count << std::endl;
         ret.push_back(std::make_tuple(d_global_paths, d_global_values, h_total_count));
+        
     }
 
     return ret;
 }
-
-template std::vector<std::tuple<int4 *, float *, int>>
-maxmin(TensorResult<float> &tensor1, TensorResult<float> &tensor2, float thr, int order);
-
-template std::vector<std::tuple<int4 *, __half *, int>>
-maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2, __half thr, int order);
