@@ -45,7 +45,7 @@ template <typename T> struct DlpackTensorCuda
 
     static void deleter(DLManagedTensor *self)
     {
-        // std::cout << "¡! BINDING Destructor Called" << std::endl;
+        std::cout << "¡! BINDING Destructor Called" << std::endl;
 
         // // ⚠️ IMPORTANTE: esta memoria es CUDA
 

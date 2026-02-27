@@ -145,6 +145,7 @@ template <typename T = float> struct TensorResult
 
         // Memory space
         auto dev = managed->dl_tensor.device.device_type;
+
         space = (dev == kDLCUDA) ? MemorySpace::Device : MemorySpace::Host;
 
         released = false; // este tensor es válido
@@ -160,39 +161,31 @@ template <typename T = float> struct TensorResult
     {
         std::cout << "¡! Destructor Called" << std::endl;
 
-        if (released)
+        if (released || !data)
         {
-            std::cout << "Not deleted for released" << std::endl;
             return;
         }
 
         if (managed)
         {
-            // std::cout << "Deleting from managed (consumer)..." << std::endl;
 
-            // 👈 ESTE es el camino correcto con DLPack
-            managed->deleter(managed);
-            managed->deleter = nullptr;
+            //managed->deleter(managed);
             managed = nullptr;
-            // std::cout << "Deleted from managed (consumer)" << std::endl;
             return;
         }
 
-        if (!data)
-        {
-            std::cout << "Cancel deletion; Null data" << std::endl;
-            return;
-        }
         if (space == MemorySpace::Device)
         {
-
+            std::cout << "gpu destructor" << std::endl;
             CHECK_CUDA(cudaFree(data));
         }
         else
-            std::free(data);
 
-        std::free(managed->dl_tensor.strides);
-        // std::cout << "Deleted from tensor class" << std::endl;
+        {
+            std::cout << "cpu destructor" << std::endl;
+            std::free(data);
+        }
+
     }
 
     // Función para obtener el tamaño en bytes
@@ -319,26 +312,18 @@ template <typename T = float> struct TensorResult
         // 3️⃣ Deleter (SE EJECUTA CUANDO NUMPY TERMINA)
         managed->deleter = [](DLManagedTensor *self)
         {
-            if (!self)
-                return;
 
-            if (self->dl_tensor.device.device_type == kDLCUDA)
-            {
-                cudaFree(self->dl_tensor.data);
-            }
-            else
-            {
-                std::free(self->dl_tensor.data);
-            }
-
+            // ⚠️ Solo liberar si fue allocado por nosotros
+            // Si quieres que TF libere, no hagas cudaFree aquí
             delete[] self->dl_tensor.shape;
+            delete[] self->dl_tensor.strides;
             delete self;
-            std::cout << "Deleted from managed" << std::endl;
+            // cudaFree lo maneja el TensorResult original o TF
         };
 
         // 4️⃣ Transferimos ownership
-        //data = nullptr;
-        released = true;
+        data = nullptr;  // 🔥 CRÍTICO
+        released = true; // 🔥 CRÍTICO
 
         // 5️⃣ Capsule con NOMBRE CORRECTO
         return py::capsule(managed, "dltensor");
