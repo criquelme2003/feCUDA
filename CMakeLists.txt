@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.28)
+cmake_minimum_required(VERSION 3.22)
 
 set(EXPORT_COMPILE_COMMANDS ON)
 project(FeCUDA LANGUAGES CXX CUDA)
@@ -11,12 +11,12 @@ set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_CXX_COMPILER g++)
-set(CMAKE_CUDA_COMPILER /usr/local/cuda-13.1/bin/nvcc)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda-12.5/bin/nvcc)
 
 find_package(CUDAToolkit REQUIRED)
 find_package(pybind11 CONFIG REQUIRED)
 
-set(Python_EXECUTABLE ${CMAKE_SOURCE_DIR}/.venv/bin/python)
+set(Python_EXECUTABLE /usr/bin/python3)
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 
@@ -34,7 +34,7 @@ add_executable(fecuda_main
 
 target_include_directories(fecuda_main
   PRIVATE include
-  /home/carlos/dlpack/include
+  /workspace/extern/dlpack/include
 )
 
 target_link_libraries(fecuda_main
@@ -68,9 +68,14 @@ pybind11_add_module(forgethreads
   ${KERNEL_SOURCES}
 )
 
+set_target_properties(forgethreads PROPERTIES
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+
+
 target_include_directories(forgethreads
   PRIVATE include
-  /home/carlos/dlpack/include
+  /workspace/extern/dlpack/include
 
 )
 target_link_libraries(forgethreads
@@ -79,12 +84,12 @@ target_link_libraries(forgethreads
   Python::Python
 )
 
-install(
-  TARGETS forgethreads
-  LIBRARY DESTINATION lib/python3.12/site-packages
-)
+#install(
+#  TARGETS forgethreads
+#  LIBRARY DESTINATION /lib/python3/site-packages
+#)
 
 install(
   TARGETS fecuda_main
-  LIBRARY DESTINATION lib/python3.12/site-packages
+  LIBRARY DESTINATION /lib/python3/site-packages
 )
