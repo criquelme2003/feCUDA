@@ -64,7 +64,59 @@ Se ha preparado una [comparativa de benchmarks](https://bench-web-sk1k.vercel.ap
 
 ### Comparación de rendimiento: forgeefects vs forgethreads
 
-Se realizó una comparación de rendimiento entre la implementación en TensorFlow puro (`forgeefects`) y la versión acelerada con CUDA (`forgethreads`).
+Se realizó una comparación de rendimiento entre la implementación en TensorFlow puro (`forgeefects`) y la versión acelerada con CUDA (`forgethreads`), utilizando el siguiente código de benchmark:
+
+```python
+from iterative_maxmin_cuadrado import iterative_maxmin_cuadrado
+import numpy as np
+import tensorflow as tf
+import time
+
+arr = np.load("/workspace/forgeffects/forgeffects/dataset/CC.npy")
+tensor = tf.constant(arr, dtype=tf.float16)
+
+thresholds = np.linspace(0.3, 0.7, 5)
+
+# --------------------
+# Warmup
+# --------------------
+_ = iterative_maxmin_cuadrado(arr, 0.5, 2)
+
+# --------------------
+# Benchmark
+# --------------------
+times = []
+
+for thr in thresholds:
+    for _ in range(2):  # 2 ejecuciones por threshold -> 10 total
+        start = time.perf_counter()
+
+        paths, values = iterative_maxmin_cuadrado(arr, thr, 2)
+
+        # forzar ejecución si es tensor
+        if isinstance(paths, tf.Tensor):
+            paths.numpy()
+        if isinstance(values, tf.Tensor):
+            values.numpy()
+
+        end = time.perf_counter()
+
+        times.append(end - start)
+
+avg_time = sum(times) / len(times)
+
+print(f"\nPromedio sobre {len(times)} ejecuciones: {avg_time:.6f} s")
+
+print("\nShapes ejemplo:")
+print(paths[0].shape)
+print(values[0].shape)
+```
+
+**Especificaciones del hardware:**
+- GPU: NVIDIA GeForce GTX 1650
+- Memoria GPU: 4096 MiB
+- Versión CUDA: 13.1
+- Driver NVIDIA: 590.48.01
 
 **Resultados:**
 
