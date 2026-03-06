@@ -2,6 +2,7 @@
 #define TYPES_CUH
 #include "../../include/utils.cuh"
 #include "dlpack/dlpack.h"
+#include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -114,47 +115,67 @@ template <typename T = float> struct TensorResult
     // Constructor por defecto
     TensorResult() : data(nullptr), space(MemorySpace::Host), dims({0, 0, 0, 0}) {}
 
-    TensorResult(py::capsule capsule)
+    TensorResult(py::object obj)
     {
+        // Obtener capsule desde __dlpack__()
+        py::object capsule_obj = obj.attr("__dlpack__")();
+        py::capsule capsule = capsule_obj.cast<py::capsule>();
+
         if (std::string(capsule.name()) != "dltensor")
         {
-            throw std::runtime_error("Capsule is not a DLPack tensor");
+            throw std::runtime_error("Object does not provide a valid DLPack tensor");
         }
 
-        managed = capsule.get_pointer<DLManagedTensor>();
+        DLManagedTensor *managed = capsule.get_pointer<DLManagedTensor>();
 
         if (!managed)
         {
             throw std::runtime_error("Null DLManagedTensor");
         }
 
-        // Extraer data
-        data = static_cast<T *>(managed->dl_tensor.data);
+        auto &dl = managed->dl_tensor;
 
-        // Dimensiones
-        if (managed->dl_tensor.ndim != 3)
+        if (dl.ndim < 3)
         {
-            throw std::runtime_error("Expected 3D tensor");
+            throw std::runtime_error("Expected tensor with ndim >= 3");
         }
 
-        dims.b = managed->dl_tensor.shape[0];
-        dims.m = managed->dl_tensor.shape[1];
-        dims.n = managed->dl_tensor.shape[2];
-        // dims.k = managed->dl_tensor.shape[3];
-        dims.k = 1;
+        int b = dl.shape[0];
+        int m = dl.shape[1];
+        int n = dl.shape[2];
 
-        // Memory space
-        auto dev = managed->dl_tensor.device.device_type;
+        dims = {b, m, n, 1};
 
+        auto dev = dl.device.device_type;
         space = (dev == kDLCUDA) ? MemorySpace::Device : MemorySpace::Host;
 
-        released = false; // este tensor es válido
+        size_t bytes = b * m * n * sizeof(T);
 
-        // ⚠️ MUY IMPORTANTE:
-        // invalidamos el capsule (estándar DLPack)
-        // capsule.set_pointer(nullptr); --> ValueError: PyCapsule_SetPointer called with null
-        // pointer
-        debug_print();
+        T *new_data;
+
+        if (dev == kDLCUDA)
+        {
+            CHECK_CUDA(cudaMalloc(&new_data, bytes));
+            CHECK_CUDA(cudaMemcpy(new_data, dl.data, bytes, cudaMemcpyDeviceToDevice));
+        }
+        else
+        {
+            new_data = (T *)std::malloc(bytes);
+            std::memcpy(new_data, dl.data, bytes);
+        }
+
+        std::cout << "copiado correctamente" << std::endl;
+        
+
+        data = new_data;
+
+        released = false;
+
+        // 🔥 Consumir el dlpack original
+        managed->deleter(managed);
+
+        // Marcar capsule como consumida (estándar dlpack)
+        PyCapsule_SetName(capsule.ptr(), "used_dltensor");
     }
 
     ~TensorResult()
@@ -169,7 +190,7 @@ template <typename T = float> struct TensorResult
         if (managed)
         {
 
-            //managed->deleter(managed);
+            // managed->deleter(managed);
             managed = nullptr;
             return;
         }
@@ -185,7 +206,6 @@ template <typename T = float> struct TensorResult
             std::cout << "cpu destructor" << std::endl;
             std::free(data);
         }
-
     }
 
     // Función para obtener el tamaño en bytes
@@ -277,55 +297,44 @@ template <typename T = float> struct TensorResult
     {
         if (released)
         {
-            throw std::runtime_error("Tensor already consumed by DLPack");
+            throw std::runtime_error("Tensor already exported to DLPack");
         }
 
-        // 1️⃣ Alloc DLManagedTensor dinámicamente
         DLManagedTensor *managed = new DLManagedTensor();
 
-        // 2️⃣ Contexto
         managed->dl_tensor.data = data;
 
         managed->dl_tensor.device = {space == MemorySpace::Device ? kDLCUDA : kDLCPU, 0};
 
         managed->dl_tensor.ndim = 4;
 
-        // shape dinámico
-        int64_t *shape = new int64_t[4]{dims.b, dims.m, dims.n, dims.k};
+        int64_t *shape = new int64_t[4]{dims.b, dims.m, dims.n, 
+          dims.k};
         managed->dl_tensor.shape = shape;
 
-        managed->dl_tensor.strides = (int64_t *)std::malloc(4 * sizeof(int64_t));
+        int64_t *strides = make_c_strides({dims.b, dims.m, dims.n, dims.k});
+        managed->dl_tensor.strides = strides;
 
-        managed->dl_tensor.strides[0] = dims.m * dims.n * dims.k;
-        managed->dl_tensor.strides[1] = dims.n * dims.k;
-        managed->dl_tensor.strides[2] = dims.k;
-        managed->dl_tensor.strides[3] = 1;
-        // contiguous
         managed->dl_tensor.byte_offset = 0;
 
-        // dtype
-        managed->dl_tensor.dtype =
-            {kDLBfloat,
-             16, // static_cast<uint8_t>(sizeof(T) * 8),
-             1};
+        managed->dl_tensor.dtype = {kDLBfloat, 16, 1};
 
-        // 3️⃣ Deleter (SE EJECUTA CUANDO NUMPY TERMINA)
+        // 🔥 guardar puntero al tensor
+        managed->manager_ctx = this;
+
         managed->deleter = [](DLManagedTensor *self)
         {
+            TensorResult *tensor = static_cast<TensorResult *>(self->manager_ctx);
 
-            // ⚠️ Solo liberar si fue allocado por nosotros
-            // Si quieres que TF libere, no hagas cudaFree aquí
             delete[] self->dl_tensor.shape;
-            delete[] self->dl_tensor.strides;
+            std::free(self->dl_tensor.strides);
+
+            delete tensor; // 🔥 destruye el TensorResult
             delete self;
-            // cudaFree lo maneja el TensorResult original o TF
         };
 
-        // 4️⃣ Transferimos ownership
-        data = nullptr;  // 🔥 CRÍTICO
-        released = true; // 🔥 CRÍTICO
+        released = true;
 
-        // 5️⃣ Capsule con NOMBRE CORRECTO
         return py::capsule(managed, "dltensor");
     }
 

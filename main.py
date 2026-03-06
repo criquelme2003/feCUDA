@@ -18,29 +18,17 @@ while (i < 10):
 
     tf_a = tf.constant(arr, dtype=tf.float16)
     tf_b = tf.constant(arr, dtype=tf.float16)
-    del arr
-    tf_a_dlpack = tf_dlpack.to_dlpack(tf_a)
-    tf_b_dlpack = tf_dlpack.to_dlpack(tf_b)
 
-    ft_a = ft.TensorResult(tf_a_dlpack)
-    ft_b = ft.TensorResult(tf_b_dlpack)
-
-    [paths, values] = ft.maxmin(ft_a, ft_b, 0.4, 1)
+    [paths, values] = ft.maxmin(tf_a, tf_b, 0.4, 1)
 
     
-    vls = tf_dlpack.from_dlpack(values.__dlpack__())
-    pts = tf_dlpack.from_dlpack(paths.__dlpack__())
+    paths_tf = tf.experimental.dlpack.from_dlpack(paths)
+    values_tf = tf.experimental.dlpack.from_dlpack(values)
 
-    print(f"Valores encontrados: {vls.shape[0]}")
-
-    # ✅ Limpiar TODO antes de siguiente iteración
-    # Las operaciones de dlpack numpy utilizan views, por lo que no hay problema...
-
-    del ft_a, ft_b
-    del vls, pts
-
+    print(f"Valores encontrados: {values_tf.shape[0]}")
     # ✅ Sincronizar GPU
     cuda.cudaDeviceSynchronize()
 
     print(f"--- Iteración {i} completada ---\n")
     i += 1
+

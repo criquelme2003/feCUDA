@@ -104,37 +104,68 @@ template <typename T> struct DlpackTensorCuda
     }
 };
 
-py::tuple maxmin_dlpack(TensorResult<__half> &t1, TensorResult<__half> &t2, float thr, int order)
+py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order)
 {
+    // 🔹 Convertir automáticamente usando __dlpack__()
+    TensorResult<__half> t1(a);
+    std::cout << "tensor 1 creado correctamente"  << std::endl;
+
+    TensorResult<__half> t2(b);
+
+    std::cout << "tensor 2 creado correctamente"  << std::endl;
+
     __half hthr = __float2half(thr);
 
-    // std::vector<__half> h_vals = t1.to_host_vector();
 
-    // int nums = h_vals.size();
-    // for (int i = 0; i < std::min(nums, 10); i++)
-    // {
-    //     std::cout << i << " value: " << __half2float(h_vals[i]) << std::endl;
-    // }
-    // exit(0);
-
+    // Ejecutar tu kernel
     auto results = maxmin(t1, t2, hthr, order);
-    // Por ahora usamos la primera iteración
+
+    // Tomamos primera iteración
     auto [d_paths, d_values, h_total_count] = results[0];
+
     std::cout << "paths finded: " << h_total_count << std::endl;
 
-    // 🔹 Suponemos h_total_count conocido
     int64_t count = h_total_count;
 
-    auto paths = new DlpackTensorCuda<int4>(
-        d_paths,
-        {count, 4}, // → (count, 4) por lanes
-        int4_dtype()
+    // 🔹 Crear tensores resultado
+    auto paths = new TensorResult<int4>(
+        MemorySpace::Device,
+        count,
+        4,
+        1,
+        1
     );
 
-    auto values = new DlpackTensorCuda<__half>(d_values, {count}, t1.managed->dl_tensor.dtype);
+    auto values = new TensorResult<__half>(
+        MemorySpace::Device,
+        count,
+        1,
+        1,
+        1
+    );
+
+    // copiar resultados del kernel
+    CHECK_CUDA(cudaMemcpy(
+        paths->getData(),
+        d_paths,
+        count * sizeof(int4),
+        cudaMemcpyDeviceToDevice
+    ));
+
+    CHECK_CUDA(cudaMemcpy(
+        values->getData(),
+        d_values,
+        count * sizeof(__half),
+        cudaMemcpyDeviceToDevice
+    ));
 
     CHECK_CUDA(cudaDeviceSynchronize());
-    return py::make_tuple(paths, values);
+
+    // 🔹 devolver como DLPack
+    return py::make_tuple(
+        paths->__dlpack__(),
+        values->__dlpack__()
+    );
 }
 
 PYBIND11_MODULE(forgethreads, m)

@@ -3,9 +3,9 @@ CompileFlags:
 
   Add:
     - "-xcuda"
-    - "-I/usr/local/cuda/include"
-    - "-I/home/carlos/dlpack/include"
-    - "-I/home/carlos/miniconda3/bin/python3 "
+    - "-I/usr/local/cuda-12.5/include"
+    - "-I/workspace/extern/dlpack/include"
+    - "-I/usr/bin/python3"
     - "-DPY_SSIZE_T_CLEAN"
     - "-DPYBIND11_NO_ASSERT_GIL_HELD_INCREF_DECREF"
   Remove:
