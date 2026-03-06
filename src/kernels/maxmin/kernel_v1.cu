@@ -3,7 +3,7 @@
 #include <cuda_fp16.h>
 #include <float.h>
 
-#define MIN_DIFF 0.001
+#define MIN_DIFF 0.01
 __global__ void maxmin_threshold_kernel(
     __half *__restrict__ X,        // gen_tensor [B,M,K]
     const __half *__restrict__ X0, // original_tensor [B,K,N]
@@ -27,7 +27,7 @@ __global__ void maxmin_threshold_kernel(
     int out_id = b * M * N + m * N + n;
     extern __shared__ __half smem[];
 
-    __half v = __float2half(-65504.0f);
+    __half v = __float2half(-FLT_MAX);
 
     // Grid-stride: cada thread procesa múltiples K, aplicando max instantaneamene para controlar K.
     for (int k = tid; k < K; k += block_size)
@@ -41,7 +41,7 @@ __global__ void maxmin_threshold_kernel(
     __syncthreads();
 
     // Reducción max
-    for (int s = (block_size / 2) >> 1; s > 0; s >>= 1)
+    for (int s = (block_size / 2) ; s > 0; s >>= 1)
     {
         if (tid < s)
             smem[tid] = __hmax(smem[tid], smem[tid + s]);
@@ -55,12 +55,6 @@ __global__ void maxmin_threshold_kernel(
     // Encontrar máximos repetidos y seleccionar caminos
     if (__hsub(k_max, X[out_id]) >= thr)
     {
-        // printf(
-        //     "max - gen (%f - %f) greater than thr (%f)!!\n",
-        //     __half2float(k_max),
-        //     __half2float(X[out_id]),
-        //     __half2float(thr)
-        // );
         for (int k = tid; k < K; k += block_size)
         {
             int a_idx = b * M * K + m * K + k;
@@ -78,8 +72,10 @@ __global__ void maxmin_threshold_kernel(
         }
     }
     __syncthreads();
+    
     if (tid == 0)
         X[out_id] = k_max;
+    
 }
 
 // template __global__ void maxmin_threshold_kernel<__half>(

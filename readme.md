@@ -30,6 +30,7 @@ La arquitectura se puede consultar en **`arch.drawio`**; a continuación se resu
 
 > 🖼️ El diagrama de `arch.drawio` muestra las conexiones entre Python, los bindings C++, el intercambio DLpack y TensorFlow. Echa un vistazo al archivo para ver las flechas y las conversiones de datos.
 
+![Alt text here](diagram.png)
 ---
 ## ⚙️ Ejemplos
 
@@ -60,6 +61,63 @@ Simplemente reemplaza `CC.npy` por tus propios datos y ajusta los parámetros se
 ## 📊 Benchmarks
 
 Se ha preparado una [comparativa de benchmarks](https://bench-web-sk1k.vercel.app/) (enlace externo). Los resultados actuales comparan diferentes versiones del algoritmo y muestran el uso de memoria/gigapíxeles por segundo.
+
+### Comparación de rendimiento: forgeefects vs forgethreads
+
+Se realizó una comparación de rendimiento entre la implementación en TensorFlow puro (`forgeefects`) y la versión acelerada con CUDA (`forgethreads`), utilizando el siguiente código de benchmark:
+
+```python
+from iterative_maxmin_cuadrado import iterative_maxmin_cuadrado
+import numpy as np
+import tensorflow as tf
+import time
+
+arr = np.load("/workspace/forgeffects/forgeffects/dataset/CC.npy")
+tensor = tf.constant(arr, dtype=tf.float16)
+
+thresholds = np.linspace(0.3, 0.7, 5)
+
+# --------------------
+# Warmup
+# --------------------
+_ = iterative_maxmin_cuadrado(arr, 0.5, 2)
+
+# --------------------
+# Benchmark
+# --------------------
+times = []
+
+for thr in thresholds:
+    for _ in range(2):  # 2 ejecuciones por threshold -> 10 total
+        start = time.perf_counter()
+
+        paths, values = iterative_maxmin_cuadrado(arr, thr, 2)
+
+        # forzar ejecución si es tensor
+        if isinstance(paths, tf.Tensor):
+            paths.numpy()
+        if isinstance(values, tf.Tensor):
+            values.numpy()
+
+        end = time.perf_counter()
+
+        times.append(end - start)
+
+avg_time = sum(times) / len(times)
+
+print(f"\nPromedio sobre {len(times)} ejecuciones: {avg_time:.6f} s")
+
+print("\nShapes ejemplo:")
+print(paths[0].shape)
+print(values[0].shape)
+```
+
+**Resultados:**
+
+- **forgeefects** (TensorFlow puro): Promedio sobre 10 ejecuciones: 0.012004 s
+- **forgethreads** (CUDA): Promedio sobre 10 ejecuciones: 0.000435 s
+
+La versión CUDA muestra una mejora significativa en rendimiento, siendo aproximadamente 27.6 veces más rápida que la implementación en TensorFlow puro.
 
 > 🧠 Nota: el proyecto investiga además el problema de **doble free de managed memory**. La solución vigente consiste en que `TensorResult` sólo se ocupa de liberar sus datos, mientras que el propietario de Python gestiona el ciclo de vida del DLpack.
 

@@ -164,7 +164,6 @@ template <typename T = float> struct TensorResult
             std::memcpy(new_data, dl.data, bytes);
         }
 
-        std::cout << "copiado correctamente" << std::endl;
         
 
         data = new_data;
@@ -180,7 +179,6 @@ template <typename T = float> struct TensorResult
 
     ~TensorResult()
     {
-        std::cout << "¡! Destructor Called" << std::endl;
 
         if (released || !data)
         {
@@ -197,13 +195,11 @@ template <typename T = float> struct TensorResult
 
         if (space == MemorySpace::Device)
         {
-            std::cout << "gpu destructor" << std::endl;
             CHECK_CUDA(cudaFree(data));
         }
         else
 
         {
-            std::cout << "cpu destructor" << std::endl;
             std::free(data);
         }
     }

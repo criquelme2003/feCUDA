@@ -108,11 +108,9 @@ py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order)
 {
     // 🔹 Convertir automáticamente usando __dlpack__()
     TensorResult<__half> t1(a);
-    std::cout << "tensor 1 creado correctamente"  << std::endl;
 
     TensorResult<__half> t2(b);
 
-    std::cout << "tensor 2 creado correctamente"  << std::endl;
 
     __half hthr = __float2half(thr);
 
@@ -123,7 +121,6 @@ py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order)
     // Tomamos primera iteración
     auto [d_paths, d_values, h_total_count] = results[0];
 
-    std::cout << "paths finded: " << h_total_count << std::endl;
 
     int64_t count = h_total_count;
 
