@@ -64,53 +64,7 @@ Se ha preparado una [comparativa de benchmarks](https://bench-web-sk1k.vercel.ap
 
 ### Comparación de rendimiento: forgeefects vs forgethreads
 
-Se realizó una comparación de rendimiento entre la implementación en TensorFlow puro (`forgeefects`) y la versión acelerada con CUDA (`forgethreads`), utilizando el siguiente código de benchmark:
-
-```python
-from iterative_maxmin_cuadrado import iterative_maxmin_cuadrado
-import numpy as np
-import tensorflow as tf
-import time
-
-arr = np.load("/workspace/forgeffects/forgeffects/dataset/CC.npy")
-tensor = tf.constant(arr, dtype=tf.float16)
-
-thresholds = np.linspace(0.3, 0.7, 5)
-
-# --------------------
-# Warmup
-# --------------------
-_ = iterative_maxmin_cuadrado(arr, 0.5, 2)
-
-# --------------------
-# Benchmark
-# --------------------
-times = []
-
-for thr in thresholds:
-    for _ in range(2):  # 2 ejecuciones por threshold -> 10 total
-        start = time.perf_counter()
-
-        paths, values = iterative_maxmin_cuadrado(arr, thr, 2)
-
-        # forzar ejecución si es tensor
-        if isinstance(paths, tf.Tensor):
-            paths.numpy()
-        if isinstance(values, tf.Tensor):
-            values.numpy()
-
-        end = time.perf_counter()
-
-        times.append(end - start)
-
-avg_time = sum(times) / len(times)
-
-print(f"\nPromedio sobre {len(times)} ejecuciones: {avg_time:.6f} s")
-
-print("\nShapes ejemplo:")
-print(paths[0].shape)
-print(values[0].shape)
-```
+Se realizó una comparación de rendimiento entre la implementación en TensorFlow puro (`forgeefects`) y la versión acelerada con CUDA (`forgethreads`).
 
 **Resultados:**
 
@@ -119,17 +73,15 @@ print(values[0].shape)
 
 La versión CUDA muestra una mejora significativa en rendimiento, siendo aproximadamente 27.6 veces más rápida que la implementación en TensorFlow puro.
 
-> 🧠 Nota: el proyecto investiga además el problema de **doble free de managed memory**. La solución vigente consiste en que `TensorResult` sólo se ocupa de liberar sus datos, mientras que el propietario de Python gestiona el ciclo de vida del DLpack.
+
 
 ---
-## 🎥 Demo
+##  Demo
 
 1. Construye el proyecto con CMake (`mkdir build && cd build && cmake .. && make`).
 2. Genera algunos ficheros NumPy de prueba, por ejemplo `np.random.rand(1000,1000).astype('float16')`.
 3. Ejecuta `python3 main.py` y observa cómo se imprime el uso de memoria de GPU y el conteo de valores.
-4. Puedes abrir `arch.drawio` en [diagrams.net](https://app.diagrams.net/) para visualizar la arquitectura.
 
-Para una demostración rápida en vídeo, se recomienda grabar la salida de la consola durante varias iteraciones mientras se monitorea `nvidia-smi`.
 
 ---
 ## 📁 Estructura relevante
@@ -142,7 +94,4 @@ Para una demostración rápida en vídeo, se recomienda grabar la salida de la c
 
 ---
 ## 📝 Licencia y contacto
-
-Añade aquí la información de licencia y cómo contactar al autor o reportar issues.
-
-
+--
