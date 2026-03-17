@@ -119,6 +119,8 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2, __half thr,
                 __half *localA = d_A + (b_ * sizeA);
 
                 __half *localB = d_B + (b_ * sizeB);
+                // batch_id=0 porque localA/localB ya están desplazados al inicio
+                // del batch b_. Usar b_ causaría doble offset: ptr+b_*size + b_*M*K.
                 maxmin_threshold_kernel<<<grid, block, shmem>>>(
                     localA,
                     localB,
@@ -126,11 +128,11 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2, __half thr,
                     d_values,
                     d_counter,
                     thr,
-                    B,
+                    1,
                     M,
                     N,
                     K,
-                    b_
+                    0
                 );
                 CHECK_CUDA(cudaDeviceSynchronize())
                 CHECK_CUDA(cudaGetLastError())

@@ -1,7 +1,5 @@
 import numpy as np
 import forgethreads as ft
-import tensorflow as tf
-import tensorflow.experimental.dlpack as tf_dlpack
 import time
 import gc
 import ctypes

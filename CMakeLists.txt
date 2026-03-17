@@ -8,8 +8,6 @@ set(CMAKE_CUDA_STANDARD 17)
 set(CMAKE_CUDA_ARCHITECTURES 75)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
-set(CMAKE_BUILD_TYPE Debug)
-
 set(CMAKE_CXX_COMPILER g++)
 set(CMAKE_CUDA_COMPILER /usr/local/cuda-12.5/bin/nvcc)
 
@@ -47,7 +45,7 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo)
 target_compile_options(fecuda_main
   PRIVATE
   $<$<COMPILE_LANGUAGE:CUDA>:
-  -G
+  -lineinfo
   >
 )
 

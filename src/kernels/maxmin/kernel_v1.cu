@@ -30,11 +30,14 @@ __global__ void maxmin_threshold_kernel(
     __half v = __float2half(-FLT_MAX);
 
     // Grid-stride: cada thread procesa múltiples K, aplicando max instantaneamene para controlar K.
+    // IMPORTANTE: leer de X0 (snapshot original, const) para evitar race condition.
+    // X[b,m,k] es escrito por otros bloques concurrentes (tid==0 escribe X[out_id]=k_max).
+    // Si leyéramos de X veríamos valores ya modificados por otros bloques del mismo m.
     for (int k = tid; k < K; k += block_size)
     {
         int a_idx = b * M * K + m * K + k;
         int b_idx = b * K * N + k * N + n;
-        v = __hmax(v, __hmin(X[a_idx], X0[b_idx]));
+        v = __hmax(v, __hmin(X0[a_idx], X0[b_idx]));
     }
 
     smem[tid] = v;
@@ -53,14 +56,15 @@ __global__ void maxmin_threshold_kernel(
     __syncthreads();
 
     // Encontrar máximos repetidos y seleccionar caminos
-    if (__hsub(k_max, X[out_id]) >= thr)
+    // Comparar contra X0[out_id] (valor original), no X[out_id] (puede estar modificado)
+    if (__hsub(k_max, X0[out_id]) >= thr)
     {
         for (int k = tid; k < K; k += block_size)
         {
             int a_idx = b * M * K + m * K + k;
             int b_idx = b * K * N + k * N + n;
 
-            __half mi = __hmin(X[a_idx], X0[b_idx]);
+            __half mi = __hmin(X0[a_idx], X0[b_idx]);
 
             if (__hle(__habs(__hsub(mi, k_max)), __half(MIN_DIFF)))
             {
