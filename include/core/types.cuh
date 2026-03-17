@@ -88,6 +88,8 @@ template <typename T = float> struct TensorResult
                 mult *= el;
             }
             int dest = ds[ix];
+            // Si mult==0 el producto total es 0 (válido), no hay riesgo de overflow
+            if (mult == 0) continue;
             if (dest > std::numeric_limits<int>::max() / mult)
             {
                 std::string error_ms =
