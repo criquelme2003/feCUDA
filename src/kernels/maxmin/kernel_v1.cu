@@ -82,11 +82,62 @@ __global__ void maxmin_threshold_kernel(
     
 }
 
-// template __global__ void maxmin_threshold_kernel<__half>(
-//     const __half *__restrict__ X,  // gen_tensor [B,M,K]
-//     const __half *__restrict__ X0, // original_tensor [B,K,N]
-//     int4 *__restrict__ paths,      // output paths
-//     __half *__restrict__ values,   // min values
-//     int *__restrict__ counter,     // atomic counter
-//     __half thr,
-//     int B, int M, int N, int K);
+// ─────────────────────────────────────────────────────────────────────────────
+// Kernel auxiliar para órdenes > 1:
+//   C_next[b,m,n] = max_k  min(C_prev[b,m,k], B_mat[b,k,n])
+//   argmax[b,m,n] = k que alcanzó ese máximo
+//
+// smem layout: [ bsz × __half | bsz × int ]
+//   tamaño = blockDim.x * (sizeof(__half) + sizeof(int))
+// ─────────────────────────────────────────────────────────────────────────────
+__global__ void maxmin_step_kernel(
+    const __half* __restrict__ C_prev,
+    const __half* __restrict__ B_mat,
+    __half* __restrict__ C_next,
+    int*   __restrict__ argmax,
+    int B, int M, int N, int K, int batch_id
+)
+{
+    int b   = (batch_id >= 0) ? batch_id : (int)blockIdx.z;
+    int m   = blockIdx.y;
+    int n   = blockIdx.x;
+    int tid = threadIdx.x;
+    int bsz = blockDim.x;
+
+    extern __shared__ char smem_step[];
+    __half* s_val = reinterpret_cast<__half*>(smem_step);
+    int*    s_k   = reinterpret_cast<int*>(smem_step + bsz * sizeof(__half));
+
+    __half best_val = __float2half(-FLT_MAX);
+    int    best_k   = 0;
+
+    for (int k = tid; k < K; k += bsz)
+    {
+        __half a_val = C_prev[b * M * K + m * K + k];
+        __half b_val = B_mat [b * K * N + k * N + n];
+        __half mi    = __hmin(a_val, b_val);
+        if (__hgt(mi, best_val)) { best_val = mi; best_k = k; }
+    }
+
+    s_val[tid] = best_val;
+    s_k[tid]   = best_k;
+    __syncthreads();
+
+    // Reducción max con tracking de argmax
+    for (int s = bsz / 2; s > 0; s >>= 1)
+    {
+        if (tid < s && __hgt(s_val[tid + s], s_val[tid]))
+        {
+            s_val[tid] = s_val[tid + s];
+            s_k[tid]   = s_k[tid + s];
+        }
+        __syncthreads();
+    }
+
+    if (tid == 0)
+    {
+        int idx      = b * M * N + m * N + n;
+        C_next[idx]  = s_val[0];
+        argmax[idx]  = s_k[0];
+    }
+}

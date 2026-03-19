@@ -148,7 +148,7 @@ bool run_and_validate(int B, int M, float thr, int n_runs = 3)
 
         __half hthr = __float2half(thr);
         auto results = maxmin(t1, t2, hthr, 1);
-        auto [d_paths, d_values, gpu_count] = results[0];
+        auto [d_paths, d_values, gpu_count, path_width, eff_order] = results[0];
 
         CHECK_CUDA(cudaFree(d_paths));
         CHECK_CUDA(cudaFree(d_values));

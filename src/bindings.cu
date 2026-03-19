@@ -3,6 +3,7 @@
 #include <dlpack/dlpack.h>
 #include <driver_types.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
 
 namespace py = pybind11;
@@ -104,73 +105,152 @@ template <typename T> struct DlpackTensorCuda
     }
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// DlpackHolder: wrapper genérico compatible con np.from_dlpack / tf.from_dlpack
+// Expone __dlpack__() y __dlpack_device__() a Python.
+// Toma ownership del DLManagedTensor* (lo libera en el destructor si no fue
+// consumido antes por el runtime de numpy/tf).
+// ─────────────────────────────────────────────────────────────────────────────
+struct DlpackHolder
+{
+    DLManagedTensor *managed;
+    bool consumed = false;
+
+    explicit DlpackHolder(DLManagedTensor *m) : managed(m) {}
+
+    ~DlpackHolder()
+    {
+        if (!consumed && managed && managed->deleter)
+            managed->deleter(managed);
+    }
+
+    py::capsule __dlpack__(py::object /*stream*/ = py::none())
+    {
+        consumed = true;
+        return py::capsule(managed, "dltensor");
+    }
+
+    py::object __dlpack_device__() const
+    {
+        return py::make_tuple(
+            (int)managed->dl_tensor.device.device_type,
+            (int)managed->dl_tensor.device.device_id);
+    }
+
+    // Copia los datos desde GPU a un numpy array (útil para debugging)
+    py::object to_numpy() const
+    {
+        auto &dl = managed->dl_tensor;
+        int64_t total = 1;
+        for (int i = 0; i < dl.ndim; i++) total *= dl.shape[i];
+
+        bool is_int32 = (dl.dtype.code == kDLInt   && dl.dtype.bits == 32);
+        bool is_fp16  = (dl.dtype.code == kDLFloat  && dl.dtype.bits == 16);
+
+        size_t elem_size = dl.dtype.bits / 8;
+        size_t nbytes    = total * elem_size;
+
+        std::vector<uint8_t> host(nbytes);
+        if (dl.device.device_type == kDLCUDA)
+            cudaMemcpy(host.data(), dl.data, nbytes, cudaMemcpyDeviceToHost);
+        else
+            std::memcpy(host.data(), dl.data, nbytes);
+
+        // Construir shape para numpy
+        std::vector<ssize_t> shape(dl.ndim), strides(dl.ndim);
+        for (int i = 0; i < dl.ndim; i++) {
+            shape[i]   = (ssize_t)dl.shape[i];
+            strides[i] = (ssize_t)(dl.strides[i] * elem_size);
+        }
+
+        py::str fmt = is_int32 ? py::str("i") : (is_fp16 ? py::str("e") : py::str("f"));
+
+        return py::array(py::buffer_info(
+            host.data(), (ssize_t)elem_size, fmt.cast<std::string>(),
+            (ssize_t)dl.ndim, shape, strides
+        )).attr("copy")();
+    }
+};
+
+static DlpackHolder* make_int32_holder(int* d_ptr, int64_t rows, int64_t cols)
+{
+    auto *managed  = new DLManagedTensor();
+    auto *shape_   = new int64_t[2]{rows, cols};
+    auto *strides_ = new int64_t[2]{cols, 1};
+
+    managed->dl_tensor = {d_ptr, {kDLCUDA, 0}, 2,
+                          {kDLInt, 32, 1}, shape_, strides_, 0};
+    managed->manager_ctx = nullptr;
+    managed->deleter = [](DLManagedTensor *self)
+    {
+        cudaFree(self->dl_tensor.data);
+        delete[] self->dl_tensor.shape;
+        delete[] self->dl_tensor.strides;
+        delete self;
+    };
+    return new DlpackHolder(managed);
+}
+
+static DlpackHolder* make_half_holder(__half* d_ptr, int64_t count)
+{
+    auto *managed  = new DLManagedTensor();
+    auto *shape_   = new int64_t[1]{count};
+    auto *strides_ = new int64_t[1]{1};
+
+    managed->dl_tensor = {d_ptr, {kDLCUDA, 0}, 1,
+                          {kDLFloat, 16, 1}, shape_, strides_, 0};
+    managed->manager_ctx = nullptr;
+    managed->deleter = [](DLManagedTensor *self)
+    {
+        cudaFree(self->dl_tensor.data);
+        delete[] self->dl_tensor.shape;
+        delete[] self->dl_tensor.strides;
+        delete self;
+    };
+    return new DlpackHolder(managed);
+}
+
 py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order)
 {
-    // 🔹 Convertir automáticamente usando __dlpack__()
     TensorResult<__half> t1(a);
-
     TensorResult<__half> t2(b);
-
-
     __half hthr = __float2half(thr);
 
-
-    // Ejecutar tu kernel
     auto results = maxmin(t1, t2, hthr, order);
+    auto [d_paths, d_values, h_total_count, path_width, effective_order] = results[0];
 
-    // Tomamos primera iteración
-    auto [d_paths, d_values, h_total_count] = results[0];
+    int64_t count = (int64_t)h_total_count;
 
+    if (count == 0)
+    {
+        int    *d_ep; __half *d_ev;
+        CHECK_CUDA(cudaMalloc(&d_ep, sizeof(int)));
+        CHECK_CUDA(cudaMalloc(&d_ev, sizeof(__half)));
+        return py::make_tuple(
+            py::cast(make_int32_holder(d_ep, 0, path_width), py::return_value_policy::take_ownership),
+            py::cast(make_half_holder (d_ev, 0),             py::return_value_policy::take_ownership),
+            effective_order
+        );
+    }
 
-    int64_t count = h_total_count;
-
-    // 🔹 Crear tensores resultado
-    auto paths = new TensorResult<int4>(
-        MemorySpace::Device,
-        count,
-        4,
-        1,
-        1
-    );
-
-    auto values = new TensorResult<__half>(
-        MemorySpace::Device,
-        count,
-        1,
-        1,
-        1
-    );
-
-    // copiar resultados del kernel
-    CHECK_CUDA(cudaMemcpy(
-        paths->getData(),
-        d_paths,
-        count * sizeof(int4),
-        cudaMemcpyDeviceToDevice
-    ));
-
-    CHECK_CUDA(cudaMemcpy(
-        values->getData(),
-        d_values,
-        count * sizeof(__half),
-        cudaMemcpyDeviceToDevice
-    ));
-
-    CHECK_CUDA(cudaDeviceSynchronize());
-
-    // 🔹 devolver como DLPack
     return py::make_tuple(
-        paths->__dlpack__(),
-        values->__dlpack__()
+        py::cast(make_int32_holder(d_paths,  count, path_width), py::return_value_policy::take_ownership),
+        py::cast(make_half_holder (d_values, count),             py::return_value_policy::take_ownership),
+        effective_order
     );
 }
 
 PYBIND11_MODULE(forgethreads, m)
 {
     py::class_<TensorResult<__half>>(m, "TensorResult")
-        .def(py::init<py::capsule>()) // 👈 NUEVO
-        .def("__dlpack__", &TensorResult<__half>::__dlpack__)
+        .def(py::init<py::capsule>())
+        .def("__dlpack__",        &TensorResult<__half>::__dlpack__)
         .def("__dlpack_device__", &TensorResult<__half>::__dlpack_device__);
+
+    py::class_<DlpackHolder>(m, "DlpackHolder")
+        .def("__dlpack__",        &DlpackHolder::__dlpack__, py::arg("stream") = py::none())
+        .def("__dlpack_device__", &DlpackHolder::__dlpack_device__)
+        .def("to_numpy",          &DlpackHolder::to_numpy);
 
     py::class_<DlpackTensorCuda<int4>>(m, "DlpackInt4")
         .def("__dlpack__", &DlpackTensorCuda<int4>::__dlpack__, py::arg("stream") = py::none());
