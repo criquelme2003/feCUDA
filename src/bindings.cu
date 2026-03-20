@@ -210,13 +210,14 @@ static DlpackHolder* make_half_holder(__half* d_ptr, int64_t count)
     return new DlpackHolder(managed);
 }
 
-py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order)
+py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order,
+                        bool return_paths = true)
 {
     TensorResult<__half> t1(a);
     TensorResult<__half> t2(b);
     __half hthr = __float2half(thr);
 
-    auto results = maxmin(t1, t2, hthr, order);
+    auto results = maxmin(t1, t2, hthr, order, return_paths);
     auto [d_paths, d_values, h_total_count, path_width, effective_order] = results[0];
 
     int64_t count = (int64_t)h_total_count;
@@ -258,5 +259,7 @@ PYBIND11_MODULE(forgethreads, m)
     py::class_<DlpackTensorCuda<__half>>(m, "DlpackFloat")
         .def("__dlpack__", &DlpackTensorCuda<__half>::__dlpack__, py::arg("stream") = py::none());
 
-    m.def("maxmin", &maxmin_dlpack);
+    m.def("maxmin", &maxmin_dlpack,
+          py::arg("a"), py::arg("b"), py::arg("thr"), py::arg("order"),
+          py::arg("return_paths") = true);
 }

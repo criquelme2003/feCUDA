@@ -13,9 +13,11 @@
 //   effective_order = último orden en que aparecieron caminos nuevos
 //                     (puede ser < order si el producto converge antes)
 // Para order=1 los paths son cast de int4* (layout idéntico en memoria).
+// return_paths=false → aristas crudas (b,m,k,n) por step, path_width=5 → (order,b,m,k,n)
+// return_paths=true  → caminos completos reconstruidos, path_width=effective_order+4
 std::vector<std::tuple<int*, __half*, int, int, int>> maxmin(
     TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
-    __half thr, int order);
+    __half thr, int order, bool return_paths = true);
 
 //------------------------------------------------
 
