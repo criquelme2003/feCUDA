@@ -7,6 +7,8 @@
 #include <cuda_runtime_api.h>
 #include <vector>
 
+bool g_verbose = true;  // definición del global (extern en utils.cuh)
+
 #define MAX_GRID_SIZE    10000
 #define MAX_PATHS_PER_ITER 100000
 
@@ -73,7 +75,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
 
         if ((long long)B * M * N * K < MAX_PATHS_PER_ITER)
         {
-            std::cout << "[MAXMIN C++] ORDER-1 COMPLETE" << std::endl;
+            LOG(std::cout << "[MAXMIN C++] ORDER-1 COMPLETE" << std::endl);
             dim3 grid(N, M, B);
             maxmin_threshold_kernel<<<grid, block, shmem>>>(
                 d_A, d_B, C_out,
@@ -86,7 +88,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         }
         else
         {
-            std::cout << "[MAXMIN C++] ORDER-1 BATCHED" << std::endl;
+            LOG(std::cout << "[MAXMIN C++] ORDER-1 BATCHED" << std::endl);
             int sizeA = M * K, sizeB = K * N;
             dim3 grid(N, M, 1);
             std::vector<int*>    d_paths_acc;
@@ -147,7 +149,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         }
         cudaFree(C_out);
         cudaFree(d_counter);
-        std::cout << "[MAXMIN C++] ORDER-1 paths found: " << h_count << std::endl;
+        LOG(std::cout << "[MAXMIN C++] ORDER-1 paths found: " << h_count << std::endl);
 
         // Prepend order=1 en CPU → (order, b, m, k, n)
         int path_width = 5;
@@ -184,8 +186,8 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     // ─────────────────────────────────────────────────────────────────────────
     // ORDEN > 1: iterativo con el mismo kernel
     // ─────────────────────────────────────────────────────────────────────────
-    std::cout << "[MAXMIN C++] ORDER-" << order << " return_paths="
-              << (return_paths ? "true" : "false") << std::endl;
+    LOG(std::cout << "[MAXMIN C++] ORDER-" << order << " return_paths="
+              << (return_paths ? "true" : "false") << std::endl);
 
     // Buffers iterativos: C_dev_before (= C_prev) y C_dev_after (= C_next)
     __half *C_dev_before, *C_dev_after;
@@ -231,8 +233,8 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
                                   cudaMemcpyDeviceToHost));
 
             if (step_count == 0) {
-                std::cout << "[MAXMIN C++] Convergencia en step " << s + 1
-                          << " (sin nuevas aristas)" << std::endl;
+                LOG(std::cout << "[MAXMIN C++] Convergencia en step " << s + 1
+                          << " (sin nuevas aristas)" << std::endl);
                 break;
             }
 
@@ -258,8 +260,8 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         cudaFree(d_counter);
 
         int total_count = (int)h_all_values.size();
-        std::cout << "[MAXMIN C++] Total aristas (return_paths=false): "
-                  << total_count << "  effective_order=" << effective_order << std::endl;
+        LOG(std::cout << "[MAXMIN C++] Total aristas (return_paths=false): "
+                  << total_count << "  effective_order=" << effective_order << std::endl);
 
         int*   d_out_paths  = nullptr;
         __half* d_out_values = nullptr;
@@ -322,8 +324,8 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
             std::swap(h_C_before, h_C_after);     // h_C_before = C_{s+1} para el próximo
             std::swap(C_dev_before, C_dev_after);
         } else {
-            std::cout << "[MAXMIN C++] Convergencia en step " << s + 1
-                      << " (sin nuevos caminos)" << std::endl;
+            LOG(std::cout << "[MAXMIN C++] Convergencia en step " << s + 1
+                      << " (sin nuevos caminos)" << std::endl);
             cudaFree(d_argmax.back());
             d_argmax.pop_back();
             break;
@@ -381,8 +383,8 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     }
 
     int total_count = (int)h_values.size();
-    std::cout << "[MAXMIN C++] Caminos reconstruidos (effective_order="
-              << effective_order << "): " << total_count << std::endl;
+    LOG(std::cout << "[MAXMIN C++] Caminos reconstruidos (effective_order="
+              << effective_order << "): " << total_count << std::endl);
 
     int*   d_out_paths  = nullptr;
     __half* d_out_values = nullptr;

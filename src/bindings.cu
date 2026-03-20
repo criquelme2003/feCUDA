@@ -8,6 +8,8 @@
 
 namespace py = pybind11;
 
+// g_verbose está definido en maxmin.cu (compilado en ambos targets)
+
 DLDataType float_dtype()
 {
     return DLDataType{kDLFloat, 32, 1};
@@ -46,7 +48,7 @@ template <typename T> struct DlpackTensorCuda
 
     static void deleter(DLManagedTensor *self)
     {
-        std::cout << "¡! BINDING Destructor Called" << std::endl;
+        LOG(std::cout << "¡! BINDING Destructor Called" << std::endl);
 
         // // ⚠️ IMPORTANTE: esta memoria es CUDA
 
@@ -258,6 +260,9 @@ PYBIND11_MODULE(forgethreads, m)
 
     py::class_<DlpackTensorCuda<__half>>(m, "DlpackFloat")
         .def("__dlpack__", &DlpackTensorCuda<__half>::__dlpack__, py::arg("stream") = py::none());
+
+    m.def("set_verbose", [](bool v) { g_verbose = v; });
+    m.def("get_verbose", []()       { return g_verbose; });
 
     m.def("maxmin", &maxmin_dlpack,
           py::arg("a"), py::arg("b"), py::arg("thr"), py::arg("order"),
