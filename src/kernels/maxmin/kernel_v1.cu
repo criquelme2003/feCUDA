@@ -95,14 +95,53 @@ __global__ void maxmin_threshold_kernel(
 
             if (__hle(__habs(__hsub(mi, k_max)), __float2half(MIN_DIFF)))
             {
-                int idx  = atomicAdd(counter, 1);
-                int base = idx * 4;
-                paths[base + 0] = b;
-                paths[base + 1] = m;
-                paths[base + 2] = k;
-                paths[base + 3] = n;
-                values[idx] = mi;
+                int idx = atomicAdd(counter, 1);
+                if (paths)   // nullptr en pass 1 (solo contar)
+                {
+                    int base = idx * 4;
+                    paths[base + 0] = b;
+                    paths[base + 1] = m;
+                    paths[base + 2] = k;
+                    paths[base + 3] = n;
+                    values[idx] = mi;
+                }
             }
         }
     }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// count_new_kernel — convergencia en GPU
+//
+// Cuenta celdas donde C_after[i] - C_before[i] >= thr_f.
+// Reemplaza la copia de B×M×N × 2 bytes a CPU en cada step.
+// Lanzar: block(256), grid(min((total+255)/256, 1024))
+// shmem = 256 * sizeof(int)
+// ─────────────────────────────────────────────────────────────────────────────
+__global__ void count_new_kernel(
+    const __half* __restrict__ C_before,
+    const __half* __restrict__ C_after,
+    int*          __restrict__ d_count,
+    float thr_f,
+    int total_elems
+)
+{
+    extern __shared__ int smem_cnt[];
+    int tid = (int)threadIdx.x;
+    int i   = (int)(blockIdx.x * blockDim.x + tid);
+
+    int local = 0;
+    for (; i < total_elems; i += (int)(gridDim.x * blockDim.x))
+        if (__half2float(C_after[i]) - __half2float(C_before[i]) >= thr_f)
+            local++;
+
+    smem_cnt[tid] = local;
+    __syncthreads();
+
+    for (int s = (int)blockDim.x / 2; s > 0; s >>= 1) {
+        if (tid < s) smem_cnt[tid] += smem_cnt[tid + s];
+        __syncthreads();
+    }
+
+    if (tid == 0) atomicAdd(d_count, smem_cnt[0]);
 }

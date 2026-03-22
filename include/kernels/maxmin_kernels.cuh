@@ -36,4 +36,21 @@ __global__ void maxmin_threshold_kernel(
     int batch_id
 );
 
+/**
+ * count_new_kernel — detección de convergencia en GPU
+ *
+ * Cuenta celdas donde C_after[i] - C_before[i] >= thr_f.
+ * Reemplaza la copia de B×M×N elementos a CPU en cada step iterativo.
+ *
+ * Lanzamiento: dim3 block(256), dim3 grid(min((total+255)/256, 1024))
+ * shmem = 256 * sizeof(int)
+ */
+__global__ void count_new_kernel(
+    const __half* __restrict__ C_before,
+    const __half* __restrict__ C_after,
+    int*          __restrict__ d_count,
+    float thr_f,
+    int total_elems
+);
+
 #endif
