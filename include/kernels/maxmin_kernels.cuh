@@ -33,7 +33,8 @@ __global__ void maxmin_threshold_kernel(
     int*          __restrict__ argmax, // nullable — [B,M,N] k ganador por celda
     __half thr,
     int B, int M, int N, int K,
-    int batch_id
+    int batch_id,
+    int max_paths  // -1 = sin límite; >= 0 = cap para evitar OOB (maxmin_reduced)
 );
 
 /**

@@ -1,0 +1,56 @@
+<mxfile host="65bd71144e">
+    <diagram id="NznViawy1WQAEzk4itRA" name="Página-1">
+        <mxGraphModel dx="2620" dy="1044" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="11" style="edgeStyle=none;html=1;endArrow=oval;endFill=0;" parent="1" source="2" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="570" y="580" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="2" value="KERNEL" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+                    <mxGeometry x="630" y="472" width="640" height="226" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="&lt;h1&gt;maxmin-reduced design&lt;/h1&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="319" y="70" width="190" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" style="edgeStyle=none;html=1;endArrow=halfCircle;endFill=0;exitX=0.997;exitY=0.544;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="4" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="570" y="580" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="4" value="maxmin_func" style="shape=process;whiteSpace=wrap;html=1;backgroundOutline=1;" parent="1" vertex="1">
+                    <mxGeometry x="10" y="390" width="490" height="350" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="-700" y="360" width="909" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f0a30a;strokeColor=#BD7000;fontColor=#000000;" vertex="1" parent="17">
+                    <mxGeometry width="839" height="160" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="&lt;div style=&quot;color: rgb(187, 190, 191); background-color: rgb(18, 19, 20); font-family: &amp;quot;CaskaydiaCove Nerd Font Mono&amp;quot;, &amp;quot;Droid Sans Mono&amp;quot;, monospace; font-weight: normal; line-height: 19px; white-space: pre;&quot;&gt;&lt;div style=&quot;color: rgb(187, 190, 191); font-size: 14px; line-height: 19px;&quot;&gt;&lt;div&gt;&lt;span style=&quot;color: #d1d6ae;&quot;&gt;maxmin&lt;/span&gt;&lt;span style=&quot;color: #bbbebf;&quot;&gt;(TensorResult&lt;/span&gt;&lt;span style=&quot;color: #c5ccd6;&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&quot;color: #bbbebf;&quot;&gt;__half&lt;/span&gt;&lt;span style=&quot;color: #c5ccd6;&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&quot;color: #bbbebf;&quot;&gt; &lt;/span&gt;&lt;span style=&quot;color: #c5ccd6;&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&quot;color: #bbbebf;&quot;&gt;tensor1, TensorResult&lt;/span&gt;&lt;span style=&quot;color: #c5ccd6;&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&quot;color: #bbbebf;&quot;&gt;__half&lt;/span&gt;&lt;span style=&quot;color: #c5ccd6;&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&quot;color: #bbbebf;&quot;&gt; &lt;/span&gt;&lt;span style=&quot;color: #c5ccd6;&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&quot;color: #bbbebf;&quot;&gt;tensor2,&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;color: #bbbebf;&quot;&gt;       __half thr, &lt;/span&gt;&lt;span style=&quot;color: #4f8fdd;&quot;&gt;int&lt;/span&gt;&lt;span style=&quot;color: #bbbebf;&quot;&gt; order, &lt;/span&gt;&lt;span style=&quot;color: #4f8fdd;&quot;&gt;bool&lt;/span&gt;&lt;span style=&quot;color: #bbbebf;&quot;&gt; return_paths)&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;" vertex="1" parent="17">
+                    <mxGeometry x="239" y="41.29032258064516" width="670" height="87.74193548387098" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="&lt;h2&gt;ACTUAL&lt;/h2&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="17">
+                    <mxGeometry x="59" y="77.41935483870968" width="60" height="15.483870967741936" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="1140" y="570" width="970" height="310" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#000066;strokeColor=#006EAF;fontColor=#ffffff;" vertex="1" parent="18">
+                    <mxGeometry x="-1840" y="-20" width="839" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;color: rgb(63, 63, 63); background-color: transparent;&quot;&gt;Explicación&lt;/span&gt;&lt;/h1&gt;&lt;h1 style=&quot;margin-top: 0px;&quot;&gt;&lt;span style=&quot;font-size: 12px; font-weight: 400;&quot;&gt;Al pasar el promedio de vecinos por nodo, podemos acotar la memoria reservada para los nuevos paths, ya que se reserva &lt;/span&gt;&lt;span style=&quot;font-size: 12px;&quot;&gt;(avg_n + 1) * N,&lt;/span&gt;&lt;span style=&quot;font-size: 12px; font-weight: 400;&quot;&gt; en lugar de N³. En el caso de N=10000&lt;/span&gt;&lt;/h1&gt;&lt;div&gt;&lt;span style=&quot;font-size: 12px; font-weight: 400;&quot;&gt;se pasa de&lt;/span&gt;&lt;/div&gt;" style="text;html=1;whiteSpace=wrap;overflow=hidden;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="310" y="160" width="250" height="350" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="&lt;h2&gt;&lt;font style=&quot;color: rgb(255, 255, 255);&quot;&gt;Nuevo&lt;/font&gt;&lt;/h2&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontColor=#FFFFFF;" vertex="1" parent="1">
+                    <mxGeometry x="-650" y="570" width="80" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="&lt;div style=&quot;font-family: &amp;quot;CaskaydiaCove Nerd Font Mono&amp;quot;, &amp;quot;Droid Sans Mono&amp;quot;, monospace; font-weight: normal; line-height: 19px; white-space: pre;&quot;&gt;&lt;div style=&quot;&quot;&gt;&lt;div style=&quot;background-color: rgb(18, 19, 20); font-size: 14px; line-height: 19px;&quot;&gt;&lt;div style=&quot;color: light-dark(rgb(187, 190, 191), rgb(73, 75, 76));&quot;&gt;&lt;span style=&quot;color: rgb(209, 214, 174);&quot;&gt;maxmin_reduced&lt;/span&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt;(TensorResult&lt;/span&gt;&lt;span style=&quot;color: rgb(197, 204, 214);&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt;__half&lt;/span&gt;&lt;span style=&quot;color: rgb(197, 204, 214);&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt; &lt;/span&gt;&lt;span style=&quot;color: rgb(197, 204, 214);&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt;tensor1, TensorResult&lt;/span&gt;&lt;span style=&quot;color: rgb(197, 204, 214);&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt;__half&lt;/span&gt;&lt;span style=&quot;color: rgb(197, 204, 214);&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt; &lt;/span&gt;&lt;span style=&quot;color: rgb(197, 204, 214);&quot;&gt;&amp;amp;&lt;/span&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt;tensor2,&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;&quot;&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt;       __half thr, &lt;/span&gt;&lt;span style=&quot;color: rgb(79, 143, 221);&quot;&gt;int&lt;/span&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt; order, &lt;/span&gt;&lt;span style=&quot;color: rgb(79, 143, 221);&quot;&gt;bool&lt;/span&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt; return_paths, &lt;/span&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt;&lt;font style=&quot;color: rgb(255, 51, 51);&quot;&gt;int avg_n&lt;/font&gt;&lt;/span&gt;&lt;span style=&quot;color: rgb(187, 190, 191);&quot;&gt;)&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;labelBackgroundColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="-461" y="475" width="641" height="240" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

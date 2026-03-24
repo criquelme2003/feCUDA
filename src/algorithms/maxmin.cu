@@ -81,7 +81,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
                 d_A, d_B, C_out,
                 d_raw_paths, d_raw_values, d_counter,
                 /*argmax=*/nullptr,
-                thr, B, M, N, K, -1);
+                thr, B, M, N, K, -1, -1);
             CHECK_CUDA(cudaGetLastError());
             CHECK_CUDA(cudaDeviceSynchronize());
             CHECK_CUDA(cudaMemcpy(&h_count, d_counter, sizeof(int), cudaMemcpyDeviceToHost));
@@ -112,7 +112,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
                     C_out + b_ * M * N,
                     dp, dv, d_ctr_b,
                     /*argmax=*/nullptr,
-                    thr, 1, M, N, K, 0);
+                    thr, 1, M, N, K, 0, -1);
                 CHECK_CUDA(cudaGetLastError());
                 CHECK_CUDA(cudaDeviceSynchronize());
 
@@ -220,7 +220,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
                 C_dev_before, d_B, C_dev_after,
                 /*paths=*/nullptr, /*values=*/nullptr, d_counter,
                 /*argmax=*/nullptr,
-                thr, B, M, N, K, -1);
+                thr, B, M, N, K, -1, -1);
             CHECK_CUDA(cudaGetLastError());
             CHECK_CUDA(cudaDeviceSynchronize());
 
@@ -245,7 +245,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
                 C_dev_before, d_B, C_dev_after,
                 d_paths_step, d_values_step, d_counter,
                 /*argmax=*/nullptr,
-                thr, B, M, N, K, -1);
+                thr, B, M, N, K, -1, -1);
             CHECK_CUDA(cudaGetLastError());
             CHECK_CUDA(cudaDeviceSynchronize());
 
@@ -330,7 +330,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
             C_dev_before, d_B, C_dev_after,
             /*paths=*/nullptr, /*values=*/nullptr, /*counter=*/nullptr,
             d_am,
-            thr, B, M, N, K, -1);
+            thr, B, M, N, K, -1, -1);
         CHECK_CUDA(cudaGetLastError());
         CHECK_CUDA(cudaDeviceSynchronize());
 
@@ -418,6 +418,257 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
               << effective_order << "): " << total_count << std::endl);
 
     int*   d_out_paths  = nullptr;
+    __half* d_out_values = nullptr;
+    if (total_count > 0) {
+        CHECK_CUDA(cudaMalloc(&d_out_paths,  (size_t)total_count * path_width * sizeof(int)));
+        CHECK_CUDA(cudaMalloc(&d_out_values, (size_t)total_count * sizeof(__half)));
+        CHECK_CUDA(cudaMemcpy(d_out_paths, h_paths.data(),
+            (size_t)total_count * path_width * sizeof(int), cudaMemcpyHostToDevice));
+        CHECK_CUDA(cudaMemcpy(d_out_values, h_values.data(),
+            (size_t)total_count * sizeof(__half), cudaMemcpyHostToDevice));
+    }
+
+    ret.push_back(std::make_tuple(d_out_paths, d_out_values,
+                                  total_count, path_width, effective_order));
+    return ret;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// maxmin_reduced — idéntica a maxmin pero para grafos esparsos:
+//   return_paths=false: single-pass con buffer de (avg_n + 1) * N aristas por step
+//                       (en lugar de two-pass). Si se excede el buffer se trunca.
+//   return_paths=true:  idéntico a maxmin.
+// ─────────────────────────────────────────────────────────────────────────────
+std::vector<std::tuple<int*, __half*, int, int, int>>
+maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
+               __half thr, int order, bool return_paths, float avg_n)
+{
+    std::vector<std::tuple<int*, __half*, int, int, int>> ret;
+
+    if (tensor1.getK() != 1 || tensor2.getK() != 1) {
+        printf("Error: maxmin_reduced solo acepta tensores 3D (K=1)\n");
+        exit(0);
+    }
+
+    int B = tensor1.getBatch();
+    int M = tensor1.getM();
+    int K = tensor1.getN();
+    int N = tensor2.getN();
+    int total_elems = B * M * N;
+
+    tensor1.move_to_device();
+    tensor2.move_to_device();
+    __half* d_A = (__half*)tensor1.getData();
+    __half* d_B = (__half*)tensor2.getData();
+
+    dim3 block(128);
+    size_t shmem = 128 * (sizeof(__half) + sizeof(int));
+
+    LOG(std::cout << "[MAXMIN_REDUCED] avg_n=" << avg_n
+              << " order=" << order << " N=" << N << std::endl);
+
+    __half *C_dev_before, *C_dev_after;
+    CHECK_CUDA(cudaMalloc(&C_dev_before, total_elems * sizeof(__half)));
+    CHECK_CUDA(cudaMalloc(&C_dev_after,  total_elems * sizeof(__half)));
+    CHECK_CUDA(cudaMemcpy(C_dev_before, d_A,
+        total_elems * sizeof(__half), cudaMemcpyDeviceToDevice));
+
+    dim3 grid(N, M, B);
+    float thr_f       = __half2float(thr);
+    int   pre_alloc   = (int)((avg_n + 1.0f) * (float)N);
+    int   effective_order = 0;
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // return_paths = false: single-pass con buffer fijo de pre_alloc aristas
+    // ─────────────────────────────────────────────────────────────────────────
+    if (!return_paths)
+    {
+        int*    d_counter;
+        int*    d_paths_step;
+        __half* d_vals_step;
+        CHECK_CUDA(cudaMalloc(&d_counter,    sizeof(int)));
+        CHECK_CUDA(cudaMalloc(&d_paths_step, (size_t)pre_alloc * 4 * sizeof(int)));
+        CHECK_CUDA(cudaMalloc(&d_vals_step,  (size_t)pre_alloc * sizeof(__half)));
+
+        std::vector<int>    h_all_paths;
+        std::vector<__half> h_all_values;
+
+        for (int s = 0; s < order; s++)
+        {
+            CHECK_CUDA(cudaMemset(d_counter, 0, sizeof(int)));
+            maxmin_threshold_kernel<<<grid, block, shmem>>>(
+                C_dev_before, d_B, C_dev_after,
+                d_paths_step, d_vals_step, d_counter,
+                /*argmax=*/nullptr,
+                thr, B, M, N, K, -1, pre_alloc);
+            CHECK_CUDA(cudaGetLastError());
+            CHECK_CUDA(cudaDeviceSynchronize());
+
+            int step_count = 0;
+            CHECK_CUDA(cudaMemcpy(&step_count, d_counter, sizeof(int),
+                                  cudaMemcpyDeviceToHost));
+
+            if (step_count == 0) {
+                LOG(std::cout << "[MAXMIN_REDUCED] Convergencia en step " << s + 1
+                          << " (sin nuevas aristas)" << std::endl);
+                break;
+            }
+
+            if (step_count > pre_alloc) {
+                LOG(printf("[MAXMIN_REDUCED] step %d: buffer (%d) excedido, "
+                           "real=%d. Aumentar avg_n.\n", s + 1, pre_alloc, step_count));
+                step_count = pre_alloc; // truncar: solo emitimos las primeras pre_alloc
+            }
+
+            std::vector<int>    h_raw4((size_t)step_count * 4);
+            std::vector<__half> h_vals((size_t)step_count);
+            CHECK_CUDA(cudaMemcpy(h_raw4.data(), d_paths_step,
+                (size_t)step_count * 4 * sizeof(int), cudaMemcpyDeviceToHost));
+            CHECK_CUDA(cudaMemcpy(h_vals.data(), d_vals_step,
+                (size_t)step_count * sizeof(__half), cudaMemcpyDeviceToHost));
+
+            prepend_order(h_raw4.data(), step_count, s + 1, h_all_paths);
+            h_all_values.insert(h_all_values.end(), h_vals.begin(), h_vals.end());
+
+            effective_order = s + 1;
+            std::swap(C_dev_before, C_dev_after);
+        }
+
+        cudaFree(d_paths_step);
+        cudaFree(d_vals_step);
+        cudaFree(d_counter);
+        cudaFree(C_dev_before);
+        cudaFree(C_dev_after);
+
+        int total_count = (int)h_all_values.size();
+        LOG(std::cout << "[MAXMIN_REDUCED] Total aristas: "
+                  << total_count << "  effective_order=" << effective_order << std::endl);
+
+        int*    d_out_paths  = nullptr;
+        __half* d_out_values = nullptr;
+        if (total_count > 0) {
+            CHECK_CUDA(cudaMalloc(&d_out_paths,  (size_t)total_count * 5 * sizeof(int)));
+            CHECK_CUDA(cudaMalloc(&d_out_values, (size_t)total_count * sizeof(__half)));
+            CHECK_CUDA(cudaMemcpy(d_out_paths, h_all_paths.data(),
+                (size_t)total_count * 5 * sizeof(int), cudaMemcpyHostToDevice));
+            CHECK_CUDA(cudaMemcpy(d_out_values, h_all_values.data(),
+                (size_t)total_count * sizeof(__half), cudaMemcpyHostToDevice));
+        }
+        ret.push_back(std::make_tuple(d_out_paths, d_out_values,
+                                      total_count, 5, effective_order));
+        return ret;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // return_paths = true: idéntico a maxmin (reconstrucción completa)
+    // ─────────────────────────────────────────────────────────────────────────
+    {
+        size_t argmax_total = (size_t)order * total_elems * sizeof(int);
+        if (argmax_total > 2ULL * 1024 * 1024 * 1024) {
+            printf("[MAXMIN_REDUCED WARNING] return_paths=true con N=%d order=%d requiere "
+                   "~%zu MB para argmax. Considera return_paths=false.\n",
+                   M, order, argmax_total / (1024 * 1024));
+        }
+    }
+
+    int* d_new_count;
+    CHECK_CUDA(cudaMalloc(&d_new_count, sizeof(int)));
+
+    std::vector<__half> h_C_final    (total_elems);
+    std::vector<__half> h_C_pre_final(total_elems);
+    CHECK_CUDA(cudaMemcpy(h_C_pre_final.data(), d_A,
+        total_elems * sizeof(__half), cudaMemcpyDeviceToHost));
+
+    std::vector<int*> d_argmax;
+    d_argmax.reserve(order);
+
+    dim3 grid_r(std::min((total_elems + 255) / 256, 1024));
+    dim3 block_r(256);
+    size_t shmem_r = 256 * sizeof(int);
+
+    for (int s = 0; s < order; s++)
+    {
+        int* d_am;
+        CHECK_CUDA(cudaMalloc(&d_am, total_elems * sizeof(int)));
+        d_argmax.push_back(d_am);
+
+        maxmin_threshold_kernel<<<grid, block, shmem>>>(
+            C_dev_before, d_B, C_dev_after,
+            /*paths=*/nullptr, /*values=*/nullptr, /*counter=*/nullptr,
+            d_am,
+            thr, B, M, N, K, -1, -1);
+        CHECK_CUDA(cudaGetLastError());
+        CHECK_CUDA(cudaDeviceSynchronize());
+
+        CHECK_CUDA(cudaMemset(d_new_count, 0, sizeof(int)));
+        count_new_kernel<<<grid_r, block_r, shmem_r>>>(
+            C_dev_before, C_dev_after, d_new_count, thr_f, total_elems);
+        CHECK_CUDA(cudaGetLastError());
+        CHECK_CUDA(cudaDeviceSynchronize());
+
+        int new_count = 0;
+        CHECK_CUDA(cudaMemcpy(&new_count, d_new_count, sizeof(int),
+                              cudaMemcpyDeviceToHost));
+
+        if (new_count > 0) {
+            effective_order = s + 1;
+            CHECK_CUDA(cudaMemcpy(h_C_pre_final.data(), C_dev_before,
+                total_elems * sizeof(__half), cudaMemcpyDeviceToHost));
+            CHECK_CUDA(cudaMemcpy(h_C_final.data(), C_dev_after,
+                total_elems * sizeof(__half), cudaMemcpyDeviceToHost));
+            std::swap(C_dev_before, C_dev_after);
+        } else {
+            LOG(std::cout << "[MAXMIN_REDUCED] Convergencia en step " << s + 1
+                      << " (sin nuevos caminos)" << std::endl);
+            cudaFree(d_argmax.back());
+            d_argmax.pop_back();
+            break;
+        }
+    }
+
+    cudaFree(d_new_count);
+    cudaFree(C_dev_before);
+    cudaFree(C_dev_after);
+
+    int n_steps    = (int)d_argmax.size();
+    int path_width = n_steps + 4;
+    std::vector<int>    h_paths;
+    std::vector<__half> h_values;
+
+    std::vector<std::vector<int>> h_argmax(n_steps, std::vector<int>(total_elems));
+    for (int s = 0; s < n_steps; s++) {
+        CHECK_CUDA(cudaMemcpy(h_argmax[s].data(), d_argmax[s],
+            total_elems * sizeof(int), cudaMemcpyDeviceToHost));
+        cudaFree(d_argmax[s]);
+    }
+
+    for (int b_ = 0; b_ < B; b_++)
+        for (int m_ = 0; m_ < M; m_++)
+            for (int n_ = 0; n_ < N; n_++) {
+                int idx = b_ * M * N + m_ * N + n_;
+                float val_after  = __half2float(h_C_final[idx]);
+                float val_before = __half2float(h_C_pre_final[idx]);
+                if ((val_after - val_before) < thr_f) continue;
+
+                std::vector<int> ks(n_steps);
+                int cur = n_;
+                for (int s = n_steps - 1; s >= 0; s--) {
+                    ks[s] = h_argmax[s][b_ * M * N + m_ * N + cur];
+                    cur   = ks[s];
+                }
+                h_paths.push_back(effective_order);
+                h_paths.push_back(b_);
+                h_paths.push_back(m_);
+                for (int k : ks) h_paths.push_back(k);
+                h_paths.push_back(n_);
+                h_values.push_back(h_C_final[idx]);
+            }
+
+    int total_count = (int)h_values.size();
+    LOG(std::cout << "[MAXMIN_REDUCED] Caminos reconstruidos (effective_order="
+              << effective_order << "): " << total_count << std::endl);
+
+    int*    d_out_paths  = nullptr;
     __half* d_out_values = nullptr;
     if (total_count > 0) {
         CHECK_CUDA(cudaMalloc(&d_out_paths,  (size_t)total_count * path_width * sizeof(int)));

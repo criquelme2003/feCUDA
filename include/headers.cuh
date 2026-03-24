@@ -19,6 +19,13 @@ std::vector<std::tuple<int*, __half*, int, int, int>> maxmin(
     TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     __half thr, int order, bool return_paths = true);
 
+// maxmin_reduced: idéntica a maxmin pero para grafos esparsos.
+// return_paths=false: single-pass con buffer de (avg_n + 1) * N aristas por step.
+// Si el conteo real supera el buffer se trunca con warning.
+std::vector<std::tuple<int*, __half*, int, int, int>> maxmin_reduced(
+    TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
+    __half thr, int order, bool return_paths, float avg_n);
+
 //------------------------------------------------
 
 

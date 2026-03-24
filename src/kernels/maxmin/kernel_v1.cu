@@ -31,7 +31,8 @@ __global__ void maxmin_threshold_kernel(
     int*          __restrict__ argmax, // nullable — [B,M,N] k ganador
     __half thr,
     int B, int M, int N, int K,
-    int batch_id
+    int batch_id,
+    int max_paths  // -1 = sin límite; >= 0 = cap de escritura (sin OOB)
 )
 {
     int b   = (batch_id >= 0) ? batch_id : (int)blockIdx.z;
@@ -96,7 +97,7 @@ __global__ void maxmin_threshold_kernel(
             if (__hle(__habs(__hsub(mi, k_max)), __float2half(MIN_DIFF)))
             {
                 int idx = atomicAdd(counter, 1);
-                if (paths)   // nullptr en pass 1 (solo contar)
+                if (paths && (max_paths < 0 || idx < max_paths))
                 {
                     int base = idx * 4;
                     paths[base + 0] = b;
