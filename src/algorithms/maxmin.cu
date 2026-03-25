@@ -15,8 +15,8 @@ bool g_verbose = true;  // definición del global (extern en utils.cuh)
 // Comprueba que una futura allocation no exceda 2GB
 // Comprueba que una futura allocation no exceda 2GB y deje 1GB libre en VRAM
 static inline bool check_alloc_size_or_fail(size_t bytes, const char *name) {
-    const size_t MAX_ALLOC = 3.5ULL * 1024 * 1024 * 1024; // 3.5GB
-    const size_t RESERVED = 500ULL * 1024 * 1024 ; // 500MB
+    const size_t MAX_ALLOC = 3.5 * 1024 * 1024 * 1024ULL; // 3.5GB
+    const size_t RESERVED = 500 * 1024 * 1024ULL ; // 500MB
     
     if (bytes > MAX_ALLOC) {
         fprintf(stderr, "ERROR: allocation for %s is %zu bytes (>2GB)\n", name, bytes);
