@@ -27,7 +27,7 @@ __global__ void maxmin_threshold_kernel(
     __half*       __restrict__ C_out,  // [B,M,N] siempre se escribe
     int*          __restrict__ paths,  // nullable — flat int[count*4]
     __half*       __restrict__ values, // nullable
-    int*          __restrict__ counter,// nullable — atomic counter
+    int*          __restrict__ counter,// nullable — atomic counter for paths
     int*          __restrict__ argmax, // nullable — [B,M,N] k ganador
     __half thr,
     int B, int M, int N, int K,
@@ -35,23 +35,28 @@ __global__ void maxmin_threshold_kernel(
     int max_paths  // -1 = sin límite; >= 0 = cap de escritura (sin OOB)
 )
 {
+
+  // Get necesary idx's
     int b   = (batch_id >= 0) ? batch_id : (int)blockIdx.z;
     int m   = (int)blockIdx.y;
     int n   = (int)blockIdx.x;
     int tid = (int)threadIdx.x;
-    int bsz = (int)blockDim.x;
-    int out_id = b * M * N + m * N + n;
+    int bsz = (int)blockDim.x; // How many threads, (pow of 2)
+    int out_id = b * M * N + m * N + n; // Write idx 
 
     // smem layout: [bsz × __half | bsz × int]
-    extern __shared__ char smem_buf[];
-    __half* s_val = reinterpret_cast<__half*>(smem_buf);
-    int*    s_k   = reinterpret_cast<int*>(smem_buf + bsz * sizeof(__half));
+    extern __shared__ char smem_buf[]; 
+    __half* s_val = reinterpret_cast<__half*>(smem_buf); // Save value for reduction
+    int*    s_k   = reinterpret_cast<int*>(smem_buf + bsz * sizeof(__half)); // save k idx's for reduction
 
     // ── Reducción local por thread ──────────────────────────────────────────
     __half best_val = __float2half(-FLT_MAX);
     int    best_k   = 0;
 
-    for (int k = tid; k < K; k += bsz)
+
+    //  !Important
+    // Each thread works on K/bsz elements, K = 10000 -> do 78 comparisons (excepting the last thread)
+    for (int k = tid; k < K; k += bsz) 
     {
         int a_idx = b * M * K + m * K + k;
         int b_idx = b * K * N + k * N + n;
@@ -64,7 +69,8 @@ __global__ void maxmin_threshold_kernel(
     __syncthreads();
 
     // ── Reducción en shared memory con tracking de argmax ───────────────────
-    for (int s = bsz / 2; s > 0; s >>= 1)
+    // ! Improvable with warp reduction, the bsz has to be a pow of 2 
+    for (int s = bsz / 2; s > 0; s >>= 1) 
     {
         if (tid < s && __hgt(s_val[tid + s], s_val[tid]))
         {
@@ -88,13 +94,13 @@ __global__ void maxmin_threshold_kernel(
     // Threshold diferencial: k_max - A_mat[m,n] >= thr
     if (counter && __hsub(k_max, A_mat[out_id]) >= thr)
     {
-        for (int k = tid; k < K; k += bsz)
+        for (int k = tid; k < K; k += bsz) // the for loop is the same, but the "k_max" is known now.
         {
             int a_idx = b * M * K + m * K + k;
             int b_idx = b * K * N + k * N + n;
             __half mi = __hmin(A_mat[a_idx], B_mat[b_idx]);
 
-            if (__hle(__habs(__hsub(mi, k_max)), __float2half(MIN_DIFF)))
+            if (__hle(__habs(__hsub(mi, k_max)), __float2half(MIN_DIFF))) // Secure comparison
             {
                 int idx = atomicAdd(counter, 1);
                 if (paths && (max_paths < 0 || idx < max_paths))
@@ -133,7 +139,7 @@ __global__ void count_new_kernel(
 
     int local = 0;
     for (; i < total_elems; i += (int)(gridDim.x * blockDim.x))
-        if (__half2float(C_after[i]) - __half2float(C_before[i]) >= thr_f)
+        if (__half2float(C_after[i]) - __half2float(C_before[i]) >= thr_f)  
             local++;
 
     smem_cnt[tid] = local;

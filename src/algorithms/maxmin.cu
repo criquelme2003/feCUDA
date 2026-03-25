@@ -12,6 +12,36 @@ bool g_verbose = true;  // definición del global (extern en utils.cuh)
 #define MAX_GRID_SIZE    10000
 #define MAX_PATHS_PER_ITER 100000
 
+// Comprueba que una futura allocation no exceda 2GB
+// Comprueba que una futura allocation no exceda 2GB y deje 1GB libre en VRAM
+static inline bool check_alloc_size_or_fail(size_t bytes, const char *name) {
+    const size_t MAX_ALLOC = 2ULL * 1024 * 1024 * 1024;
+    const size_t RESERVED = 1ULL * 1024 * 1024 * 1024;
+    if (bytes > MAX_ALLOC) {
+        fprintf(stderr, "ERROR: allocation for %s is %zu bytes (>2GB)\n", name, bytes);
+        return false;
+    }
+
+    size_t free_bytes = 0, total_bytes = 0;
+    cudaError_t err = cudaMemGetInfo(&free_bytes, &total_bytes);
+    if (err != cudaSuccess) {
+        fprintf(stderr, "WARN: cudaMemGetInfo failed (%s). Allowing allocation for %s of %zu bytes\n",
+                cudaGetErrorString(err), name, bytes);
+        return true; // no info available → be permissive (preserves previous behaviour)
+    }
+
+    if (free_bytes < bytes + RESERVED) {
+        fprintf(stderr,
+                "ERROR: not enough free GPU memory for %s: requested=%zu free=%zu reserved=%zu\n",
+                name, bytes, free_bytes, RESERVED);
+        return false;
+    }
+    return true;
+}
+
+#define CHECK_ALLOC_SIZE_OR_EXIT(bytes, name) \
+    do { if (!check_alloc_size_or_fail((bytes),(name))) exit(EXIT_FAILURE); } while(0)
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Prepend step_order a cada fila (b,m,k,n) y acumula en out_host.
 // raw4: buffer host con count*4 ints   layout: [b, m, k, n] por fila
@@ -41,6 +71,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         exit(0);
     }
 
+    // GET NECESARY DIMENSIONS
     int B = tensor1.getBatch();
     int M = tensor1.getM();
     int K = tensor1.getN(); // N del tensor1 actúa como K en el kernel
@@ -52,27 +83,53 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     __half* d_A = (__half*)tensor1.getData();
     __half* d_B = (__half*)tensor2.getData();
 
+    
     // Configuración de lanzamiento (fija para todos los paths)
-    dim3 block(128);
-    size_t shmem = 128 * (sizeof(__half) + sizeof(int));
+    int blockDim = 128;
+    dim3 block(blockDim); // define septs for thread loop
+    size_t shmem = blockDim * (sizeof(__half) + sizeof(int)); // shared memory save k_values and k_index for block reduction
 
     // ─────────────────────────────────────────────────────────────────────────
     // ORDEN 1: un solo paso A⊗B
     // ─────────────────────────────────────────────────────────────────────────
     if (order == 1)
     {
-        __half* C_out;
-        CHECK_CUDA(cudaMalloc(&C_out, total_elems * sizeof(__half)));
+
+      // alloc fot c mtx
+        __half* C_out; 
+        {
+            size_t __alloc_bytes = (size_t)total_elems * sizeof(__half);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_out");
+            CHECK_CUDA(cudaMalloc(&C_out, __alloc_bytes));
+        }
 
         int*    d_raw_paths;
         __half* d_raw_values;
         int     h_count = 0;
         int*    d_counter;
-        CHECK_CUDA(cudaMalloc(&d_counter,    sizeof(int)));
-        CHECK_CUDA(cudaMemset(d_counter, 0, sizeof(int)));
-        CHECK_CUDA(cudaMalloc(&d_raw_paths,  (size_t)MAX_PATHS_PER_ITER * 4 * sizeof(int)));
-        CHECK_CUDA(cudaMalloc(&d_raw_values, (size_t)MAX_PATHS_PER_ITER * sizeof(__half)));
 
+      // alloc ant init  path counter 
+        {
+            size_t __alloc_bytes = (size_t)sizeof(int);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_counter");
+            CHECK_CUDA(cudaMalloc(&d_counter, __alloc_bytes));
+        }
+        CHECK_CUDA(cudaMemset(d_counter, 0, sizeof(int)));
+
+      // alloc  paths array 
+        {
+            size_t __alloc_bytes = (size_t)MAX_PATHS_PER_ITER * 4 * sizeof(int);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_raw_paths");
+            CHECK_CUDA(cudaMalloc(&d_raw_paths, __alloc_bytes));
+        }
+      // alloc values array 
+        {
+            size_t __alloc_bytes = (size_t)MAX_PATHS_PER_ITER * sizeof(__half);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_raw_values");
+            CHECK_CUDA(cudaMalloc(&d_raw_values, __alloc_bytes));
+        }
+
+      
         if ((long long)B * M * N * K < MAX_PATHS_PER_ITER)
         {
             LOG(std::cout << "[MAXMIN C++] ORDER-1 COMPLETE" << std::endl);
@@ -96,14 +153,27 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
             std::vector<int>     h_counts_acc;
 
             int* d_ctr_b;
-            CHECK_CUDA(cudaMalloc(&d_ctr_b, sizeof(int)));
+            {
+                size_t __alloc_bytes = (size_t)sizeof(int);
+                CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_ctr_b");
+                CHECK_CUDA(cudaMalloc(&d_ctr_b, __alloc_bytes));
+            }
 
             for (int b_ = 0; b_ < B; b_++)
             {
-                int*    dp; __half* dv;
+                int*    dp;
+                __half* dv;
                 int     mppi = M * K * N;
-                CHECK_CUDA(cudaMalloc(&dp, (size_t)mppi * 4 * sizeof(int)));
-                CHECK_CUDA(cudaMalloc(&dv, (size_t)mppi * sizeof(__half)));
+                {
+                    size_t __alloc_bytes = (size_t)mppi * 4 * sizeof(int);
+                    CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "dp");
+                    CHECK_CUDA(cudaMalloc(&dp, __alloc_bytes));
+                }
+                {
+                    size_t __alloc_bytes = (size_t)mppi * sizeof(__half);
+                    CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "dv");
+                    CHECK_CUDA(cudaMalloc(&dv, __alloc_bytes));
+                }
                 CHECK_CUDA(cudaMemset(d_ctr_b, 0, sizeof(int)));
 
                 maxmin_threshold_kernel<<<grid, block, shmem>>>(
@@ -123,13 +193,21 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
                 h_counts_acc.push_back(cnt);
                 h_count += cnt;
             }
-            cudaFree(d_ctr_b);
+                CHECK_CUDA(cudaFree(d_ctr_b));
 
             // Reusar d_raw_paths / d_raw_values para el merge
-            cudaFree(d_raw_paths);
-            cudaFree(d_raw_values);
-            CHECK_CUDA(cudaMalloc(&d_raw_paths,  (size_t)h_count * 4 * sizeof(int)));
-            CHECK_CUDA(cudaMalloc(&d_raw_values, (size_t)h_count * sizeof(__half)));
+            CHECK_CUDA(cudaFree(d_raw_paths));
+            CHECK_CUDA(cudaFree(d_raw_values));
+            {
+                size_t __alloc_bytes = (size_t)h_count * 4 * sizeof(int);
+                CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_raw_paths");
+                CHECK_CUDA(cudaMalloc(&d_raw_paths, __alloc_bytes));
+            }
+            {
+                size_t __alloc_bytes = (size_t)h_count * sizeof(__half);
+                CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_raw_values");
+                CHECK_CUDA(cudaMalloc(&d_raw_values, __alloc_bytes));
+            }
 
             int offset = 0;
             for (int c = 0; c < B; c++) {
@@ -143,12 +221,12 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
                         cudaMemcpyDeviceToDevice));
                     offset += cnt;
                 }
-                cudaFree(d_paths_acc[c]);
-                cudaFree(d_values_acc[c]);
+                CHECK_CUDA(cudaFree(d_paths_acc[c]));
+                CHECK_CUDA(cudaFree(d_values_acc[c]));
             }
         }
-        cudaFree(C_out);
-        cudaFree(d_counter);
+        CHECK_CUDA(cudaFree(C_out));
+        CHECK_CUDA(cudaFree(d_counter));
         LOG(std::cout << "[MAXMIN C++] ORDER-1 paths found: " << h_count << std::endl);
 
         // Prepend order=1 en CPU → (order, b, m, k, n)
@@ -168,15 +246,23 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
             h_out.reserve((size_t)h_count * 5);
             prepend_order(h_raw4.data(), h_count, 1, h_out);
 
-            CHECK_CUDA(cudaMalloc(&d_final_paths,  (size_t)h_count * 5 * sizeof(int)));
-            CHECK_CUDA(cudaMalloc(&d_final_values, (size_t)h_count * sizeof(__half)));
+            {
+                size_t __alloc_bytes = (size_t)h_count * 5 * sizeof(int);
+                CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_final_paths");
+                CHECK_CUDA(cudaMalloc(&d_final_paths, __alloc_bytes));
+            }
+            {
+                size_t __alloc_bytes = (size_t)h_count * sizeof(__half);
+                CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_final_values");
+                CHECK_CUDA(cudaMalloc(&d_final_values, __alloc_bytes));
+            }
             CHECK_CUDA(cudaMemcpy(d_final_paths, h_out.data(),
                 (size_t)h_count * 5 * sizeof(int), cudaMemcpyHostToDevice));
             CHECK_CUDA(cudaMemcpy(d_final_values, h_vals.data(),
                 (size_t)h_count * sizeof(__half), cudaMemcpyHostToDevice));
         }
-        cudaFree(d_raw_paths);
-        cudaFree(d_raw_values);
+        CHECK_CUDA(cudaFree(d_raw_paths));
+        CHECK_CUDA(cudaFree(d_raw_values));
 
         ret.push_back(std::make_tuple(d_final_paths, d_final_values,
                                       h_count, path_width, 1));
@@ -191,8 +277,16 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
 
     // Buffers iterativos: C_dev_before (= C_prev) y C_dev_after (= C_next)
     __half *C_dev_before, *C_dev_after;
-    CHECK_CUDA(cudaMalloc(&C_dev_before, total_elems * sizeof(__half)));
-    CHECK_CUDA(cudaMalloc(&C_dev_after,  total_elems * sizeof(__half)));
+    {
+        size_t __alloc_bytes = (size_t)total_elems * sizeof(__half);
+        CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_dev_before");
+        CHECK_CUDA(cudaMalloc(&C_dev_before, __alloc_bytes));
+    }
+    {
+        size_t __alloc_bytes = (size_t)total_elems * sizeof(__half);
+        CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_dev_after");
+        CHECK_CUDA(cudaMalloc(&C_dev_after, __alloc_bytes));
+    }
     // C_dev_before arranca como copia de d_A
     CHECK_CUDA(cudaMemcpy(C_dev_before, d_A,
         total_elems * sizeof(__half), cudaMemcpyDeviceToDevice));
@@ -207,7 +301,11 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     if (!return_paths)
     {
         int* d_counter;
-        CHECK_CUDA(cudaMalloc(&d_counter, sizeof(int)));
+        {
+            size_t __alloc_bytes = (size_t)sizeof(int);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_counter");
+            CHECK_CUDA(cudaMalloc(&d_counter, __alloc_bytes));
+        }
 
         std::vector<int>    h_all_paths;
         std::vector<__half> h_all_values;
@@ -237,8 +335,16 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
             // ── Pasada 2: alocar exacto y emitir ────────────────────────────
             int*    d_paths_step;
             __half* d_values_step;
-            CHECK_CUDA(cudaMalloc(&d_paths_step,  (size_t)step_count * 4 * sizeof(int)));
-            CHECK_CUDA(cudaMalloc(&d_values_step, (size_t)step_count * sizeof(__half)));
+            {
+                size_t __alloc_bytes = (size_t)step_count * 4 * sizeof(int);
+                CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_paths_step");
+                CHECK_CUDA(cudaMalloc(&d_paths_step, __alloc_bytes));
+            }
+            {
+                size_t __alloc_bytes = (size_t)step_count * sizeof(__half);
+                CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_values_step");
+                CHECK_CUDA(cudaMalloc(&d_values_step, __alloc_bytes));
+            }
             CHECK_CUDA(cudaMemset(d_counter, 0, sizeof(int)));
 
             maxmin_threshold_kernel<<<grid, block, shmem>>>(
@@ -255,8 +361,8 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
                 (size_t)step_count * 4 * sizeof(int), cudaMemcpyDeviceToHost));
             CHECK_CUDA(cudaMemcpy(h_vals.data(), d_values_step,
                 (size_t)step_count * sizeof(__half), cudaMemcpyDeviceToHost));
-            cudaFree(d_paths_step);
-            cudaFree(d_values_step);
+            CHECK_CUDA(cudaFree(d_paths_step));
+            CHECK_CUDA(cudaFree(d_values_step));
 
             prepend_order(h_raw4.data(), step_count, s + 1, h_all_paths);
             h_all_values.insert(h_all_values.end(), h_vals.begin(), h_vals.end());
@@ -265,9 +371,9 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
             std::swap(C_dev_before, C_dev_after);
         }
 
-        cudaFree(C_dev_before);
-        cudaFree(C_dev_after);
-        cudaFree(d_counter);
+        CHECK_CUDA(cudaFree(C_dev_before));
+        CHECK_CUDA(cudaFree(C_dev_after));
+        CHECK_CUDA(cudaFree(d_counter));
 
         int total_count = (int)h_all_values.size();
         LOG(std::cout << "[MAXMIN C++] Total aristas (return_paths=false): "
@@ -276,8 +382,16 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         int*   d_out_paths  = nullptr;
         __half* d_out_values = nullptr;
         if (total_count > 0) {
-            CHECK_CUDA(cudaMalloc(&d_out_paths,  (size_t)total_count * 5 * sizeof(int)));
-            CHECK_CUDA(cudaMalloc(&d_out_values, (size_t)total_count * sizeof(__half)));
+            {
+                size_t __alloc_bytes = (size_t)total_count * 5 * sizeof(int);
+                CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_out_paths");
+                CHECK_CUDA(cudaMalloc(&d_out_paths, __alloc_bytes));
+            }
+            {
+                size_t __alloc_bytes = (size_t)total_count * sizeof(__half);
+                CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_out_values");
+                CHECK_CUDA(cudaMalloc(&d_out_values, __alloc_bytes));
+            }
             CHECK_CUDA(cudaMemcpy(d_out_paths, h_all_paths.data(),
                 (size_t)total_count * 5 * sizeof(int), cudaMemcpyHostToDevice));
             CHECK_CUDA(cudaMemcpy(d_out_values, h_all_values.data(),
@@ -303,7 +417,11 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
 
     // Convergencia en GPU: solo 4 bytes D2H por step (antes: total_elems*2 bytes)
     int* d_new_count;
-    CHECK_CUDA(cudaMalloc(&d_new_count, sizeof(int)));
+    {
+        size_t __alloc_bytes = (size_t)sizeof(int);
+        CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_new_count");
+        CHECK_CUDA(cudaMalloc(&d_new_count, __alloc_bytes));
+    }
 
     // Para reconstrucción: guardar C antes y después del último step efectivo
     std::vector<__half> h_C_final    (total_elems);
@@ -323,7 +441,11 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     for (int s = 0; s < order; s++)
     {
         int* d_am;
-        CHECK_CUDA(cudaMalloc(&d_am, total_elems * sizeof(int)));
+        {
+            size_t __alloc_bytes = (size_t)total_elems * sizeof(int);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_am");
+            CHECK_CUDA(cudaMalloc(&d_am, __alloc_bytes));
+        }
         d_argmax.push_back(d_am);
 
         maxmin_threshold_kernel<<<grid, block, shmem>>>(
@@ -356,15 +478,15 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         } else {
             LOG(std::cout << "[MAXMIN C++] Convergencia en step " << s + 1
                       << " (sin nuevos caminos)" << std::endl);
-            cudaFree(d_argmax.back());
+            CHECK_CUDA(cudaFree(d_argmax.back()));
             d_argmax.pop_back();
             break;
         }
     }
 
-    cudaFree(d_new_count);
-    cudaFree(C_dev_before);
-    cudaFree(C_dev_after);
+    CHECK_CUDA(cudaFree(d_new_count));
+    CHECK_CUDA(cudaFree(C_dev_before));
+    CHECK_CUDA(cudaFree(C_dev_after));
 
     int n_steps = (int)d_argmax.size();  // = effective_order
 
@@ -373,7 +495,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     for (int s = 0; s < n_steps; s++) {
         CHECK_CUDA(cudaMemcpy(h_argmax[s].data(), d_argmax[s],
             total_elems * sizeof(int), cudaMemcpyDeviceToHost));
-        cudaFree(d_argmax[s]);
+        CHECK_CUDA(cudaFree(d_argmax[s]));
     }
 
     // ── Reconstrucción de caminos ────────────────────────────────────────────
@@ -420,8 +542,16 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     int*   d_out_paths  = nullptr;
     __half* d_out_values = nullptr;
     if (total_count > 0) {
-        CHECK_CUDA(cudaMalloc(&d_out_paths,  (size_t)total_count * path_width * sizeof(int)));
-        CHECK_CUDA(cudaMalloc(&d_out_values, (size_t)total_count * sizeof(__half)));
+        {
+            size_t __alloc_bytes = (size_t)total_count * path_width * sizeof(int);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_out_paths");
+            CHECK_CUDA(cudaMalloc(&d_out_paths, __alloc_bytes));
+        }
+        {
+            size_t __alloc_bytes = (size_t)total_count * sizeof(__half);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_out_values");
+            CHECK_CUDA(cudaMalloc(&d_out_values, __alloc_bytes));
+        }
         CHECK_CUDA(cudaMemcpy(d_out_paths, h_paths.data(),
             (size_t)total_count * path_width * sizeof(int), cudaMemcpyHostToDevice));
         CHECK_CUDA(cudaMemcpy(d_out_values, h_values.data(),
@@ -449,7 +579,7 @@ maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         printf("Error: maxmin_reduced solo acepta tensores 3D (K=1)\n");
         exit(0);
     }
-
+// Get dims
     int B = tensor1.getBatch();
     int M = tensor1.getM();
     int K = tensor1.getN();
@@ -467,15 +597,27 @@ maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     LOG(std::cout << "[MAXMIN_REDUCED] avg_n=" << avg_n
               << " order=" << order << " N=" << N << std::endl);
 
+// aloc for c mtxs
     __half *C_dev_before, *C_dev_after;
-    CHECK_CUDA(cudaMalloc(&C_dev_before, total_elems * sizeof(__half)));
-    CHECK_CUDA(cudaMalloc(&C_dev_after,  total_elems * sizeof(__half)));
+    {
+        size_t __alloc_bytes = (size_t)total_elems * sizeof(__half);
+        CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_dev_before_reduced");
+        CHECK_CUDA(cudaMalloc(&C_dev_before, __alloc_bytes));
+    }
+    {
+        size_t __alloc_bytes = (size_t)total_elems * sizeof(__half);
+        CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_dev_after_reduced");
+        CHECK_CUDA(cudaMalloc(&C_dev_after, __alloc_bytes));
+    }
+    // initial copy, for first iteration
     CHECK_CUDA(cudaMemcpy(C_dev_before, d_A,
         total_elems * sizeof(__half), cudaMemcpyDeviceToDevice));
 
-    dim3 grid(N, M, B);
+
+    // grid dims. with N = M = n = 10000, B = 1,  10⁸ blocks
+    dim3 grid(N, M, B); 
     float thr_f       = __half2float(thr);
-    int   pre_alloc   = (int)((avg_n + 1.0f) * (float)N);
+    int   pre_alloc   = (int)((avg_n + 1.0f) * (float)N); // prealloc for paths
     int   effective_order = 0;
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -486,9 +628,21 @@ maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         int*    d_counter;
         int*    d_paths_step;
         __half* d_vals_step;
-        CHECK_CUDA(cudaMalloc(&d_counter,    sizeof(int)));
-        CHECK_CUDA(cudaMalloc(&d_paths_step, (size_t)pre_alloc * 4 * sizeof(int)));
-        CHECK_CUDA(cudaMalloc(&d_vals_step,  (size_t)pre_alloc * sizeof(__half)));
+        {
+            size_t __alloc_bytes = (size_t)sizeof(int);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_counter_reduced");
+            CHECK_CUDA(cudaMalloc(&d_counter, __alloc_bytes));
+        }
+        {
+            size_t __alloc_bytes = (size_t)pre_alloc * 4 * sizeof(int);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_paths_step_reduced");
+            CHECK_CUDA(cudaMalloc(&d_paths_step, __alloc_bytes));
+        }
+        {
+            size_t __alloc_bytes = (size_t)pre_alloc * sizeof(__half);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_vals_step_reduced");
+            CHECK_CUDA(cudaMalloc(&d_vals_step, __alloc_bytes));
+        }
 
         std::vector<int>    h_all_paths;
         std::vector<__half> h_all_values;
@@ -534,11 +688,11 @@ maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
             std::swap(C_dev_before, C_dev_after);
         }
 
-        cudaFree(d_paths_step);
-        cudaFree(d_vals_step);
-        cudaFree(d_counter);
-        cudaFree(C_dev_before);
-        cudaFree(C_dev_after);
+        CHECK_CUDA(cudaFree(d_paths_step));
+        CHECK_CUDA(cudaFree(d_vals_step));
+        CHECK_CUDA(cudaFree(d_counter));
+        CHECK_CUDA(cudaFree(C_dev_before));
+        CHECK_CUDA(cudaFree(C_dev_after));
 
         int total_count = (int)h_all_values.size();
         LOG(std::cout << "[MAXMIN_REDUCED] Total aristas: "
@@ -547,8 +701,16 @@ maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         int*    d_out_paths  = nullptr;
         __half* d_out_values = nullptr;
         if (total_count > 0) {
-            CHECK_CUDA(cudaMalloc(&d_out_paths,  (size_t)total_count * 5 * sizeof(int)));
-            CHECK_CUDA(cudaMalloc(&d_out_values, (size_t)total_count * sizeof(__half)));
+            {
+                size_t __alloc_bytes = (size_t)total_count * 5 * sizeof(int);
+                CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_out_paths_reduced");
+                CHECK_CUDA(cudaMalloc(&d_out_paths, __alloc_bytes));
+            }
+            {
+                size_t __alloc_bytes = (size_t)total_count * sizeof(__half);
+                CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_out_values_reduced");
+                CHECK_CUDA(cudaMalloc(&d_out_values, __alloc_bytes));
+            }
             CHECK_CUDA(cudaMemcpy(d_out_paths, h_all_paths.data(),
                 (size_t)total_count * 5 * sizeof(int), cudaMemcpyHostToDevice));
             CHECK_CUDA(cudaMemcpy(d_out_values, h_all_values.data(),
@@ -572,7 +734,11 @@ maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     }
 
     int* d_new_count;
-    CHECK_CUDA(cudaMalloc(&d_new_count, sizeof(int)));
+    {
+        size_t __alloc_bytes = (size_t)sizeof(int);
+        CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_new_count_reduced");
+        CHECK_CUDA(cudaMalloc(&d_new_count, __alloc_bytes));
+    }
 
     std::vector<__half> h_C_final    (total_elems);
     std::vector<__half> h_C_pre_final(total_elems);
@@ -589,7 +755,11 @@ maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     for (int s = 0; s < order; s++)
     {
         int* d_am;
-        CHECK_CUDA(cudaMalloc(&d_am, total_elems * sizeof(int)));
+        {
+            size_t __alloc_bytes = (size_t)total_elems * sizeof(int);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_am_reduced");
+            CHECK_CUDA(cudaMalloc(&d_am, __alloc_bytes));
+        }
         d_argmax.push_back(d_am);
 
         maxmin_threshold_kernel<<<grid, block, shmem>>>(
@@ -620,15 +790,15 @@ maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         } else {
             LOG(std::cout << "[MAXMIN_REDUCED] Convergencia en step " << s + 1
                       << " (sin nuevos caminos)" << std::endl);
-            cudaFree(d_argmax.back());
+            CHECK_CUDA(cudaFree(d_argmax.back()));
             d_argmax.pop_back();
             break;
         }
     }
 
-    cudaFree(d_new_count);
-    cudaFree(C_dev_before);
-    cudaFree(C_dev_after);
+    CHECK_CUDA(cudaFree(d_new_count));
+    CHECK_CUDA(cudaFree(C_dev_before));
+    CHECK_CUDA(cudaFree(C_dev_after));
 
     int n_steps    = (int)d_argmax.size();
     int path_width = n_steps + 4;
@@ -639,7 +809,7 @@ maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     for (int s = 0; s < n_steps; s++) {
         CHECK_CUDA(cudaMemcpy(h_argmax[s].data(), d_argmax[s],
             total_elems * sizeof(int), cudaMemcpyDeviceToHost));
-        cudaFree(d_argmax[s]);
+        CHECK_CUDA(cudaFree(d_argmax[s]));
     }
 
     for (int b_ = 0; b_ < B; b_++)
@@ -671,8 +841,16 @@ maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     int*    d_out_paths  = nullptr;
     __half* d_out_values = nullptr;
     if (total_count > 0) {
-        CHECK_CUDA(cudaMalloc(&d_out_paths,  (size_t)total_count * path_width * sizeof(int)));
-        CHECK_CUDA(cudaMalloc(&d_out_values, (size_t)total_count * sizeof(__half)));
+        {
+            size_t __alloc_bytes = (size_t)total_count * path_width * sizeof(int);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_out_paths_reduced");
+            CHECK_CUDA(cudaMalloc(&d_out_paths, __alloc_bytes));
+        }
+        {
+            size_t __alloc_bytes = (size_t)total_count * sizeof(__half);
+            CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_out_values_reduced");
+            CHECK_CUDA(cudaMalloc(&d_out_values, __alloc_bytes));
+        }
         CHECK_CUDA(cudaMemcpy(d_out_paths, h_paths.data(),
             (size_t)total_count * path_width * sizeof(int), cudaMemcpyHostToDevice));
         CHECK_CUDA(cudaMemcpy(d_out_values, h_values.data(),
