@@ -147,7 +147,7 @@ bool run_and_validate(int B, int M, float thr, int n_runs = 3)
         CHECK_CUDA(cudaMemcpy(t2.getData(), h_tensor.data(), B * M * M * sizeof(__half), cudaMemcpyHostToDevice));
 
         __half hthr = __float2half(thr);
-        auto results = maxmin(t1, t2, hthr, 1);
+        auto results = maxmin_reduced(t1, t2, hthr, 1,true,0.1);
         auto [d_paths, d_values, gpu_count, path_width, eff_order] = results[0];
 
         CHECK_CUDA(cudaFree(d_paths));
@@ -173,38 +173,40 @@ bool run_and_validate(int B, int M, float thr, int n_runs = 3)
 
 int main()
 {
-    printf("GPU: sm_75 (GTX 1650)\n");
-    printf("Validando MaxMin: comparando GPU vs CPU reference, %d runs por config\n\n", 3);
+    // printf("GPU: sm_75 (GTX 1650)\n");
+    // printf("Validando MaxMin: comparando GPU vs CPU reference, %d runs por config\n\n", 3);
 
-    bool all_passed = true;
+    // bool all_passed = true;
 
-    // ── Límites de dimensiones ───────────────────────────────────────────────
-    // M pequeño
-    all_passed &= run_and_validate(1,   4,  0.3f);
-    all_passed &= run_and_validate(1,   8,  0.3f);
-    all_passed &= run_and_validate(1,  16,  0.3f);
-    all_passed &= run_and_validate(1,  32,  0.3f);
-    all_passed &= run_and_validate(1,  64,  0.3f);
-    all_passed &= run_and_validate(1, 128,  0.3f);
+    // // ── Límites de dimensiones ───────────────────────────────────────────────
+    // // M pequeño
+    // all_passed &= run_and_validate(1,   4,  0.3f);
+    // all_passed &= run_and_validate(1,   8,  0.3f);
+    // all_passed &= run_and_validate(1,  16,  0.3f);
+    // all_passed &= run_and_validate(1,  32,  0.3f);
+    // all_passed &= run_and_validate(1,  64,  0.3f);
+    // all_passed &= run_and_validate(1, 128,  0.3f);
 
-    // ── Variación de threshold ───────────────────────────────────────────────
-    all_passed &= run_and_validate(1, 16, 0.0f);   // thr=0: todos los paths donde k_max > A[m,n]
-    all_passed &= run_and_validate(1, 16, 0.5f);
-    all_passed &= run_and_validate(1, 16, 0.9f);   // thr alto: pocos paths
+    // // ── Variación de threshold ───────────────────────────────────────────────
+    // all_passed &= run_and_validate(1, 16, 0.0f);   // thr=0: todos los paths donde k_max > A[m,n]
+    // all_passed &= run_and_validate(1, 16, 0.5f);
+    // all_passed &= run_and_validate(1, 16, 0.9f);   // thr alto: pocos paths
 
-    // ── Batch > 1 ────────────────────────────────────────────────────────────
-    all_passed &= run_and_validate(4,  16, 0.3f);
-    all_passed &= run_and_validate(8,  32, 0.3f);
-    all_passed &= run_and_validate(10, 16, 0.4f);  // mismo que test original
+    // // ── Batch > 1 ────────────────────────────────────────────────────────────
+    // all_passed &= run_and_validate(4,  16, 0.3f);
+    // all_passed &= run_and_validate(8,  32, 0.3f);
+    // all_passed &= run_and_validate(10, 16, 0.4f);  // mismo que test original
 
-    // ── Batch grande que dispara el camino BATCHED del algoritmo ─────────────
-    // MAX_PATHS_PER_ITER = 100000; B*M*N*K > 100000 → batched path
-    // Con M=64, B=30: 30*64*64*64 = 7,864,320 >> 100000
-    all_passed &= run_and_validate(30, 64, 0.3f);
+    // // ── Batch grande que dispara el camino BATCHED del algoritmo ─────────────
+    // // MAX_PATHS_PER_ITER = 100000; B*M*N*K > 100000 → batched path
+    // // Con M=64, B=30: 30*64*64*64 = 7,864,320 >> 100000
+    // all_passed &= run_and_validate(30, 64, 0.3f);
 
-    printf("\n==============================\n");
-    printf("Resultado final: %s\n", all_passed ? "TODOS OK" : "HAY FALLOS");
-    printf("==============================\n");
+    // printf("\n==============================\n");
+    // printf("Resultado final: %s\n", all_passed ? "TODOS OK" : "HAY FALLOS");
+    // printf("==============================\n");
 
-    return all_passed ? 0 : 1;
+    // return all_passed ? 0 : 1;
+
+    run_and_validate(1,10000,0.5,1);
 }

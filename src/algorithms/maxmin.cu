@@ -15,8 +15,9 @@ bool g_verbose = true;  // definición del global (extern en utils.cuh)
 // Comprueba que una futura allocation no exceda 2GB
 // Comprueba que una futura allocation no exceda 2GB y deje 1GB libre en VRAM
 static inline bool check_alloc_size_or_fail(size_t bytes, const char *name) {
-    const size_t MAX_ALLOC = 2ULL * 1024 * 1024 * 1024;
-    const size_t RESERVED = 1ULL * 1024 * 1024 * 1024;
+    const size_t MAX_ALLOC = 3.5ULL * 1024 * 1024 * 1024; // 3.5GB
+    const size_t RESERVED = 500ULL * 1024 * 1024 ; // 500MB
+    
     if (bytes > MAX_ALLOC) {
         fprintf(stderr, "ERROR: allocation for %s is %zu bytes (>2GB)\n", name, bytes);
         return false;
@@ -30,9 +31,9 @@ static inline bool check_alloc_size_or_fail(size_t bytes, const char *name) {
         return true; // no info available → be permissive (preserves previous behaviour)
     }
 
-    if (free_bytes < bytes + RESERVED) {
+    if (free_bytes < bytes + RESERVED ) {
         fprintf(stderr,
-                "ERROR: not enough free GPU memory for %s: requested=%zu free=%zu reserved=%zu\n",
+                "ERROR: not enough free GPU memory for %s: requested=%zubytes free=%zubytes reserved=%zubytes\n",
                 name, bytes, free_bytes, RESERVED);
         return false;
     }
@@ -83,7 +84,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     __half* d_A = (__half*)tensor1.getData();
     __half* d_B = (__half*)tensor2.getData();
 
-    
+
     // Configuración de lanzamiento (fija para todos los paths)
     int blockDim = 128;
     dim3 block(blockDim); // define septs for thread loop
@@ -96,7 +97,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
     {
 
       // alloc fot c mtx
-        __half* C_out; 
+        __half* C_out;
         {
             size_t __alloc_bytes = (size_t)total_elems * sizeof(__half);
             CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_out");
@@ -108,7 +109,7 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         int     h_count = 0;
         int*    d_counter;
 
-      // alloc ant init  path counter 
+      // alloc ant init  path counter
         {
             size_t __alloc_bytes = (size_t)sizeof(int);
             CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_counter");
@@ -116,20 +117,20 @@ maxmin(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
         }
         CHECK_CUDA(cudaMemset(d_counter, 0, sizeof(int)));
 
-      // alloc  paths array 
+      // alloc  paths array
         {
             size_t __alloc_bytes = (size_t)MAX_PATHS_PER_ITER * 4 * sizeof(int);
             CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_raw_paths");
             CHECK_CUDA(cudaMalloc(&d_raw_paths, __alloc_bytes));
         }
-      // alloc values array 
+      // alloc values array
         {
             size_t __alloc_bytes = (size_t)MAX_PATHS_PER_ITER * sizeof(__half);
             CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "d_raw_values");
             CHECK_CUDA(cudaMalloc(&d_raw_values, __alloc_bytes));
         }
 
-      
+
         if ((long long)B * M * N * K < MAX_PATHS_PER_ITER)
         {
             LOG(std::cout << "[MAXMIN C++] ORDER-1 COMPLETE" << std::endl);
@@ -573,7 +574,8 @@ std::vector<std::tuple<int*, __half*, int, int, int>>
 maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
                __half thr, int order, bool return_paths, float avg_n)
 {
-    std::vector<std::tuple<int*, __half*, int, int, int>> ret;
+  printf("Executing maxmin reduced\n");
+  std::vector<std::tuple<int*, __half*, int, int, int>> ret;
 
     if (tensor1.getK() != 1 || tensor2.getK() != 1) {
         printf("Error: maxmin_reduced solo acepta tensores 3D (K=1)\n");
@@ -615,7 +617,7 @@ maxmin_reduced(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2,
 
 
     // grid dims. with N = M = n = 10000, B = 1,  10⁸ blocks
-    dim3 grid(N, M, B); 
+    dim3 grid(N, M, B);
     float thr_f       = __half2float(thr);
     int   pre_alloc   = (int)((avg_n + 1.0f) * (float)N); // prealloc for paths
     int   effective_order = 0;

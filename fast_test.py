@@ -4,9 +4,7 @@ from numba import njit
 
 
 rng = np.random.default_rng()
-ft.set_verbose(True)
-
-
+ft.set_verbose(False)
 
 
 @njit(cache=True, fastmath=True)
@@ -48,7 +46,7 @@ def _flat_to_rc(sel, n, m, rows, cols):
             cols[i] = n + c
 
 
-def build_matrix2(n, m, d, seed=None):
+def build_matrix(n, m, d, seed=None):
     rng = np.random.default_rng(seed)
     N   = n + m
     h   = np.float32(0.5)
@@ -58,8 +56,6 @@ def build_matrix2(n, m, d, seed=None):
     M[:n, :n] = rng.random((n, n), dtype=np.float32) * h   # [0, 0.5)
     M[n:, n:] = rng.random((m, m), dtype=np.float32) * h
     M[:n, n:] = rng.random((n, m), dtype=np.float32) * h
-
-
 
     # ── 2. Diagonales = 1 sobre la vista (sin copias) ─────────────────
     np.fill_diagonal(M[:n, :n], 1.0)
@@ -77,21 +73,17 @@ def build_matrix2(n, m, d, seed=None):
         cols = np.empty(target_edges, dtype=np.int64)
         _flat_to_rc(sel, n, m, rows, cols)                  # JIT compilado
         M[rows, cols] = rng.random(target_edges, dtype=np.float32) * h + h
-    else: 
-      print("The distribution is incompatible ")
+
     return M.reshape(1, N, N).astype(np.float16)
-    # return M
+
 
 # ── Warm-up: compilar el JIT antes del bucle principal ────────────────
-build_matrix2(4, 2, 1.0, seed=0)
-
+def warmup():
+    build_matrix(4, 2, 1.0, seed=0)
     
-m1 = build_matrix2(10000,10000,np.log(10000),1111)
-m2 = m1.copy()
+    
+warmup()
 
+mtx = build_matrix(10000, 10000, np.log(10000), seed=0)
 
-ft.maxmin_reduced(
-      m1, 
-      m2, 
-      0.5, 1,False,np.log(10000))
-
+print(mtx.shape)
