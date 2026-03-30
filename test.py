@@ -1,13 +1,10 @@
 import forgethreads as ft
 import numpy as np
 from numba import njit
-
+from datetime import datetime
 
 rng = np.random.default_rng()
 ft.set_verbose(True)
-
-
-
 
 @njit(cache=True, fastmath=True)
 def _flat_to_rc(sel, n, m, rows, cols):
@@ -86,12 +83,14 @@ def build_matrix2(n, m, d, seed=None):
 build_matrix2(4, 2, 1.0, seed=0)
 
     
-m1 = build_matrix2(10000,10000,np.log(10000),1111)
+m1 = build_matrix2(5000,5000,2,1111)
 m2 = m1.copy()
 
 
+print(datetime.now())
 ft.maxmin_reduced(
       m1, 
       m2, 
-      0.5, 1,False,np.log(10000))
-
+      0.5, 5,False,2)
+print(datetime.now())
+ww

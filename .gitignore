@@ -14,6 +14,7 @@ Makefile
 /datasets_txt/
 /validation/results/
 /validation/data/
+__pycache__
 *.ncu-rep
 
 # Configuración local de VS Code
