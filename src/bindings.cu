@@ -215,11 +215,12 @@ static DlpackHolder* make_half_holder(__half* d_ptr, int64_t count)
 py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order,
                         bool return_paths = true)
 {
-    TensorResult<__half> t1(a);
-    TensorResult<__half> t2(b);
+    PyBindTensorResult<__half> pt1(a);
+    PyBindTensorResult<__half> pt2(b);
+
     __half hthr = __float2half(thr);
 
-    auto results = maxmin(t1, t2, hthr, order, return_paths);
+    auto results = maxmin(pt1, pt2, hthr, order, return_paths);
     auto [d_paths, d_values, h_total_count, path_width, effective_order] = results[0];
 
     int64_t count = (int64_t)h_total_count;
@@ -246,8 +247,8 @@ py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order,
 py::tuple maxmin_reduced_dlpack(py::object a, py::object b, float thr, int order,
                                 bool return_paths = true, float avg_n = 3.0f)
 {
-    TensorResult<__half> t1(a);
-    TensorResult<__half> t2(b);
+  PyBindTensorResult<__half> t1(a);
+    PyBindTensorResult<__half> t2(b);
     __half hthr = __float2half(thr);
 
     auto results = maxmin_reduced(t1, t2, hthr, order, return_paths, avg_n);
@@ -276,10 +277,10 @@ py::tuple maxmin_reduced_dlpack(py::object a, py::object b, float thr, int order
 
 PYBIND11_MODULE(forgethreads, m)
 {
-    py::class_<TensorResult<__half>>(m, "TensorResult")
+    py::class_<PyBindTensorResult<__half>>(m, "TensorResult")
         .def(py::init<py::capsule>())
-        .def("__dlpack__",        &TensorResult<__half>::__dlpack__)
-        .def("__dlpack_device__", &TensorResult<__half>::__dlpack_device__);
+        .def("__dlpack__",        &PyBindTensorResult<__half>::__dlpack__)
+        .def("__dlpack_device__", &PyBindTensorResult<__half>::__dlpack_device__);
 
     py::class_<DlpackHolder>(m, "DlpackHolder")
         .def("__dlpack__",        &DlpackHolder::__dlpack__, py::arg("stream") = py::none())

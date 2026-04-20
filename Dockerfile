@@ -25,4 +25,6 @@ COPY . .
 
 RUN mkdir extern && cd extern && git clone --depth 1 https://github.com/dmlc/dlpack.git
 
+RUN sudo apt-get install r-base r-base-dev 
+
 

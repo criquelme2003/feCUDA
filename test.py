@@ -83,7 +83,7 @@ def build_matrix2(n, m, d, seed=None):
 build_matrix2(4, 2, 1.0, seed=0)
 
     
-m1 = build_matrix2(5000,5000,2,1111)
+m1 = build_matrix2(50,50,30,1111)
 m2 = m1.copy()
 
 
@@ -93,4 +93,3 @@ ft.maxmin_reduced(
       m2, 
       0.5, 5,False,2)
 print(datetime.now())
-ww
