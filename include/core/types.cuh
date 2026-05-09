@@ -383,6 +383,8 @@ template <typename T = float> struct PyBindTensorResult : public TensorResult<T>
     }
 };
 
+
+
 inline unsigned int nextPow2(unsigned int x)
 {
     --x;

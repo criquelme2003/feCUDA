@@ -88,8 +88,8 @@ m2 = m1.copy()
 
 
 print(datetime.now())
-ft.maxmin_reduced(
+ft.maxmin(
       m1, 
       m2, 
-      0.5, 5,False,2)
+      0.5, 5,False)
 print(datetime.now())
