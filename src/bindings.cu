@@ -243,36 +243,6 @@ py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order,
     );
 }
 
-py::tuple maxmin_reduced_dlpack(py::object a, py::object b, float thr, int order,
-                                bool return_paths = true, float avg_n = 3.0f)
-{
-    TensorResult<__half> t1(a);
-    TensorResult<__half> t2(b);
-    __half hthr = __float2half(thr);
-
-    auto results = maxmin_reduced(t1, t2, hthr, order, return_paths, avg_n);
-    auto [d_paths, d_values, h_total_count, path_width, effective_order] = results[0];
-
-    int64_t count = (int64_t)h_total_count;
-
-    if (count == 0)
-    {
-        int    *d_ep; __half *d_ev;
-        CHECK_CUDA(cudaMalloc(&d_ep, sizeof(int)));
-        CHECK_CUDA(cudaMalloc(&d_ev, sizeof(__half)));
-        return py::make_tuple(
-            py::cast(make_int32_holder(d_ep, 0, path_width), py::return_value_policy::take_ownership),
-            py::cast(make_half_holder (d_ev, 0),             py::return_value_policy::take_ownership),
-            effective_order
-        );
-    }
-
-    return py::make_tuple(
-        py::cast(make_int32_holder(d_paths,  count, path_width), py::return_value_policy::take_ownership),
-        py::cast(make_half_holder (d_values, count),             py::return_value_policy::take_ownership),
-        effective_order
-    );
-}
 
 PYBIND11_MODULE(forgethreads, m)
 {
@@ -299,7 +269,5 @@ PYBIND11_MODULE(forgethreads, m)
           py::arg("a"), py::arg("b"), py::arg("thr"), py::arg("order"),
           py::arg("return_paths") = true);
 
-    m.def("maxmin_reduced", &maxmin_reduced_dlpack,
-          py::arg("a"), py::arg("b"), py::arg("thr"), py::arg("order"),
-          py::arg("return_paths") = true, py::arg("avg_n") = 3.0f);
+
 }

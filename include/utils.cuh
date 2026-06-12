@@ -6,36 +6,35 @@
 #include <curand.h>
 
 // Macro para verificar errores de CUDA con exceptions
-#define CHECK_CUDA(call)                                                       \
-  {                                                                            \
-    cudaError_t err = (call);                                                  \
-    if (err != cudaSuccess) {                                                  \
-      std::string error_msg = std::string("CUDA error at ") + __FILE__ + ":" + \
-                              std::to_string(__LINE__) + ": " +                \
-                              cudaGetErrorString(err);                         \
-      std::cerr << error_msg << std::endl;                                     \
-      cudaDeviceReset();                                                       \
-      exit(EXIT_FAILURE);                                                      \
-    }                                                                          \
-  }
+#define CHECK_CUDA(call)                                                                           \
+    {                                                                                              \
+        cudaError_t err = (call);                                                                  \
+        if (err != cudaSuccess) {                                                                  \
+            std::string error_msg = std::string("CUDA error at ") + __FILE__ + ":" +               \
+                                    std::to_string(__LINE__) + ": " + cudaGetErrorString(err);     \
+            std::cerr << error_msg << std::endl;                                                   \
+            cudaDeviceReset();                                                                     \
+            exit(EXIT_FAILURE);                                                                    \
+        }                                                                                          \
+    }
 
-#define CHECK_KERNEL()                                                         \
-  {                                                                            \
-    cudaError_t err = cudaGetLastError();                                      \
-    if (err != cudaSuccess) {                                                  \
-      std::cerr << "CUDA kernel launch error at " << __FILE__ << ":"           \
-                << __LINE__ << " : " << cudaGetErrorString(err) << std::endl;  \
-      exit(EXIT_FAILURE);                                                      \
-    }                                                                          \
-  }
+#define CHECK_KERNEL()                                                                             \
+    {                                                                                              \
+        cudaError_t err = cudaGetLastError();                                                      \
+        if (err != cudaSuccess) {                                                                  \
+            std::cerr << "CUDA kernel launch error at " << __FILE__ << ":" << __LINE__ << " : "    \
+                      << cudaGetErrorString(err) << std::endl;                                     \
+            exit(EXIT_FAILURE);                                                                    \
+        }                                                                                          \
+    }
 
-#define CHECK_CURAND(x)                                                        \
-  do {                                                                         \
-    if ((x) != CURAND_STATUS_SUCCESS) {                                        \
-      printf("Error at %s:%d\n", __FILE__, __LINE__);                          \
-      return EXIT_FAILURE;                                                     \
-    }                                                                          \
-  } while (0)
+#define CHECK_CURAND(x)                                                                            \
+    do {                                                                                           \
+        if ((x) != CURAND_STATUS_SUCCESS) {                                                        \
+            printf("Error at %s:%d\n", __FILE__, __LINE__);                                        \
+            return EXIT_FAILURE;                                                                   \
+        }                                                                                          \
+    } while (0)
 
 // // Función para limpiar memoria de TensorResult<> de forma segura
 
@@ -92,6 +91,11 @@
 
 // ── Global verbose flag ──────────────────────────────────────────────────────
 extern bool g_verbose;
-#define LOG(x) do { if (g_verbose) { x; } } while(0)
+#define LOG(x)                                                                                     \
+    do {                                                                                           \
+        if (g_verbose) {                                                                           \
+            x;                                                                                     \
+        }                                                                                          \
+    } while (0)
 
 #endif

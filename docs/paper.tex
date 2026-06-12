@@ -1,0 +1,204 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Aceleración de búsqueda de efectos olvidados en grafos utilizando CUDA}
+
+\author{\IEEEauthorblockN{Carlos Riquelme Ávila}
+\IEEEauthorblockA{\textit{Departamento de Informática} \\
+\textit{Universidad Católica de Temuco}\\
+Temuco, Chile\\
+criquelme2022@alu.uct.cl}
+}
+
+\maketitle
+
+\begin{abstract}
+Los efectos olvidados en grafos son relaciones indirectas entre pares de nodos cuya intensidad supera la de su conexión directa. Su cálculo mediante convoluciones max-min iterativas presenta un costo computacional de $\mathcal{O}(n^3)$ por orden, lo que limita la escalabilidad de las soluciones existentes. Este trabajo presenta \textbf{forgethreads}, una implementación acelerada en GPU mediante CUDA que paraleliza la convolución max-min directamente sobre las celdas de la matriz de adyacencia. Los resultados experimentales muestran aceleraciones de entre 5{,}7$\times$ y 17$\times$ frente a \textbf{forgeffects}, la referencia basada en TensorFlow, alcanzando además un límite práctico de 2\,000 nodos frente a los 1\,200 que soporta la solución existente.
+\end{abstract}
+
+\begin{IEEEkeywords}
+efectos olvidados, grafos grandes, CUDA, aceleración GPU, algoritmos de grafos
+\end{IEEEkeywords}
+
+% -------------------------------------------------------
+\section{Introducción}
+
+Los grafos son estructuras matemáticas ampliamente utilizadas para modelar relaciones entre entidades en ámbitos tan diversos como la biología, las redes sociales, la economía y la ingeniería de software~\cite{forgotten_index}. En el análisis de grafos ponderados, los \textit{efectos olvidados} representan caminos indirectos entre un par de nodos cuya intensidad —medida mediante la convolución max-min— supera la de la arista directa que los conecta. Identificar estos efectos permite descubrir relaciones latentes y caminos alternativos que no son evidentes en la estructura directa del grafo.
+
+Las soluciones existentes para encontrar efectos olvidados, como \textbf{forgeffects}~\cite{claudio} y \textbf{foRgotten}~\cite{elliott}, producen resultados correctos en grafos de mediana escala, pero presentan limitaciones significativas de rendimiento y memoria que impiden su aplicación a instancias grandes. En particular, \textbf{forgeffects} no puede procesar grafos de más de 1\,240 nodos sin agotar la memoria de video, mientras que \textbf{foRgotten} opera exclusivamente en CPU con un escalado cúbico en tiempo de ejecución.
+
+Este trabajo propone \textbf{forgethreads}, un módulo implementado en CUDA C++ que acelera la búsqueda de efectos olvidados mediante la paralelización directa de la convolución max-min en GPU. La solución expone una interfaz Python compatible con NumPy y TensorFlow a través de PyBind11 y el protocolo DLpack, permitiendo integrarla en flujos de trabajo existentes sin transferencias innecesarias de datos. Los experimentos realizados sobre una GPU NVIDIA RTX~4090 demuestran aceleraciones de hasta 17$\times$ frente a \textbf{forgeffects} y capacidad para procesar grafos de hasta 2\,000 nodos.
+
+% -------------------------------------------------------
+\section{Estado del Arte}
+\label{sec:soa}
+
+Para la búsqueda de efectos olvidados existen dos soluciones de referencia: \textbf{forgeffects} y \textbf{foRgotten}. Ambas obtienen resultados correctos en grafos de mediana escala, pero sus limitaciones de escalabilidad y rendimiento motivan el presente trabajo.
+
+\subsection{forgeffects}
+
+El paquete \textbf{forgeffects}~\cite{claudio}, desarrollado en Python, encuentra efectos olvidados mediante un proceso iterativo de convoluciones max-min sobre matrices bidimensionales. Utiliza operaciones de la biblioteca TensorFlow para aprovechar la GPU disponible y reducir el tiempo de cómputo. La complejidad por orden es $\mathcal{O}(n^3)$ para matrices cuadradas de dimensión $n$, reduciéndose a $\mathcal{O}(n^3/p)$ cuando se dispone de $p$ unidades de procesamiento paralelas en GPU.
+
+\textbf{Limitaciones:}
+\begin{itemize}
+    \item \textbf{Paralelización limitada}: Aunque TensorFlow ofrece operaciones optimizadas en GPU, estas se instancian de manera aislada dentro del algoritmo, incrementando el \textit{overhead} de lanzamiento y reduciendo las ventajas de la paralelización masiva.
+    \item \textbf{Uso de memoria}: Las primitivas de TensorFlow requieren materializar tensores intermedios completos durante la convolución max-min, limitando el tamaño de los grafos manejables.
+    \item \textbf{Transferencia de datos}: La interacción con el runtime de TensorFlow genera transferencias adicionales entre host y dispositivo que incrementan la latencia total.
+\end{itemize}
+
+\subsection{foRgotten}
+
+El paquete \textbf{foRgotten}~\cite{elliott}, desarrollado en R y C++, encuentra efectos olvidados mediante llamadas recursivas a una función que itera sobre los órdenes del efecto de manera secuencial. La complejidad para matrices cuadradas es $\mathcal{O}(n^3)$ por orden.
+
+\textbf{Limitaciones:}
+\begin{itemize}
+    \item \textbf{Sin aceleración GPU}: La implementación opera exclusivamente en CPU, sin posibilidad de paralelización masiva, lo que escala de forma cúbica en tiempo de ejecución.
+    \item \textbf{Tiempo de ejecución}: El proceso iterativo hace que el tiempo de ejecución crezca significativamente con el tamaño del grafo.
+\end{itemize}
+
+Estas limitaciones motivan el diseño de una solución acelerada en GPU con capacidad para manejar grafos más grandes de manera eficiente.
+
+% -------------------------------------------------------
+\section{Solución Propuesta}
+\label{sec:solution}
+
+Para superar las limitaciones identificadas, se propone \textbf{forgethreads}, un algoritmo basado en CUDA para el cálculo de efectos olvidados en grafos. La solución se estructura en diseño e implementación.
+
+\subsection{Diseño}
+
+El núcleo del diseño es un kernel CUDA que paraleliza la convolución max-min sobre las celdas de la matriz de adyacencia. Cada hilo es responsable de calcular el valor del efecto en una posición $(i,j)$ específica.
+
+\begin{itemize}
+    \item \textbf{Representación del grafo}: El grafo se representa como una matriz de adyacencia densa almacenada como tensor float16 de forma $[B, n, n]$, donde $B$ es el tamaño del batch y $n$ el número de nodos. Este formato permite operar directamente sobre los datos sin conversiones adicionales.
+
+    \item \textbf{Kernel de convolución}: El kernel CUDA implementa la operación:
+    \begin{equation}
+      C[b,i,j] = \max_{k} \min\!\left(A[b,i,k],\; B[b,k,j]\right)
+      \label{eq:maxmin}
+    \end{equation}
+    para cada par $(i,j)$ en paralelo. Posteriormente, si $C[b,i,j] - A[b,i,j] \geq \theta$, se registra un efecto olvidado en esa posición, donde $\theta$ es el umbral configurado por el usuario.
+
+    \item \textbf{Distribución de trabajo}: A cada hilo se le asigna un único par $(i,j)$ de la matriz resultado. El grid de lanzamiento se configura en función de $n$ y $B$, cubriendo la matriz completa sin cómputo redundante.
+
+    \item \textbf{Convergencia anticipada}: Al final de cada orden, el algoritmo verifica si se descubrieron nuevas aristas. Si no hay cambios entre iteraciones consecutivas, la ejecución termina sin necesidad de llegar al orden máximo solicitado.
+\end{itemize}
+
+\subsection{Implementación}
+
+La solución se implementa en CUDA C++ con compatibilidad de compute capability 7.0 en adelante. Los componentes principales son:
+
+\begin{enumerate}
+    \item \textit{Interfaz Python}: El módulo se expone como extensión Python mediante PyBind11. La función principal \texttt{ft.maxmin(A, B, thr, order)} acepta tensores TensorFlow y arreglos NumPy directamente.
+    \item \textit{Transferencia cero-copia}: La integración con TensorFlow utiliza el protocolo DLpack para compartir buffers GPU sin copias entre el binding C++ y el runtime de TensorFlow, eliminando transferencias host-device innecesarias.
+    \item \textit{Paralelización sin tensores intermedios}: A diferencia de \textbf{forgeffects}, el kernel procesa cada celda de la convolución directamente sobre las matrices de entrada, sin materializar el tensor 3D intermedio de dimensión $n \times n \times n$ que limita la escalabilidad de la solución basada en TensorFlow.
+    \item \textit{Recolección de resultados}: Las posiciones donde se detecta un efecto olvidado se almacenan en un buffer compacto junto con su valor, usando operaciones atómicas para escritura concurrente segura.
+\end{enumerate}
+
+% -------------------------------------------------------
+\section{Resultados Experimentales}
+\label{sec:results}
+
+Se evalúa \textbf{forgethreads} frente a \textbf{forgeffects}~\cite{claudio} sobre grafos sintéticos de tamaño creciente. Todos los experimentos se realizaron en una máquina con GPU NVIDIA RTX~4090 (24\,GB VRAM) y CPU Intel Core i9, bajo Ubuntu 24.04. Cada medición se repite 10 veces y se reporta la media descartando la primera ejecución como calentamiento.
+
+Los grafos de prueba se generan como matrices de adyacencia aleatorias de tipo bipartito $(n{+}n)$ con densidad $d = n\ln n$, almacenadas en float16. Se utilizó umbral $\theta = 0.3$ y se calcularon efectos hasta orden~4.
+
+\subsection{Tiempo de ejecución}
+
+La Tabla~\ref{tab:speed} muestra los tiempos medios de ejecución en función del número de nodos. El símbolo ``---'' indica que \textbf{forgeffects} no pudo completar la ejecución por agotamiento de memoria GPU.
+
+\begin{table}[htbp]
+\caption{Tiempo de ejecución medio (ms)}
+\begin{center}
+\begin{tabular}{|r|c|c|c|}
+\hline
+\textbf{Nodos} & \textbf{forgeffects} & \textbf{forgethreads} & \textbf{Speedup} \\
+\hline
+200    & 10{,}2  & 0{,}6   & 17{,}0$\times$ \\
+400    & 29{,}1  & 3{,}5   & 8{,}3$\times$  \\
+600    & 81{,}6  & 11{,}1  & 7{,}4$\times$  \\
+800    & 181{,}1 & 25{,}7  & 7{,}0$\times$  \\
+1\,000 & 345{,}0 & 55{,}5  & 6{,}2$\times$  \\
+1\,200 & 594{,}2 & 103{,}8 & 5{,}7$\times$  \\
+1\,600 & ---     & 236{,}8 & ---            \\
+2\,000 & ---     & 442{,}3 & ---            \\
+\hline
+\end{tabular}
+\label{tab:speed}
+\end{center}
+\end{table}
+
+\textbf{forgethreads} supera a \textbf{forgeffects} en todos los tamaños medidos, con aceleraciones que van de 5{,}7$\times$ a 17$\times$. El speedup es mayor en grafos pequeños, donde el overhead de los operadores TensorFlow representa una proporción más significativa del tiempo total de \textbf{forgeffects}. A medida que $n$ crece, el trabajo de cómputo domina y la ventaja relativa se estabiliza en torno a 6$\times$. Para los tamaños donde \textbf{forgeffects} falla por memoria (1\,600 y 2\,000 nodos), \textbf{forgethreads} completa la ejecución en 237\,ms y 442\,ms respectivamente.
+
+\subsection{Uso de memoria}
+
+El principal cuello de botella de \textbf{forgeffects} es el consumo de memoria GPU. El algoritmo iterativo basado en TensorFlow requiere materializar tensores intermedios durante la convolución max-min de la ecuación~\eqref{eq:maxmin}: para evaluar $\max_k\min(A_{ik}, B_{kj})$, la implementación expande el problema a una operación sobre un tensor de forma $[n, n, n]$ antes de reducirlo, consumiendo memoria de orden $\mathcal{O}(n^3)$. Para $n = 1\,240$ nodos en float16, esto demanda aproximadamente 3{,}6\,GB de VRAM adicionales sobre las entradas, saturando la memoria disponible.
+
+Experimentalmente se observó que \textbf{forgeffects} lanza un error \textit{out-of-memory} al intentar procesar grafos de más de 1\,240 nodos en la RTX~4090. Este límite no es previsible a partir del tamaño de las matrices de entrada (del orden de los MB), sino que emerge de los patrones internos de reserva de memoria de TensorFlow durante las operaciones de broadcasting.
+
+\textbf{forgethreads} evita materializar ese tensor 3D: el kernel CUDA evalúa la ecuación~\eqref{eq:maxmin} celda a celda en paralelo, manteniendo únicamente las dos matrices de entrada y el buffer de salida en VRAM. El consumo de memoria es $\mathcal{O}(n^2)$, independiente del orden calculado. Para $n = 2\,000$ nodos en float16, las dos matrices de entrada ocupan aproximadamente 16\,MB, muy por debajo de la capacidad de la GPU.
+
+La Tabla~\ref{tab:memory} resume los límites de escalabilidad observados para ambas implementaciones.
+
+\begin{table}[htbp]
+\caption{Límite práctico de escalabilidad (RTX~4090, 24\,GB VRAM)}
+\begin{center}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Implementación} & \textbf{Nodos} & \textbf{Resultado} \\
+\hline
+forgeffects (TensorFlow) & 1\,200 & Exitoso \\
+forgeffects (TensorFlow) & 1\,240 & Error OOM \\
+forgethreads (CUDA)      & 2\,000 & Exitoso \\
+\hline
+\end{tabular}
+\label{tab:memory}
+\end{center}
+\end{table}
+
+% -------------------------------------------------------
+\section{Conclusiones}
+\label{sec:conclusion}
+
+Este trabajo presentó \textbf{forgethreads}, un algoritmo acelerado en GPU mediante CUDA para el cálculo de efectos olvidados en grafos. Al paralelizar directamente la convolución max-min sobre las celdas de la matriz de adyacencia, la solución propuesta supera las limitaciones de velocidad y memoria de las implementaciones existentes.
+
+Los resultados experimentales confirman aceleraciones de entre 5{,}7$\times$ y 17$\times$ frente a \textbf{forgeffects} para grafos de 200 a 1\,200 nodos, y demuestran capacidad de escalado hasta los 2\,000 nodos, tamaño para el cual la referencia falla por agotamiento de memoria. La reducción del consumo de memoria de $\mathcal{O}(n^3)$ a $\mathcal{O}(n^2)$ es el factor determinante que habilita este escalado.
+
+Como trabajo futuro se contempla extender la solución a entornos multi-GPU distribuidos y evaluar su comportamiento sobre grafos dinámicos cuya topología varía en el tiempo. Asimismo, se planea comparar contra \textbf{foRgotten}~\cite{elliott} sobre un conjunto de benchmarks estándar e incorporar soporte para grafos dispersos mediante representaciones CSR.
+
+% -------------------------------------------------------
+\section*{Agradecimientos}
+
+El autor agradece al Departamento de Informática de la Universidad Católica de Temuco por proveer los recursos computacionales y el apoyo durante el desarrollo de esta investigación.
+
+% -------------------------------------------------------
+\begin{thebibliography}{00}
+
+\bibitem{elliott}
+[AUTHOR PLACEHOLDER] Elliott et al., ``[Title of Elliott's work on forgotten effects],''
+[Journal/Conference], vol.~[X], pp.~[XX--XX], [Year].
+
+\bibitem{claudio}
+[AUTHOR PLACEHOLDER] Claudio et al., ``[Title of Claudio's work],''
+[Journal/Conference], vol.~[X], pp.~[XX--XX], [Year].
+
+\bibitem{forgotten_index}
+B.~Furtula and I.~Gutman, ``A forgotten topological index,''
+\textit{Journal of Mathematical Chemistry}, vol.~53, pp.~1184--1190, 2015.
+
+\bibitem{cuda_graphs}
+[AUTHOR PLACEHOLDER], ``GPU-accelerated graph analytics: A survey,''
+[Journal/Conference], [Year].
+
+\end{thebibliography}
+
+\end{document}

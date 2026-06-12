@@ -1,22 +1,30 @@
 cmake_minimum_required(VERSION 3.22)
 
-set(EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+set(CMAKE_CXX_COMPILER g++)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda-12.4/bin/nvcc)
+
 project(FeCUDA LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
-set(CMAKE_CUDA_ARCHITECTURES 75)
+set(CMAKE_CUDA_ARCHITECTURES native)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
 set(CMAKE_CXX_COMPILER g++)
-set(CMAKE_CUDA_COMPILER /usr/local/cuda-12.5/bin/nvcc)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda-12.4/bin/nvcc)
+
+set(DLPACK_ROUTE "/home/criquelme/feCUDA/extern/dlpack")
 
 find_package(CUDAToolkit REQUIRED)
-find_package(pybind11 CONFIG REQUIRED)
 
-set(Python_EXECUTABLE /usr/bin/python3)
+set(Python_EXECUTABLE /home/criquelme/miniconda3/envs/fecuda/bin/python)
+set(PYBIND11_FINDPYTHON ON)
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
+find_package(pybind11 CONFIG REQUIRED)
+
 
 file(GLOB ALGORITHM_SOURCES "src/algorithms/*.cu")
 file(GLOB UTILS_SOURCES "src/utils/*.cu")
@@ -32,14 +40,16 @@ add_executable(fecuda_main
 
 target_include_directories(fecuda_main
   PRIVATE include
-  /workspace/extern/dlpack/include
+  ${DLPACK_ROUTE}/include
 )
 
 target_link_libraries(fecuda_main
+  PRIVATE
   CUDA::curand
+  pybind11::headers
   Python::Python
-
 )
+
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 target_compile_options(fecuda_main
@@ -73,7 +83,7 @@ set_target_properties(forgethreads PROPERTIES
 
 target_include_directories(forgethreads
   PRIVATE include
-  /workspace/extern/dlpack/include
+  ${DLPACK_ROUTE}/include
 
 )
 target_link_libraries(forgethreads

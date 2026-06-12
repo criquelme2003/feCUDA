@@ -4,6 +4,7 @@ import time
 import gc
 import ctypes
 
+
 # Cargar CUDA runtime
 cuda = ctypes.CDLL("libcudart.so")
 

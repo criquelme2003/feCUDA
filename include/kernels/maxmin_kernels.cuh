@@ -24,34 +24,16 @@
  *   size_t shmem = 128 * (sizeof(__half) + sizeof(int));
  */
 __global__ void maxmin_threshold_kernel(
-    const __half* __restrict__ A_mat,  // [B,M,K] factor izq. y referencia threshold
-    const __half* __restrict__ B_mat,  // [B,K,N] factor derecho
-    __half*       __restrict__ C_out,  // [B,M,N] resultado (siempre se escribe)
-    int*          __restrict__ paths,  // nullable — flat int[count*4]: (b,m,k,n)
-    __half*       __restrict__ values, // nullable
-    int*          __restrict__ counter,// nullable — atomic counter de aristas emitidas
-    int*          __restrict__ argmax, // nullable — [B,M,N] k ganador por celda
+    const __half *__restrict__ A_mat, // [B,M,K] factor izq. y referencia threshold
+    const __half *__restrict__ B_mat, // [B,K,N] factor derecho
+    __half *__restrict__ C_out,       // [B,M,N] resultado (siempre se escribe)
+    int *__restrict__ argmax,         // nullable — [B,M,N] k ganador por celda
     __half thr,
-    int B, int M, int N, int K,
-    int batch_id,
-    int max_paths  // -1 = sin límite; >= 0 = cap para evitar OOB (maxmin_reduced)
-);
-
-/**
- * count_new_kernel — detección de convergencia en GPU
- *
- * Cuenta celdas donde C_after[i] - C_before[i] >= thr_f.
- * Reemplaza la copia de B×M×N elementos a CPU en cada step iterativo.
- *
- * Lanzamiento: dim3 block(256), dim3 grid(min((total+255)/256, 1024))
- * shmem = 256 * sizeof(int)
- */
-__global__ void count_new_kernel(
-    const __half* __restrict__ C_before,
-    const __half* __restrict__ C_after,
-    int*          __restrict__ d_count,
-    float thr_f,
-    int total_elems
+    int B,
+    int M,
+    int N,
+    int K,
+    int batch_id
 );
 
 #endif

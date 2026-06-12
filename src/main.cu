@@ -1,4 +1,3 @@
-
 #include "../include/core/types.cuh"
 #include "../include/headers.cuh"
 #include "../include/utils.cuh"
@@ -147,7 +146,7 @@ bool run_and_validate(int B, int M, float thr, int n_runs = 3)
         CHECK_CUDA(cudaMemcpy(t2.getData(), h_tensor.data(), B * M * M * sizeof(__half), cudaMemcpyHostToDevice));
 
         __half hthr = __float2half(thr);
-        auto results = maxmin_reduced(t1, t2, hthr, 1,true,0.1);
+        auto results = maxmin(t1, t2, hthr, 1,true);
         auto [d_paths, d_values, gpu_count, path_width, eff_order] = results[0];
 
         CHECK_CUDA(cudaFree(d_paths));
