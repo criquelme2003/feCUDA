@@ -66,8 +66,8 @@ def build_matrix2(n, m, d, seed=None):
     return M.reshape(1, N, N).astype(np.float16)
 
 
-NS = [5000]
-REPEATS = 1
+NS = [600]
+REPEATS = 10
 
 
 def run_timing(ns=NS, repeats=REPEATS):
@@ -76,9 +76,9 @@ def run_timing(ns=NS, repeats=REPEATS):
     # warmup
     m1 = build_matrix2(100, 100, 100 * np.log(100), seed=444)
     m2 = m1.copy()
-    ft.maxmin(m1, m2, 0.3, 4, False)
-    ft.maxmin(m1, m2, 0.3, 4, False)
-    ft.maxmin(m1, m2, 0.3, 4, False)
+    ft.maxmin(m1, m2, 0.3, 4)
+    ft.maxmin(m1, m2, 0.3, 4)
+    ft.maxmin(m1, m2, 0.3, 4)
 
     for n in ns:
         ft_runs = []
@@ -88,7 +88,7 @@ def run_timing(ns=NS, repeats=REPEATS):
             m1 = build_matrix2(n, n, n * np.log(2*n), seed=444)
             m2 = m1.copy()
             t0 = time.perf_counter()
-            ft.maxmin(m1, m2, 0.3, 4, False)
+            ft.maxmin(m1, m2, 0.5, 4)
             ft_runs.append((time.perf_counter() - t0) * 1000)
 
         times_ft[n] = ft_runs
@@ -141,5 +141,31 @@ def plot_comparison(times_ft):
     plt.show()
 
 
-times_ft = run_timing()
-plot_comparison(times_ft)
+def sweep_d(n=600, thr=0.5, order=10, seed=42):
+    ds = np.round(np.arange(1, np.log(n*2), 0.01), 2)
+    max_orders = []
+
+    for d in ds:
+        m1 = build_matrix2(n, n, d * (n*2), seed=seed)
+        m2 = m1.copy()
+        _, _, eff_order = ft.maxmin(m1, m2, thr, order)
+        max_orders.append(eff_order)
+        print(f"d={d:.1f}  effective_order={eff_order}")
+
+    _, ax = plt.subplots(figsize=(9, 5))
+    ax.plot(ds, max_orders, marker="o")
+    ax.set_xlabel("densidad d")
+    ax.set_ylabel("orden máximo alcanzado")
+    ax.set_title(f"Orden máximo vs densidad  (n={n}, thr={thr})")
+    ax.set_xticks(ds[::2])
+    ax.grid(True, linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    plt.savefig("sweep_d_vs_order.png", dpi=150)
+    plt.show()
+
+    return ds, max_orders
+
+
+sweep_d()
+# times_ft = run_timing()
+# plot_comparison(times_ft)

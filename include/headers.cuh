@@ -5,22 +5,17 @@
 #include <vector>
 #include <cuda_fp16.h>
 
-// Funciones exportadas desde archivos .cu
+struct MaxminResult {
+    std::vector<std::vector<std::vector<int>>> paths;  // paths[s] = paths del step s
+    std::vector<std::vector<float>>            values; // values[s] = valores del step s
+    int                                        effective_order;
+};
 
-//------------------------------------------------
-// Retorna vector de tuplas (flat_paths, values, count, path_width, effective_order)
-//   path_width      = order + 3  =>  cada fila es (b, m, k1, ..., kp, n)
-//   effective_order = último orden en que aparecieron caminos nuevos
-//                     (puede ser < order si el producto converge antes)
-// Para order=1 los paths son cast de int4* (layout idéntico en memoria).
-// return_paths=false → aristas crudas (b,m,k,n) por step, path_width=5 → (order,b,m,k,n)
-// return_paths=true  → caminos completos reconstruidos, path_width=effective_order+4
-std::vector<std::tuple<int *, __half *, int, int, int>> maxmin(
+MaxminResult maxmin(
     TensorResult<__half> &tensor1,
     TensorResult<__half> &tensor2,
     __half thr,
-    int order,
-    bool return_paths = true
+    int order
 );
 
 #endif

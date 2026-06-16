@@ -28,6 +28,7 @@ __global__ void maxmin_threshold_kernel(
     const __half *__restrict__ B_mat, // [B,K,N] factor derecho
     __half *__restrict__ C_out,       // [B,M,N] resultado (siempre se escribe)
     int *__restrict__ argmax,         // nullable — [B,M,N] k ganador por celda
+    int *__restrict__ counter,        // nullable — cuenta celdas con efecto >= thr
     __half thr,
     int B,
     int M,

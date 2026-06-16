@@ -26,6 +26,7 @@ __global__ void maxmin_threshold_kernel(
     const __half *__restrict__ B_mat, // [B,K,N] factor der. = B_orig
     __half *__restrict__ C_out,       // [B,M,N] siempre se escribe
     int *__restrict__ argmax,         // nullable — [B,M,N] k ganador
+    int *__restrict__ counter,        // nullable — cuenta celdas con efecto >= thr
     __half thr,
     int B,
     int M,
@@ -82,9 +83,13 @@ __global__ void maxmin_threshold_kernel(
 
     // ── Escritura densa (siempre) ────────────────────────────────────────────
     if (tid == 0) {
-        C_out[out_id] = s_val[0];
+        __half k_max = s_val[0];
+        C_out[out_id] = k_max;
         if (argmax)
             argmax[out_id] = s_k[0];
+        if (counter && __hge(__hsub(k_max, A_mat[out_id]), thr))
+            atomicAdd(counter, 1);
     }
     __syncthreads();
-}
+
+  }

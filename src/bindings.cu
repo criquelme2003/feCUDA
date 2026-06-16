@@ -212,35 +212,38 @@ static DlpackHolder* make_half_holder(__half* d_ptr, int64_t count)
     return new DlpackHolder(managed);
 }
 
-py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order,
-                        bool return_paths = true)
+py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order)
 {
     TensorResult<__half> t1(a);
     TensorResult<__half> t2(b);
-    __half hthr = __float2half(thr);
 
-    auto results = maxmin(t1, t2, hthr, order, return_paths);
-    auto [d_paths, d_values, h_total_count, path_width, effective_order] = results[0];
+    auto result = maxmin(t1, t2, __float2half(thr), order);
 
-    int64_t count = (int64_t)h_total_count;
+    py::list paths_list;
+    py::list values_list;
 
-    if (count == 0)
-    {
-        int    *d_ep; __half *d_ev;
-        CHECK_CUDA(cudaMalloc(&d_ep, sizeof(int)));
-        CHECK_CUDA(cudaMalloc(&d_ev, sizeof(__half)));
-        return py::make_tuple(
-            py::cast(make_int32_holder(d_ep, 0, path_width), py::return_value_policy::take_ownership),
-            py::cast(make_half_holder (d_ev, 0),             py::return_value_policy::take_ownership),
-            effective_order
-        );
+    for (int s = 0; s < (int)result.paths.size(); s++) {
+        const auto& sp = result.paths[s];
+        const auto& sv = result.values[s];
+
+        int count = (int)sp.size();
+        int width = count > 0 ? (int)sp[0].size() : 0;
+
+        auto paths_arr  = py::array_t<int32_t>({(ssize_t)count, (ssize_t)width});
+        auto values_arr = py::array_t<float>({(ssize_t)count});
+        auto pb = paths_arr.mutable_unchecked<2>();
+        auto vb = values_arr.mutable_unchecked<1>();
+
+        for (int i = 0; i < count; i++) {
+            for (int j = 0; j < width; j++) pb(i, j) = sp[i][j];
+            vb(i) = sv[i];
+        }
+
+        paths_list.append(paths_arr);
+        values_list.append(values_arr);
     }
 
-    return py::make_tuple(
-        py::cast(make_int32_holder(d_paths,  count, path_width), py::return_value_policy::take_ownership),
-        py::cast(make_half_holder (d_values, count),             py::return_value_policy::take_ownership),
-        effective_order
-    );
+    return py::make_tuple(paths_list, values_list, result.effective_order);
 }
 
 
@@ -266,8 +269,7 @@ PYBIND11_MODULE(forgethreads, m)
     m.def("get_verbose", []()       { return g_verbose; });
 
     m.def("maxmin", &maxmin_dlpack,
-          py::arg("a"), py::arg("b"), py::arg("thr"), py::arg("order"),
-          py::arg("return_paths") = true);
+          py::arg("a"), py::arg("b"), py::arg("thr"), py::arg("order"));
 
 
 }

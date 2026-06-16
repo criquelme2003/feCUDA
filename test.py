@@ -108,7 +108,7 @@ def build_matrix2(n, m, d, seed=None):
 
 ITERATIVE_MAX_N     = 600   # límite GPU: OOM en VRAM (tensor n³ fp16)
 ITERATIVE_CPU_MAX_N = 900   # límite CPU: overflow int32 en indices.py para n > 900
-NS = [100, 200, 300, 400, 500, 600, 800, 900, 1000, 2000, 5000]
+NS = [100, 200, 300, 400, 500, 600, 800, 900, 1000 ]
 REPEATS = 10
 
 
@@ -137,7 +137,7 @@ def run_timing(ns=NS, repeats=REPEATS):
             if n <= ITERATIVE_MAX_N:
                 with tf.device("/GPU:0"):
                     cp.get_default_memory_pool().free_all_blocks()
-                    m = build_matrix2(n, n, n * np.log(n), seed=444)
+                    m = build_matrix2(n, n, 2*n * np.log(2*n), seed=444)
                     t0 = time.perf_counter()
                     iterative_maxmin_cuadrado(m, 0.3, 4)
                     iter_runs.append((time.perf_counter() - t0) * 1000)
@@ -147,7 +147,7 @@ def run_timing(ns=NS, repeats=REPEATS):
 
             if n <= ITERATIVE_CPU_MAX_N:
                 with tf.device("/CPU:0"):
-                    m = build_matrix2(n, n, n * np.log(n), seed=444)
+                    m = build_matrix2(n, n, 2*n * np.log(2*n), seed=444)
                     try:
                         t0 = time.perf_counter()
                         iterative_maxmin_cuadrado(m, 0.3, 4)
@@ -160,7 +160,7 @@ def run_timing(ns=NS, repeats=REPEATS):
             m1 = build_matrix2(n, n, n * np.log(n), seed=444)
             m2 = m1.copy()
             t0 = time.perf_counter()
-            ft.maxmin(m1, m2, 0.3, 4, False)
+            ft.maxmin(m1, m2, 0.3, 4)
             ft_runs.append((time.perf_counter() - t0) * 1000)
 
         if iter_runs:

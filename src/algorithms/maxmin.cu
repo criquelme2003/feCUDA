@@ -1,4 +1,5 @@
 #include "../../include/core/types.cuh"
+#include "../../include/headers.cuh"
 #include "../../include/kernels/maxmin_kernels.cuh"
 #include "../../include/utils.cuh"
 #include <cstdio>
@@ -8,6 +9,8 @@
 #include <vector>
 
 bool g_verbose = true; // definición del global (extern en utils.cuh)
+
+#define MIN_DIFF 0.01f
 
 #define MAX_GRID_SIZE 10000
 #define MAX_PATHS_PER_ITER 100000
@@ -62,38 +65,84 @@ static inline bool check_alloc_size_or_fail(size_t bytes, const char *name) {
 // raw4: buffer host con count*4 ints   layout: [b, m, k, n] por fila
 // out_host: vector acumulador con path_width=5
 // ─────────────────────────────────────────────────────────────────────────────
-std::vector<std::vector<int>> assemble_paths(
-    std::vector<std::vector<int>> prev_paths, __half *d_A, __half *d_C, int M, int N, int B
+// Ensambla o extiende caminos usando el argmax que ya calculó el kernel en GPU.
+//
+// Primera llamada (prev_paths vacío):
+//   Para cada (b,m,n) donde C[m,n] - A[m,n] >= thr, el pivote k viene
+//   directamente de argmax[b,m,n]. Devuelve paths [b, m, k, n].
+//
+// Llamadas siguientes:
+//   Para cada path [b,m,...,n], busca n2 donde C[m,n2] - A[m,n2] >= thr
+//   y argmax[b,m,n2] == n (el kernel eligió n como pivote óptimo).
+//   Devuelve paths extendidos con n2 al final.
+//
+// A = C_{s-1},  C = C_s,  argmax = resultado del kernel para este step.
+using PathsAndValues = std::pair<std::vector<std::vector<int>>, std::vector<float>>;
+
+PathsAndValues assemble_paths(
+    std::vector<std::vector<int>> prev_paths,
+    __half *d_A,
+    __half *d_C,
+    int *d_argmax,
+    float thr,
+    int M,
+    int N,
+    int B
 ) {
-    std::vector<std::vector<int>> ret;
+    std::vector<std::vector<int>> paths;
+    std::vector<float>            values;
 
-    std::vector<__half> h_A(M*N*B);
-    std::vector<__half> h_C(M*N*B);
+    int total = M * N * B;
+    std::vector<__half> h_A(total);
+    std::vector<__half> h_C(total);
+    std::vector<int> h_argmax(total);
 
-    cudaMemcpy(h_A.data(), d_A, M * N * B * sizeof(__half), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_C.data(), d_C, M * N * B * sizeof(__half), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_A.data(),      d_A,      total * sizeof(__half), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_C.data(),      d_C,      total * sizeof(__half), cudaMemcpyDeviceToHost);
+    cudaMemcpy(h_argmax.data(), d_argmax, total * sizeof(int),    cudaMemcpyDeviceToHost);
 
-    if (prev_paths.size() > 0) {
-        for (auto path : prev_paths) {
-          for(int i = 0; i< h_A)
+    auto idx = [&](int b, int m, int n) { return b * M * N + m * N + n; };
+
+    if (!prev_paths.empty()) {
+        for (const auto &path : prev_paths) {
+            int b = path[0];
+            int m = path[1];     // nodo fuente, fijo en todos los steps
+            int n = path.back(); // cola actual del camino
+
+            for (int n2 = 0; n2 < N; n2++) {
+                int i = idx(b, m, n2);
+                float c_val = __half2float(h_C[i]);
+                if (c_val - __half2float(h_A[i]) < thr) continue;
+                if (h_argmax[i] != n) continue;
+
+                auto new_path = path;
+                new_path.push_back(n2);
+                paths.push_back(std::move(new_path));
+                values.push_back(c_val);
+            }
         }
     } else {
-      for()
-
+        for (int b = 0; b < B; b++) {
+            for (int m = 0; m < M; m++) {
+                for (int n = 0; n < N; n++) {
+                    int i = idx(b, m, n);
+                    float c_val = __half2float(h_C[i]);
+                    if (c_val - __half2float(h_A[i]) < thr) continue;
+                    paths.push_back({b, m, h_argmax[i], n});
+                    values.push_back(c_val);
+                }
+            }
+        }
     }
+    return {paths, values};
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Maxmin retorna d_paths, d_values, h_total_count, path_width, effective_order
-
-std::vector<std::tuple<int *, __half *, int, int, int>> maxmin(
+MaxminResult maxmin(
     TensorResult<__half> &tensor1,
     TensorResult<__half> &tensor2,
     __half thr,
-    int order,
-    bool return_paths
+    int order
 ) {
-    std::vector<std::tuple<int *, __half *, int, int, int>> ret;
 
     if (tensor1.getK() != 1 || tensor2.getK() != 1) {
         printf("Error: maxmin solo acepta tensores 3D (K=1)\n");
@@ -123,8 +172,7 @@ std::vector<std::tuple<int *, __half *, int, int, int>> maxmin(
 
     LOG(std::cout << "[MAXMIN C++] M: " << M << "B: " << B << std::endl);
 
-    LOG(std::cout << "[MAXMIN C++] ORDER-" << order
-                  << " return_paths=" << (return_paths ? "true" : "false") << std::endl);
+    LOG(std::cout << "[MAXMIN C++] ORDER-" << order << std::endl);
 
     // Buffers iterativos: C_dev_before (= C_prev) y C_dev_after (= C_next)
     __half *C_dev_before, *C_dev_after;
@@ -153,37 +201,48 @@ std::vector<std::tuple<int *, __half *, int, int, int>> maxmin(
 
     dim3 grid(N, M, B);
     float thr_f = __half2float(thr);
-    int effective_order = 0;
+    int effective_order = 1;
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // return_paths = false: emitir aristas crudas por step
-    // ─────────────────────────────────────────────────────────────────────────
-    if (!return_paths) {
+    int* d_counter;
+    CHECK_CUDA(cudaMalloc(&d_counter, sizeof(int)));
 
-        for (int s = 0; s < order; s++) {
+    std::vector<std::vector<int>> current_paths;
+    MaxminResult result;
 
-            maxmin_threshold_kernel<<<grid, block, shmem>>>(
-                C_dev_before,
-                d_B,
-                C_dev_after,
-                argmax,
-                thr,
-                B,
-                M,
-                N,
-                K,
-                -1
-            );
-            CHECK_CUDA(cudaGetLastError());
-            CHECK_CUDA(cudaDeviceSynchronize());
+    for (int s = 0; s < order; s++) {
+        CHECK_CUDA(cudaMemset(d_counter, 0, sizeof(int)));
 
-            effective_order++;
-            std::swap(C_dev_before, C_dev_after);
+        maxmin_threshold_kernel<<<grid, block, shmem>>>(
+            C_dev_before, d_B, C_dev_after, argmax, d_counter, thr, B, M, N, K, -1);
+        CHECK_CUDA(cudaGetLastError());
+        CHECK_CUDA(cudaDeviceSynchronize());
+
+        int h_counter = 0;
+        CHECK_CUDA(cudaMemcpy(&h_counter, d_counter, sizeof(int), cudaMemcpyDeviceToHost));
+
+        if (h_counter == 0) {
+            LOG(std::cout << "[MAXMIN C++] Convergencia en step " << s + 1 << std::endl);
+            break;
+        }else{
+          LOG(std::cout << "[MAXMIN C++] Efectos encontrados en orden "<< s +1 << " : " << h_counter<< std::endl);
         }
 
-        CHECK_CUDA(cudaFree(C_dev_before));
-        CHECK_CUDA(cudaFree(C_dev_after));
+        effective_order = s + 1;
 
-        return ret;
+        // auto [new_paths, new_values] = assemble_paths(
+        //     current_paths, C_dev_before, C_dev_after, argmax, thr_f, M, N, B);
+        // result.paths.push_back(new_paths);
+        // result.values.push_back(new_values);
+        // current_paths = std::move(new_paths);
+
+        std::swap(C_dev_before, C_dev_after);
     }
+
+    CHECK_CUDA(cudaFree(d_counter));
+    CHECK_CUDA(cudaFree(C_dev_before));
+    CHECK_CUDA(cudaFree(C_dev_after));
+    CHECK_CUDA(cudaFree(argmax));
+
+    result.effective_order = effective_order;
+    return result;
 }

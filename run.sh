@@ -7,6 +7,5 @@
 
 source /home/criquelme/miniconda3/bin/activate
 conda activate fecuda
-
 python test2.py
 
