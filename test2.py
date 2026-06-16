@@ -66,7 +66,7 @@ def build_matrix2(n, m, d, seed=None):
     return M.reshape(1, N, N).astype(np.float16)
 
 
-NS = [600]
+NS = [5000]
 REPEATS = 10
 
 
@@ -141,23 +141,33 @@ def plot_comparison(times_ft):
     plt.show()
 
 
-def sweep_d(n=600, thr=0.5, order=10, seed=42):
-    ds = np.round(np.arange(1, np.log(n*2), 0.01), 2)
+def sparse_supercritical_matrix(n, c, seed=None):
+    rng = np.random.default_rng(seed)
+    p = c / (n - 1)
+    E = np.zeros((n, n), dtype=float)
+    U = rng.binomial(1, p, size=(n, n))
+    E[np.triu_indices(n, k=1)] = U[np.triu_indices(n, k=1)]
+    np.fill_diagonal(E, 1)
+    return E
+
+
+def sweep_d(n=10000, thr=0.5, order=25, seed=42):
+    ds = np.round(np.arange(1, np.log(n), 0.01), 2)
     max_orders = []
 
-    for d in ds:
-        m1 = build_matrix2(n, n, d * (n*2), seed=seed)
-        m2 = m1.copy()
-        _, _, eff_order = ft.maxmin(m1, m2, thr, order)
-        max_orders.append(eff_order)
-        print(f"d={d:.1f}  effective_order={eff_order}")
+    # for d in ds:
+    m1 = sparse_supercritical_matrix(n, 8, seed=seed).reshape(1, n, n).astype(np.float16)
+    m2 = m1.copy()
+    _, _, eff_order = ft.maxmin(m1, m2, thr, order)
+    max_orders.append(eff_order)
+    print(f"c={d:.2f}  effective_order={eff_order}")
 
     _, ax = plt.subplots(figsize=(9, 5))
     ax.plot(ds, max_orders, marker="o")
-    ax.set_xlabel("densidad d")
+    ax.set_xlabel("grado promedio c")
     ax.set_ylabel("orden máximo alcanzado")
-    ax.set_title(f"Orden máximo vs densidad  (n={n}, thr={thr})")
-    ax.set_xticks(ds[::2])
+    ax.set_title(f"Orden máximo vs grado promedio  (n={n}, thr={thr})")
+    ax.set_xticks(ds[::20])
     ax.grid(True, linestyle="--", alpha=0.5)
     plt.tight_layout()
     plt.savefig("sweep_d_vs_order.png", dpi=150)
