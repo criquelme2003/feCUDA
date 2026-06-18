@@ -151,31 +151,96 @@ def sparse_supercritical_matrix(n, c, seed=None):
     return E
 
 
-def sweep_d(n=10000, thr=0.5, order=25, seed=42):
-    ds = np.round(np.arange(1, np.log(n), 0.01), 2)
-    max_orders = []
-
-    # for d in ds:
-    m1 = sparse_supercritical_matrix(n, 8, seed=seed).reshape(1, n, n).astype(np.float16)
-    m2 = m1.copy()
-    _, _, eff_order = ft.maxmin(m1, m2, thr, order)
-    max_orders.append(eff_order)
-    print(f"c={d:.2f}  effective_order={eff_order}")
-
-    _, ax = plt.subplots(figsize=(9, 5))
-    ax.plot(ds, max_orders, marker="o")
-    ax.set_xlabel("grado promedio c")
-    ax.set_ylabel("orden máximo alcanzado")
-    ax.set_title(f"Orden máximo vs grado promedio  (n={n}, thr={thr})")
-    ax.set_xticks(ds[::20])
-    ax.grid(True, linestyle="--", alpha=0.5)
-    plt.tight_layout()
-    plt.savefig("sweep_d_vs_order.png", dpi=150)
-    plt.show()
-
-    return ds, max_orders
+NS      = [10,100, 1_000, 10_000]
+CS      = [2, 4, 8]
+REPEATS = 20
+THR     = 0.5
+ORDER   = 25
+CSV_OUT = "sweep_n_order.csv"
 
 
-sweep_d()
-# times_ft = run_timing()
-# plot_comparison(times_ft)
+def run_sweep():
+    # warmup
+    m_w = sparse_supercritical_matrix(200, 4, seed=0).reshape(1, 200, 200).astype(np.float16)
+    ft.maxmin(m_w.copy(), m_w.copy(), THR, ORDER)
+
+    results = {}  # c -> n -> list of effective_orders
+
+    with open(CSV_OUT, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["c", "n", "repeticion", "orden_efectivo"])
+
+        for c in CS:
+            results[c] = {}
+            for n in NS:
+                orders = []
+                for rep in range(REPEATS):
+                    cp.get_default_memory_pool().free_all_blocks()
+                    seed = rep * 1000 + n
+                    m1 = sparse_supercritical_matrix(n, c, seed=seed).reshape(1, n, n).astype(np.float16)
+                    m2 = m1.copy()
+                    _, _, eff_order = ft.maxmin(m1, m2, THR, ORDER)
+                    orders.append(eff_order)
+
+                results[c][n] = orders
+                print(
+                    f"c={c}  n={n}  "
+                    f"mean={np.mean(orders):.2f}  "
+                    f"min={int(np.min(orders))}  "
+                    f"max={int(np.max(orders))}"
+                )
+
+                for rep, o in enumerate(orders):
+                    writer.writerow([c, n, rep, o])
+                f.flush()
+
+    return results
+
+
+def plot_results(results):
+    for c in CS:
+        _, ax = plt.subplots(figsize=(9, 5))
+        ns    = sorted(results[c].keys())
+        means = np.array([np.mean(results[c][n]) for n in ns], dtype=float)
+        mins  = np.array([np.min(results[c][n])  for n in ns], dtype=float)
+        maxs  = np.array([np.max(results[c][n])  for n in ns], dtype=float)
+
+        ax.fill_between(ns, mins, maxs, alpha=0.20, label="rango [min, max]")
+        ax.plot(ns, means, marker="o", label="media")
+        ax.plot(ns, mins,  marker="v", linestyle="--", linewidth=0.8, label="mínimo")
+        ax.plot(ns, maxs,  marker="^", linestyle="--", linewidth=0.8, label="máximo")
+
+        for n, mean, mn, mx in zip(ns, means, mins, maxs):
+            ax.annotate(f"{mean:.2f}", (n, mean), textcoords="offset points", xytext=(0,  6), ha="center", fontsize=7, color="C1")
+            ax.annotate(f"{mn:.2f}",   (n, mn),   textcoords="offset points", xytext=(0, -10), ha="center", fontsize=7, color="C2")
+            ax.annotate(f"{mx:.2f}",   (n, mx),   textcoords="offset points", xytext=(0,  6), ha="center", fontsize=7, color="C3")
+
+        ax.set_xscale("log")
+        ax.set_xticks(ns)
+        ax.set_xticklabels([str(n) for n in ns], rotation=45, ha="right")
+        ax.set_xlabel("n")
+        ax.set_ylabel("orden alcanzado")
+        ax.set_title(f"Orden alcanzado vs n  (c={c}, thr={THR}, {REPEATS} repeticiones)")
+        ax.legend()
+        ax.grid(True, which="both", linestyle="--", alpha=0.5)
+        plt.tight_layout()
+        fname = f"sweep_n_order_c{c}.png"
+        plt.savefig(fname, dpi=150)
+        plt.show()
+        print(f"Guardado: {fname}")
+
+
+# results = run_sweep()
+
+import pandas as pd
+
+df = pd.read_csv('sweep_n_order.csv')
+
+results = (
+    df.groupby(['c', 'n'])['orden_efectivo']
+    .apply(list)
+    .unstack(level='n')
+    .to_dict(orient='index')
+)
+
+plot_results(results)
