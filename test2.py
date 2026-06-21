@@ -152,10 +152,10 @@ def sparse_supercritical_matrix(n, c, seed=None):
 
 
 NS      = [10,100, 1_000, 10_000]
-CS      = [2, 4, 8]
+CS      = [10]
 REPEATS = 20
 THR     = 0.5
-ORDER   = 25
+ORDER   = 30
 CSV_OUT = "sweep_n_order.csv"
 
 
@@ -166,9 +166,12 @@ def run_sweep():
 
     results = {}  # c -> n -> list of effective_orders
 
-    with open(CSV_OUT, "w", newline="") as f:
+    import os
+    write_header = not os.path.exists(CSV_OUT) or os.path.getsize(CSV_OUT) == 0
+    with open(CSV_OUT, "a", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["c", "n", "repeticion", "orden_efectivo"])
+        if write_header:
+            writer.writerow(["c", "n", "repeticion", "orden_efectivo"])
 
         for c in CS:
             results[c] = {}
@@ -224,23 +227,23 @@ def plot_results(results):
         ax.legend()
         ax.grid(True, which="both", linestyle="--", alpha=0.5)
         plt.tight_layout()
-        fname = f"sweep_n_order_c{c}.png"
+        fname = f"sweep_n_order_cc{c}.png"
         plt.savefig(fname, dpi=150)
         plt.show()
         print(f"Guardado: {fname}")
 
 
-# results = run_sweep()
+results = run_sweep()
 
-import pandas as pd
+# import pandas as pd
 
-df = pd.read_csv('sweep_n_order.csv')
+# df = pd.read_csv('sweep_n_order.csv')
 
-results = (
-    df.groupby(['c', 'n'])['orden_efectivo']
-    .apply(list)
-    .unstack(level='n')
-    .to_dict(orient='index')
-)
+# results = (
+#     df.groupby(['c', 'n'])['orden_efectivo']
+#     .apply(list)
+#     .unstack(level='n')
+#     .to_dict(orient='index')
+# )
 
 plot_results(results)
