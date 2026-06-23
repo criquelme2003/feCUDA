@@ -151,8 +151,8 @@ def sparse_supercritical_matrix(n, c, seed=None):
     return E
 
 
-NS      = [10,100, 1_000, 10_000]
-CS      = [10]
+NS      = [100, 1_000, 10_000]
+CS      = [25,50]
 REPEATS = 20
 THR     = 0.5
 ORDER   = 30
