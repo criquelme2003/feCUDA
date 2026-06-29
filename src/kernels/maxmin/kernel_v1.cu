@@ -2,94 +2,62 @@
 #include <cuda_fp16.h>
 #include <float.h>
 
-#define MIN_DIFF 0.01f
-
 // ─────────────────────────────────────────────────────────────────────────────
-// maxmin_threshold_kernel — producto max-min con threshold diferencial
+// maxmin_threshold_kernel — producto max-min tileado por columna, con threshold
 //
-// Calcula C_out[b,m,n] = max_k  min(A_mat[b,m,k], B_mat[b,k,n])
-// y emite las aristas (b,m,k,n) donde la mejora sobre A_mat[b,m,n] supera thr.
+// Calcula C_new[b,m,n] = max_k min(C_old[b,m,k], B_col[b,k])
+// donde B_col es la columna n de B, pre-extraída y contigua en memoria.
 //
-// Threshold:  k_max - A_mat[b,m,n] >= thr
-//   • A_mat es C_prev en cada step iterativo.
-//   • step 0: A_mat = A_orig → suprime pares con arista directa (semántica paper).
-//   • step s>0: A_mat = C_s → suprime pares ya encontrados (unicidad de nivel).
+// C_old permanece completa en GPU. Por cada columna n se hace un lanzamiento.
+// B_col debe tener layout [B, K] (columna n de B transpuesta a [B, N, K]).
 //
-// Parámetros nullable (pueden ser nullptr):
-//   paths, values, counter → si counter==nullptr no se emiten aristas
-//   argmax                 → si nullptr no se guarda el k ganador
+// Threshold diferencial: C_new[b,m,n] - C_old[b,m,n] >= thr
+//   • step 0: C_old = A_orig
+//   • step s: C_old = C_{s-1}
 //
-// shmem = blockDim.x * (sizeof(__half) + sizeof(int))
+// Lanzamiento: dim3 grid(M, B);  dim3 block(128);
+//              shmem = 128 * sizeof(__half)
 // ─────────────────────────────────────────────────────────────────────────────
 __global__ void maxmin_threshold_kernel(
-    const __half *__restrict__ A_mat, // [B,M,K] factor izq. = C_prev
-    const __half *__restrict__ B_mat, // [B,K,N] factor der. = B_orig
-    __half *__restrict__ C_out,       // [B,M,N] siempre se escribe
-    int *__restrict__ argmax,         // nullable — [B,M,N] k ganador
-    int *__restrict__ counter,        // nullable — cuenta celdas con efecto >= thr
+    const __half *__restrict__ C_old,   // [B, M, K] completa, fija en GPU
+    const __half *__restrict__ B_col,   // [B, K]    columna n de B
+    __half *__restrict__ C_new_col,     // [B, M]    columna n de salida
+    unsigned long long *__restrict__ counter,  // nullable — cuenta efectos >= thr
     __half thr,
-    int B,
-    int M,
-    int N,
-    int K,
-    int batch_id
+    int B, int M, int K,
+    int n                               // índice global de la columna actual
 ) {
-
-    // Get necesary idx's
-    int b = (batch_id >= 0) ? batch_id : (int)blockIdx.z;
-    int m = (int)blockIdx.y;
-    int n = (int)blockIdx.x;
+    int b   = (int)blockIdx.y;
+    int m   = (int)blockIdx.x;
     int tid = (int)threadIdx.x;
-    int bsz = (int)blockDim.x;          // How many threads, (pow of 2)
-    int out_id = b * M * N + m * N + n; // Write idx
+    int bsz = (int)blockDim.x;
 
-    // smem layout: [bsz × __half | bsz × int]
     extern __shared__ char smem_buf[];
-    __half *s_val = reinterpret_cast<__half *>(smem_buf); // Save value for reduction
-    int *s_k =
-        reinterpret_cast<int *>(smem_buf + bsz * sizeof(__half)); // save k idx's for reduction
+    __half *s_val = reinterpret_cast<__half *>(smem_buf);
 
-    // ── Reducción local por thread ──────────────────────────────────────────
     __half best_val = __float2half(-FLT_MAX);
-    int best_k = 0;
 
-    //  !Important
-    // Each thread works on K/bsz elements, K = 10000 -> do 78 comparisons (excepting the last
-    // thread)
+    size_t row_off = (size_t)b * M * K + (size_t)m * K;
+
     for (int k = tid; k < K; k += bsz) {
-        int a_idx = b * M * K + m * K + k;
-        int b_idx = b * K * N + k * N + n;
-        __half mi = __hmin(A_mat[a_idx], B_mat[b_idx]);
-        if (__hgt(mi, best_val)) {
+        __half mi = __hmin(C_old[row_off + k], B_col[(size_t)b * K + k]);
+        if (__hgt(mi, best_val))
             best_val = mi;
-            best_k = k;
-        }
     }
 
     s_val[tid] = best_val;
-    s_k[tid] = best_k;
     __syncthreads();
 
-    // ── Reducción en shared memory con tracking de argmax ───────────────────
-    // ! Improvable with warp reduction, the bsz has to be a pow of 2
     for (int s = bsz / 2; s > 0; s >>= 1) {
-        if (tid < s && __hgt(s_val[tid + s], s_val[tid])) {
+        if (tid < s && __hgt(s_val[tid + s], s_val[tid]))
             s_val[tid] = s_val[tid + s];
-            s_k[tid] = s_k[tid + s];
-        }
         __syncthreads();
     }
 
-
-    // ── Escritura densa (siempre) ────────────────────────────────────────────
     if (tid == 0) {
-        __half k_max = s_val[0];
-        C_out[out_id] = k_max;
-        if (argmax)
-            argmax[out_id] = s_k[0];
-        if (counter && __hge(__hsub(k_max, A_mat[out_id]), thr))
-            atomicAdd(counter, 1);
+        __half val = s_val[0];
+        C_new_col[(size_t)b * M + m] = val;
+        if (counter && __hge(__hsub(val, C_old[row_off + n]), thr))
+            atomicAdd(counter, 1ULL);
     }
-    __syncthreads();
-
-  }
+}

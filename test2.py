@@ -151,12 +151,12 @@ def sparse_supercritical_matrix(n, c, seed=None):
     return E
 
 
-NS      = [100, 1_000, 10_000]
-CS      = [25,50]
-REPEATS = 20
+NS      = [100_000]
+CS      = [10]
+REPEATS = 1
 THR     = 0.5
 ORDER   = 30
-CSV_OUT = "sweep_n_order.csv"
+CSV_OUT = "sweep_100_000_order.csv"
 
 
 def run_sweep():

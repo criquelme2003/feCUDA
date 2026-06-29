@@ -2,6 +2,7 @@
 #include "../include/headers.cuh"
 #include "../include/utils.cuh"
 #include <chrono>
+#include <climits>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -157,7 +158,7 @@ bool run_and_validate(int B, int M, float thr, int n_runs = 3)
 
     // Correr GPU n_runs veces y verificar que el resultado sea siempre igual al CPU
     bool all_ok = true;
-    int prev_gpu = -1;
+    unsigned long long prev_gpu = ULLONG_MAX;
     for (int run = 0; run < n_runs; run++)
     {
         // Construir TensorResult device con los datos originales
@@ -175,15 +176,15 @@ bool run_and_validate(int B, int M, float thr, int n_runs = 3)
 
         __half hthr = __float2half(thr);
         auto result   = maxmin(t1, t2, hthr, 1);
-        int gpu_count = result.paths.empty() ? 0 : (int)result.paths[0].size();
+        unsigned long long gpu_count = result.effects_order1;
 
-        bool match = (gpu_count == cpu_count);
-        printf("  Run %d: GPU=%d  %s\n", run, gpu_count, match ? "OK" : "MISMATCH !!!");
+        bool match = (gpu_count == (unsigned long long)cpu_count);
+        printf("  Run %d: GPU=%llu  %s\n", run, gpu_count, match ? "OK" : "MISMATCH !!!");
 
         if (!match) all_ok = false;
         if (run > 0 && gpu_count != prev_gpu)
         {
-            printf("  *** VARIACION ENTRE RUNS: run%d=%d vs run%d=%d ***\n",
+            printf("  *** VARIACION ENTRE RUNS: run%d=%llu vs run%d=%llu ***\n",
                    run, gpu_count, run - 1, prev_gpu);
             all_ok = false;
         }

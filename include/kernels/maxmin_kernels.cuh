@@ -5,36 +5,32 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 
-/**
- * KERNEL MAXMIN CON THRESHOLD DIFERENCIAL
- *
- * Calcula C_out[b,m,n] = max_k min(A_mat[b,m,k], B_mat[b,k,n])
- * y emite aristas donde k_max - A_mat[b,m,n] >= thr.
- *
- * Threshold diferencial:
- *   • Step 0: A_mat = A_orig → suprime pares con arista directa.
- *   • Step s: A_mat = C_s   → suprime pares ya encontrados (unicidad de nivel).
- *
- * Parámetros nullable: paths, values, counter, argmax.
- *   Si counter == nullptr → no se emiten aristas.
- *   Si argmax  == nullptr → no se guarda el k ganador.
- *
- * Lanzamiento recomendado:
- *   dim3 grid(N, M, B);  dim3 block(128);
- *   size_t shmem = 128 * (sizeof(__half) + sizeof(int));
- */
+// ─────────────────────────────────────────────────────────────────────────────
+// maxmin_threshold_kernel — producto max-min tileado por columna
+//
+// C_new[b,m,n] = max_k min(C_old[b,m,k], B_col[b,k])
+//
+// B_col es la columna n de B, pre-extraída con layout [B, K].
+// Para obtenerla contigua, B debe estar transpuesta a [B, N, K] en host:
+//   cudaMemcpy(d_B_col, &h_B_T[n * K], B * K * sizeof(__half), H2D);
+//
+// Threshold diferencial:  C_new[b,m,n] - C_old[b,m,n] >= thr
+//
+// Lanzamiento por columna n:
+//   dim3 grid(M, B);  dim3 block(128);
+//   size_t shmem = 128 * sizeof(__half);
+//   maxmin_threshold_kernel<<<grid, block, shmem>>>(
+//       d_C_old, d_B_col, d_C_new_col, d_counter, thr, B, M, K, n);
+//   // copiar columna al host: cudaMemcpy(&h_C_new[n*M], d_C_new_col, B*M*sizeof(__half), D2H)
+// ─────────────────────────────────────────────────────────────────────────────
 __global__ void maxmin_threshold_kernel(
-    const __half *__restrict__ A_mat, // [B,M,K] factor izq. y referencia threshold
-    const __half *__restrict__ B_mat, // [B,K,N] factor derecho
-    __half *__restrict__ C_out,       // [B,M,N] resultado (siempre se escribe)
-    int *__restrict__ argmax,         // nullable — [B,M,N] k ganador por celda
-    int *__restrict__ counter,        // nullable — cuenta celdas con efecto >= thr
+    const __half *__restrict__ C_old,   // [B, M, K] completa en GPU
+    const __half *__restrict__ B_col,   // [B, K]    columna n de B
+    __half *__restrict__ C_new_col,     // [B, M]    columna n de salida
+    unsigned long long *__restrict__ counter,          // nullable
     __half thr,
-    int B,
-    int M,
-    int N,
-    int K,
-    int batch_id
+    int B, int M, int K,
+    int n
 );
 
 #endif

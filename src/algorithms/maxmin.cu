@@ -18,7 +18,7 @@ bool g_verbose = true; // definición del global (extern en utils.cuh)
 // Comprueba que una futura allocation no exceda 2GB
 // Comprueba que una futura allocation no exceda 2GB y deje 1GB libre en VRAM
 static inline bool check_alloc_size_or_fail(size_t bytes, const char *name) {
-    const size_t MAX_ALLOC = 3.5 * 1024 * 1024 * 1024ULL; // 3.5GB
+    const size_t MAX_ALLOC = 22ULL * 1024 * 1024 * 1024; // 22GB
     const size_t RESERVED = 500 * 1024 * 1024ULL;         // 500MB
 
     if (bytes > MAX_ALLOC) {
@@ -143,105 +143,105 @@ MaxminResult maxmin(
     __half thr,
     int order
 ) {
-
     if (tensor1.getK() != 1 || tensor2.getK() != 1) {
         printf("Error: maxmin solo acepta tensores 3D (K=1)\n");
         exit(0);
     }
 
-    // GET NECESARY DIMENSIONS
     int B = tensor1.getBatch();
     int M = tensor1.getM();
-    int K = tensor1.getN(); // N del tensor1 actúa como K en el kernel
+    int K = tensor1.getN();
     int N = tensor2.getN();
-    int total_elems = B * M * N;
-    tensor1.move_to_device();
-    tensor2.move_to_device();
-    __half *d_A = (__half *)tensor1.getData();
-    __half *d_B = (__half *)tensor2.getData();
-    // Configuración de lanzamiento (fija para todos los paths)
-    int blockDim = 128;
-    dim3 block(blockDim); // define septs for thread loop
-    size_t shmem =
-        blockDim * (sizeof(__half) +
-                    sizeof(int)); // shared memory save k_values and k_index for block reduction
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // ORDEN > 1: iterativo con el mismo kernel
-    // ─────────────────────────────────────────────────────────────────────────
+    // Datos en host — B se tipea por columna, A se sube completa una vez
+    tensor1.move_to_host();
+    tensor2.move_to_host();
+    __half *h_A = (__half *)tensor1.getData();
+    __half *h_B = (__half *)tensor2.getData();
 
-    LOG(std::cout << "[MAXMIN C++] M: " << M << "B: " << B << std::endl);
-
+    LOG(std::cout << "[MAXMIN C++] M=" << M << " B=" << B << " N=" << N << std::endl);
     LOG(std::cout << "[MAXMIN C++] ORDER-" << order << std::endl);
 
-    // Buffers iterativos: C_dev_before (= C_prev) y C_dev_after (= C_next)
-    __half *C_dev_before, *C_dev_after;
-    int *argmax;
+    // Pre-transponer B: [B,K,N] → [N,B,K]
+    // La columna n queda contigua en h_B_T + n*B*K  (B*K elementos)
+    std::vector<__half> h_B_T((size_t)N * B * K);
+    for (int b = 0; b < B; b++)
+        for (int k = 0; k < K; k++)
+            for (int n = 0; n < N; n++)
+                h_B_T[(size_t)n * B * K + b * K + k] = h_B[(size_t)b * K * N + k * N + n];
+
+    // Buffers host
+    std::vector<__half> h_C_new((size_t)B * M * N);  // resultado ensamblado [B,M,N]
+    std::vector<__half> h_col_tmp((size_t)B * M);     // columna temporal [B,M]
+
+    // Buffers GPU
+    __half              *d_C_old, *d_B_col, *d_C_new_col;
+    unsigned long long  *d_counter;
     {
-        size_t __alloc_bytes = (size_t)total_elems * sizeof(__half);
-        CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_dev_before");
-        CHECK_CUDA(cudaMalloc(&C_dev_before, __alloc_bytes));
+        size_t sz_mat = (size_t)B * M * K * sizeof(__half);
+        CHECK_ALLOC_SIZE_OR_EXIT(sz_mat, "d_C_old");
+        CHECK_CUDA(cudaMalloc(&d_C_old, sz_mat));
     }
-    {
-        size_t __alloc_bytes = (size_t)total_elems * sizeof(__half);
-        CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_dev_after");
-        CHECK_CUDA(cudaMalloc(&C_dev_after, __alloc_bytes));
-    }
+    CHECK_CUDA(cudaMalloc(&d_B_col,     (size_t)B * K * sizeof(__half)));
+    CHECK_CUDA(cudaMalloc(&d_C_new_col, (size_t)B * M * sizeof(__half)));
+    CHECK_CUDA(cudaMalloc(&d_counter,   sizeof(unsigned long long)));
 
-    {
-        size_t __alloc_bytes = (size_t)total_elems * sizeof(int);
-        CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_dev_after");
-        CHECK_CUDA(cudaMalloc(&argmax, __alloc_bytes));
-        CHECK_CUDA(cudaMemset(argmax, -1, __alloc_bytes));
-    }
-    // C_dev_before arranca como copia de d_A
-    CHECK_CUDA(
-        cudaMemcpy(C_dev_before, d_A, total_elems * sizeof(__half), cudaMemcpyDeviceToDevice)
-    );
+    // C_old arranca como A
+    CHECK_CUDA(cudaMemcpy(d_C_old, h_A, (size_t)B * M * K * sizeof(__half),
+                          cudaMemcpyHostToDevice));
 
-    dim3 grid(N, M, B);
-    float thr_f = __half2float(thr);
-    int effective_order = 1;
+    dim3 block(128);
+    dim3 grid(M, B);
+    size_t shmem = 128 * sizeof(__half);
 
-    int* d_counter;
-    CHECK_CUDA(cudaMalloc(&d_counter, sizeof(int)));
-
-    std::vector<std::vector<int>> current_paths;
+    int effective_order = 0;
     MaxminResult result;
+    result.effects_order1 = 0;
 
     for (int s = 0; s < order; s++) {
-        CHECK_CUDA(cudaMemset(d_counter, 0, sizeof(int)));
+        CHECK_CUDA(cudaMemset(d_counter, 0, sizeof(unsigned long long)));
 
-        maxmin_threshold_kernel<<<grid, block, shmem>>>(
-            C_dev_before, d_B, C_dev_after, argmax, d_counter, thr, B, M, N, K, -1);
-        CHECK_CUDA(cudaGetLastError());
-        CHECK_CUDA(cudaDeviceSynchronize());
+        for (int n = 0; n < N; n++) {
+            // Subir columna n de B (contigua en h_B_T)
+            CHECK_CUDA(cudaMemcpy(d_B_col, &h_B_T[(size_t)n * B * K],
+                                  (size_t)B * K * sizeof(__half), cudaMemcpyHostToDevice));
 
-        int h_counter = 0;
-        CHECK_CUDA(cudaMemcpy(&h_counter, d_counter, sizeof(int), cudaMemcpyDeviceToHost));
+            maxmin_threshold_kernel<<<grid, block, shmem>>>(
+                d_C_old, d_B_col, d_C_new_col, d_counter, thr, B, M, K, n);
+            CHECK_CUDA(cudaGetLastError());
+
+            // Bajar columna n de C_new (sincroniza el kernel implícitamente)
+            CHECK_CUDA(cudaMemcpy(h_col_tmp.data(), d_C_new_col,
+                                  (size_t)B * M * sizeof(__half), cudaMemcpyDeviceToHost));
+
+            // Ensamblar en h_C_new [B,M,N]
+            for (int b = 0; b < B; b++)
+                for (int m = 0; m < M; m++)
+                    h_C_new[(size_t)b * M * N + m * N + n] = h_col_tmp[b * M + m];
+        }
+
+        unsigned long long h_counter = 0;
+        CHECK_CUDA(cudaMemcpy(&h_counter, d_counter, sizeof(unsigned long long), cudaMemcpyDeviceToHost));
 
         if (h_counter == 0) {
             LOG(std::cout << "[MAXMIN C++] Convergencia en step " << s + 1 << std::endl);
             break;
-        }else{
-          LOG(std::cout << "[MAXMIN C++] Efectos encontrados en orden "<< s +1 << " : " << h_counter<< std::endl);
         }
+        LOG(std::cout << "[MAXMIN C++] Efectos encontrados en orden " << s + 1
+                      << " : " << h_counter << std::endl);
 
         effective_order = s + 1;
+        if (s == 0) result.effects_order1 = h_counter;
 
-        // auto [new_paths, new_values] = assemble_paths(
-        //     current_paths, C_dev_before, C_dev_after, argmax, thr_f, M, N, B);
-        // result.paths.push_back(new_paths);
-        // result.values.push_back(new_values);
-        // current_paths = std::move(new_paths);
-
-        std::swap(C_dev_before, C_dev_after);
+        // C_new → C_old para el siguiente step
+        CHECK_CUDA(cudaMemcpy(d_C_old, h_C_new.data(),
+                              (size_t)B * M * N * sizeof(__half), cudaMemcpyHostToDevice));
     }
 
+    CHECK_CUDA(cudaFree(d_C_old));
+    CHECK_CUDA(cudaFree(d_B_col));
+    CHECK_CUDA(cudaFree(d_C_new_col));
     CHECK_CUDA(cudaFree(d_counter));
-    CHECK_CUDA(cudaFree(C_dev_before));
-    CHECK_CUDA(cudaFree(C_dev_after));
-    CHECK_CUDA(cudaFree(argmax));
 
     result.effective_order = effective_order;
     return result;

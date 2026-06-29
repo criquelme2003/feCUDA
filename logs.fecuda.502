@@ -1,0 +1,12 @@
+[MAXMIN C++] M=200 B=1 N=200
+[MAXMIN C++] ORDER-30
+[MAXMIN C++] Efectos encontrados en orden 1 : 551
+[MAXMIN C++] Efectos encontrados en orden 2 : 496
+[MAXMIN C++] Efectos encontrados en orden 3 : 324
+[MAXMIN C++] Efectos encontrados en orden 4 : 168
+[MAXMIN C++] Efectos encontrados en orden 5 : 104
+[MAXMIN C++] Efectos encontrados en orden 6 : 44
+[MAXMIN C++] Efectos encontrados en orden 7 : 15
+[MAXMIN C++] Efectos encontrados en orden 8 : 5
+[MAXMIN C++] Convergencia en step 9
+/var/spool/slurmd/job00502/slurm_script: line 10: 106029 Killed                  python test2.py

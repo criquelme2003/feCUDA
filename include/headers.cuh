@@ -9,6 +9,7 @@ struct MaxminResult {
     std::vector<std::vector<std::vector<int>>> paths;  // paths[s] = paths del step s
     std::vector<std::vector<float>>            values; // values[s] = valores del step s
     int                                        effective_order;
+    unsigned long long                         effects_order1;  // efectos encontrados en step 0
 };
 
 MaxminResult maxmin(

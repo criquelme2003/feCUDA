@@ -1,0 +1,202 @@
+Ejecutando fecuda_main con argumentos: 
+Validando MaxMin: comparando GPU vs CPU reference, 3 runs por config
+
+
+=== B=1  M=4  thr=0.30 ===
+  CPU reference (argmax): 0 paths
+[MAXMIN C++] M=4 B=1 N=4
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Convergencia en step 1
+  Run 0: GPU=0  OK
+[MAXMIN C++] M=4 B=1 N=4
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Convergencia en step 1
+  Run 1: GPU=0  OK
+[MAXMIN C++] M=4 B=1 N=4
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Convergencia en step 1
+  Run 2: GPU=0  OK
+
+=== B=1  M=8  thr=0.30 ===
+  CPU reference (argmax): 26 paths
+[MAXMIN C++] M=8 B=1 N=8
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 26
+  Run 0: GPU=26  OK
+[MAXMIN C++] M=8 B=1 N=8
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 26
+  Run 1: GPU=26  OK
+[MAXMIN C++] M=8 B=1 N=8
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 26
+  Run 2: GPU=26  OK
+
+=== B=1  M=16  thr=0.30 ===
+  CPU reference (argmax): 121 paths
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 121
+  Run 0: GPU=121  OK
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 121
+  Run 1: GPU=121  OK
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 121
+  Run 2: GPU=121  OK
+
+=== B=1  M=32  thr=0.30 ===
+  CPU reference (argmax): 555 paths
+[MAXMIN C++] M=32 B=1 N=32
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 555
+  Run 0: GPU=555  OK
+[MAXMIN C++] M=32 B=1 N=32
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 555
+  Run 1: GPU=555  OK
+[MAXMIN C++] M=32 B=1 N=32
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 555
+  Run 2: GPU=555  OK
+
+=== B=1  M=64  thr=0.30 ===
+  CPU reference (argmax): 2375 paths
+[MAXMIN C++] M=64 B=1 N=64
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 2375
+  Run 0: GPU=2375  OK
+[MAXMIN C++] M=64 B=1 N=64
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 2375
+  Run 1: GPU=2375  OK
+[MAXMIN C++] M=64 B=1 N=64
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 2375
+  Run 2: GPU=2375  OK
+
+=== B=1  M=128  thr=0.30 ===
+  CPU reference (argmax): 10149 paths
+[MAXMIN C++] M=128 B=1 N=128
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 10149
+  Run 0: GPU=10149  OK
+[MAXMIN C++] M=128 B=1 N=128
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 10149
+  Run 1: GPU=10149  OK
+[MAXMIN C++] M=128 B=1 N=128
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 10149
+  Run 2: GPU=10149  OK
+
+=== B=1  M=16  thr=0.00 ===
+  CPU reference (argmax): 211 paths
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 211
+  Run 0: GPU=211  OK
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 211
+  Run 1: GPU=211  OK
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 211
+  Run 2: GPU=211  OK
+
+=== B=1  M=16  thr=0.50 ===
+  CPU reference (argmax): 77 paths
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 77
+  Run 0: GPU=77  OK
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 77
+  Run 1: GPU=77  OK
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 77
+  Run 2: GPU=77  OK
+
+=== B=1  M=16  thr=0.90 ===
+  CPU reference (argmax): 1 paths
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 1
+  Run 0: GPU=1  OK
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 1
+  Run 1: GPU=1  OK
+[MAXMIN C++] M=16 B=1 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 1
+  Run 2: GPU=1  OK
+
+=== B=4  M=16  thr=0.30 ===
+  CPU reference (argmax): 484 paths
+[MAXMIN C++] M=16 B=4 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 484
+  Run 0: GPU=484  OK
+[MAXMIN C++] M=16 B=4 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 484
+  Run 1: GPU=484  OK
+[MAXMIN C++] M=16 B=4 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 484
+  Run 2: GPU=484  OK
+
+=== B=8  M=32  thr=0.30 ===
+  CPU reference (argmax): 4440 paths
+[MAXMIN C++] M=32 B=8 N=32
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 4440
+  Run 0: GPU=4440  OK
+[MAXMIN C++] M=32 B=8 N=32
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 4440
+  Run 1: GPU=4440  OK
+[MAXMIN C++] M=32 B=8 N=32
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 4440
+  Run 2: GPU=4440  OK
+
+=== B=10  M=16  thr=0.40 ===
+  CPU reference (argmax): 1000 paths
+[MAXMIN C++] M=16 B=10 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 1000
+  Run 0: GPU=1000  OK
+[MAXMIN C++] M=16 B=10 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 1000
+  Run 1: GPU=1000  OK
+[MAXMIN C++] M=16 B=10 N=16
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 1000
+  Run 2: GPU=1000  OK
+
+=== B=30  M=64  thr=0.30 ===
+  CPU reference (argmax): 71250 paths
+[MAXMIN C++] M=64 B=30 N=64
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 71250
+  Run 0: GPU=71250  OK
+[MAXMIN C++] M=64 B=30 N=64
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 71250
+  Run 1: GPU=71250  OK
+[MAXMIN C++] M=64 B=30 N=64
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 71250
+  Run 2: GPU=71250  OK
+
+==============================
+Resultado final: TODOS OK
+==============================
