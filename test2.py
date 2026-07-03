@@ -149,19 +149,109 @@ def sparse_supercritical_matrix(n, c, seed=None):
     E[np.triu_indices(n, k=1)] = U[np.triu_indices(n, k=1)]
     np.fill_diagonal(E, 1)
     return E
+def sparse_supercritical_block_matrix(n_N, n_M, c, seed=None):
+    rng = np.random.default_rng(seed)
+    Ntot = n_N + n_M
+    p = c / (Ntot - 1)
 
+    E = np.zeros((Ntot, Ntot), dtype=float)
 
-NS      = [100, 1_000, 10_000]
-CS      = [25,50]
+    # Blocks
+    NN = rng.binomial(1, p, size=(n_N, n_N))
+    NM = rng.binomial(1, p, size=(n_N, n_M))
+    MM = rng.binomial(1, p, size=(n_M, n_M))
+
+    # Remove self-loops before imposing reflexivity
+    np.fill_diagonal(NN, 0)
+    np.fill_diagonal(MM, 0)
+
+    # Assemble block-upper-triangular matrix
+    E[:n_N, :n_N] = NN
+    E[:n_N, n_N:] = NM
+    E[n_N:, n_N:] = MM
+
+    # Lower-left block M -> N remains zero
+    E[n_N:, :n_N] = 0
+
+    # Reflexivity
+    np.fill_diagonal(E, 1)
+
+    return E 
+
+def sparse_supercritical_block_matrix2(n_N, n_M, c, seed=None):
+    """
+    Binary reflexive one-way block Bernoulli support matrix.
+
+    Structure:
+        E = [ E_NN  E_NM
+              0     E_MM ]
+
+    Here c controls the expected admissible out-degree in each block row:
+        rows in N: p_N = c / (Ntot - 1)
+        rows in M: p_M = c / (n_M - 1)
+
+    Therefore:
+        E[deg^+ | row in N] ≈ c
+        E[deg^+ | row in M] ≈ c
+
+    Cells with p_N > 1 or p_M > 1 are inadmissible and should be skipped,
+    not truncated.
+    """
+    rng = np.random.default_rng(seed)
+
+    Ntot = n_N + n_M
+
+    if Ntot <= 1:
+        raise ValueError("Ntot must be greater than 1.")
+    if n_M <= 1:
+        raise ValueError("n_M must be greater than 1.")
+
+    p_N = c / (Ntot - 1)
+    p_M = c / (n_M - 1)
+
+    if p_N > 1 or p_M > 1:
+        raise ValueError(
+            f"Inadmissible Bernoulli parameter: "
+            f"p_N={p_N:.4f}, p_M={p_M:.4f}, "
+            f"for n_N={n_N}, n_M={n_M}, c={c}."
+        )
+
+    E = np.zeros((Ntot, Ntot), dtype=float)
+
+    # N -> N and N -> M use p_N
+    NN = rng.binomial(1, p_N, size=(n_N, n_N))
+    NM = rng.binomial(1, p_N, size=(n_N, n_M))
+
+    # M -> M uses p_M
+    MM = rng.binomial(1, p_M, size=(n_M, n_M))
+
+    # Remove self-loops before imposing reflexivity
+    np.fill_diagonal(NN, 0)
+    np.fill_diagonal(MM, 0)
+
+    # Assemble one-way block matrix
+    E[:n_N, :n_N] = NN
+    E[:n_N, n_N:] = NM
+    E[n_N:, :n_N] = 0
+    E[n_N:, n_N:] = MM
+
+    # Reflexivity
+    np.fill_diagonal(E, 1)
+
+    return E, p_N, p_M
+
+NS      = [100, 250, 500, 1_000, 2_500, 5_000, 10_000]
+CS      = [0.125, 0.250, 0.500, 1, 1.125, 1.250, 1.500, 1.750,2,3,4,6,8,10,25,50]
 REPEATS = 20
 THR     = 0.5
-ORDER   = 30
-CSV_OUT = "sweep_n_order.csv"
+ORDER   = 100
+CSV_OUT = "sweep_n_block_02_06_order.csv"
 
 
 def run_sweep():
     # warmup
-    m_w = sparse_supercritical_matrix(200, 4, seed=0).reshape(1, 200, 200).astype(np.float16)
+    m_w, _, _ = sparse_supercritical_block_matrix2(100, 100, 4, seed=0)
+    m_w = m_w.reshape(1, 200, 200).astype(np.float16)
     ft.maxmin(m_w.copy(), m_w.copy(), THR, ORDER)
 
     results = {}  # c -> n -> list of effective_orders
@@ -176,26 +266,31 @@ def run_sweep():
         for c in CS:
             results[c] = {}
             for n in NS:
-                orders = []
-                for rep in range(REPEATS):
-                    cp.get_default_memory_pool().free_all_blocks()
-                    seed = rep * 1000 + n
-                    m1 = sparse_supercritical_matrix(n, c, seed=seed).reshape(1, n, n).astype(np.float16)
-                    m2 = m1.copy()
-                    _, _, eff_order = ft.maxmin(m1, m2, THR, ORDER)
-                    orders.append(eff_order)
+                _n = int(n/2)
+                if(c < _n):
+                  orders = []
 
-                results[c][n] = orders
-                print(
-                    f"c={c}  n={n}  "
-                    f"mean={np.mean(orders):.2f}  "
-                    f"min={int(np.min(orders))}  "
-                    f"max={int(np.max(orders))}"
-                )
+                  for rep in range(REPEATS):
+                      cp.get_default_memory_pool().free_all_blocks()
+                      seed = rep * 1000 + n
+                      N_tot = n
+                      E, _, _ = sparse_supercritical_block_matrix2(_n, _n, c, seed=seed)
+                      m1 = E.reshape(1, N_tot, N_tot).astype(np.float16)
+                      m2 = m1.copy()
+                      _, _, eff_order = ft.maxmin(m1, m2, THR, ORDER)
+                      orders.append(eff_order)
 
-                for rep, o in enumerate(orders):
-                    writer.writerow([c, n, rep, o])
-                f.flush()
+                  results[c][n] = orders
+                  print(
+                      f"c={c}  n={n}  "
+                      f"mean={np.mean(orders):.2f}  "
+                      f"min={int(np.min(orders))}  "
+                      f"max={int(np.max(orders))}"
+                  )
+
+                  for rep, o in enumerate(orders):
+                      writer.writerow([c, n, rep, o])
+                  f.flush()
 
     return results
 
@@ -227,7 +322,7 @@ def plot_results(results):
         ax.legend()
         ax.grid(True, which="both", linestyle="--", alpha=0.5)
         plt.tight_layout()
-        fname = f"sweep_n_order_cc{c}.png"
+        fname = f"sweep_n_order_02_06_block{c}.png"
         plt.savefig(fname, dpi=150)
         plt.show()
         print(f"Guardado: {fname}")
