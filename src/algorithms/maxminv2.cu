@@ -241,6 +241,9 @@ MaxminResult maxminv2(
           LOG(std::cout << "[MAXMIN C++] Efectos encontrados en orden "<< s +1 << " : " << h_counter<< std::endl);
         }
 
+        // Registrar los efectos de este orden (1 entrada por orden con efectos).
+        result.effects_per_order.push_back(h_counter);
+
         effective_order = s + 1;
 
         // auto [new_paths, new_values] = assemble_paths(

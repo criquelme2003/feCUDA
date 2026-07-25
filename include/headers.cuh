@@ -12,6 +12,7 @@
 struct MaxminResult {
     std::vector<std::vector<std::vector<int>>> paths;  // paths[s] = paths del step s
     std::vector<std::vector<float>>            values; // values[s] = valores del step s
+    std::vector<int> effects_per_order; // effects_per_order[s] = nº de efectos (counter) del orden s+1
     int                                        effective_order;
 };
 

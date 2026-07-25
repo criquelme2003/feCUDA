@@ -1,0 +1,6 @@
+
+=== [GPU-ONLY] B=1  M=1000  thr=0.50 ===
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 472326
+  effective_order=1

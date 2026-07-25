@@ -3,9 +3,6 @@
 #SBATCH --job-name=fecuda
 #SBATCH --cpus-per-task=8
 #SBATCH --no-requeue
-#SBATCH --output=logs.%x.%j
+#SBATCH --output=../logs/logs.%x.%j
 
-source /usr/local/miniconda3/bin/activate
-conda activate fecuda
-python test2.py
-
+../build/fecuda_main

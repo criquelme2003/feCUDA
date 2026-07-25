@@ -216,8 +216,9 @@ bool run_and_validate(int B, int M, float thr, int n_runs = 3)
         CHECK_CUDA(cudaMemcpy(t2.getData(), h_tensor.data(), B * M * M * sizeof(__half), cudaMemcpyHostToDevice));
 
         __half hthr = __float2half(thr);
-        auto result   = maxmin(t1, t2, hthr, 1);
-        int gpu_count = result.paths.empty() ? 0 : (int)result.paths[0].size();
+        auto result   = maxminv2(t1, t2, hthr, 1);
+        // Counter de efectos del orden 1 (misma semántica que cpu_maxmin_count_argmax).
+        int gpu_count = result.effects_per_order.empty() ? 0 : result.effects_per_order[0];
 
         bool match = (gpu_count == cpu_count);
         printf("  Run %d: GPU=%d  %s\n", run, gpu_count, match ? "OK" : "MISMATCH !!!");
@@ -274,9 +275,18 @@ int main()
 
     // return all_passed ? 0 : 1;
 
-    // run_and_validate(1,100,0.5,1);
-    // run_and_validate(1,500,0.5,1);
-    // run_and_validate(1,1000,0.5,1);
-    run_gpu_only(1, 1000, 0.5f);
+    // Rango [100,1000]; mezcla de múltiplos de 32 (256,640,800) y no-múltiplos
+    // (100,400,1000) para ejercitar el padding y los tiles de borde.
+    bool all_ok = true;
+    all_ok &= run_and_validate(1,  100, 0.5f, 1);
+    all_ok &= run_and_validate(1,  256, 0.5f, 1);
+    all_ok &= run_and_validate(1,  400, 0.5f, 1);
+    all_ok &= run_and_validate(1,  640, 0.5f, 1);
+    all_ok &= run_and_validate(1,  800, 0.5f, 1);
+    all_ok &= run_and_validate(1, 1000, 0.5f, 1);
 
+    printf("\n==============================\n");
+    printf("Resultado final: %s\n", all_ok ? "TODOS OK" : "HAY FALLOS");
+    printf("==============================\n");
+    return all_ok ? 0 : 1;
 }
