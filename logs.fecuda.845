@@ -1,0 +1,58 @@
+[MAXMIN C++] M: 200B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 2666
+[MAXMIN C++] Efectos encontrados en orden 2 : 6502
+[MAXMIN C++] Efectos encontrados en orden 3 : 7655
+[MAXMIN C++] Efectos encontrados en orden 4 : 4000
+[MAXMIN C++] Efectos encontrados en orden 5 : 1596
+[MAXMIN C++] Efectos encontrados en orden 6 : 798
+[MAXMIN C++] Efectos encontrados en orden 7 : 437
+[MAXMIN C++] Efectos encontrados en orden 8 : 235
+[MAXMIN C++] Efectos encontrados en orden 9 : 120
+[MAXMIN C++] Efectos encontrados en orden 10 : 40
+[MAXMIN C++] Efectos encontrados en orden 11 : 8
+[MAXMIN C++] Convergencia en step 12
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 1018
+[MAXMIN C++] Efectos encontrados en orden 2 : 1011
+[MAXMIN C++] Efectos encontrados en orden 3 : 1058
+[MAXMIN C++] Efectos encontrados en orden 4 : 1072
+[MAXMIN C++] Efectos encontrados en orden 5 : 1125
+[MAXMIN C++] Efectos encontrados en orden 6 : 1153
+[MAXMIN C++] Efectos encontrados en orden 7 : 1227
+[MAXMIN C++] Efectos encontrados en orden 8 : 1261
+[MAXMIN C++] Efectos encontrados en orden 9 : 1245
+[MAXMIN C++] Efectos encontrados en orden 10 : 1220
+[MAXMIN C++] Efectos encontrados en orden 11 : 1165
+[MAXMIN C++] Efectos encontrados en orden 12 : 1070
+[MAXMIN C++] Efectos encontrados en orden 13 : 875
+[MAXMIN C++] Efectos encontrados en orden 14 : 684
+[MAXMIN C++] Efectos encontrados en orden 15 : 549
+[MAXMIN C++] Efectos encontrados en orden 16 : 414
+[MAXMIN C++] Efectos encontrados en orden 17 : 274
+[MAXMIN C++] Efectos encontrados en orden 18 : 206
+[MAXMIN C++] Efectos encontrados en orden 19 : 151
+[MAXMIN C++] Efectos encontrados en orden 20 : 85
+[MAXMIN C++] Efectos encontrados en orden 21 : 50
+[MAXMIN C++] Efectos encontrados en orden 22 : 24
+[MAXMIN C++] Efectos encontrados en orden 23 : 10
+[MAXMIN C++] Efectos encontrados en orden 24 : 5
+[MAXMIN C++] Convergencia en step 25
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 60550
+[MAXMIN C++] Efectos encontrados en orden 2 : 280222
+[MAXMIN C++] Efectos encontrados en orden 3 : 248330
+[MAXMIN C++] Efectos encontrados en orden 4 : 89496
+[MAXMIN C++] Efectos encontrados en orden 5 : 41865
+[MAXMIN C++] Efectos encontrados en orden 6 : 9294
+[MAXMIN C++] Efectos encontrados en orden 7 : 1207
+[MAXMIN C++] Efectos encontrados en orden 8 : 112
+[MAXMIN C++] Efectos encontrados en orden 9 : 6
+[MAXMIN C++] Efectos encontrados en orden 10 : 1
+[MAXMIN C++] Convergencia en step 11
+c=1  n=1000  mean=24.00  min=24  max=24
+c=8  n=1000  mean=10.00  min=10  max=10
+Guardado: sweep_n_order_02_06_block1.png
+Guardado: sweep_n_order_02_06_block8.png

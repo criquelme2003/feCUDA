@@ -10,6 +10,9 @@
 
 set -e
 
+source /etc/profile
+module load cuda/12.5
+
 TOOL="ncu"
 BINARY="fecuda_main"
 BUILD_DIR="build"
@@ -51,7 +54,7 @@ cd "$BUILD_DIR"
 
 if [ "$TOOL" = "ncu" ]; then
   echo "Ejecutando ncu con métricas: $METRICS"
-  ncu --metrics "$METRICS" --output "../docs/${OUTPUT_PREFIX}_ncu" ./$BINARY
+  ncu  -f -o  "../docs/${OUTPUT_PREFIX}_ncu" ./$BINARY
   echo "Perfil ncu completado. Resultados en docs/${OUTPUT_PREFIX}_ncu.ncu-rep"
 elif [ "$TOOL" = "nsys" ]; then
   echo "Ejecutando nsys"

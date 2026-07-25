@@ -19,7 +19,7 @@ set(DLPACK_ROUTE "/home/criquelme/feCUDA/extern/dlpack")
 
 find_package(CUDAToolkit REQUIRED)
 
-set(Python_EXECUTABLE /home/criquelme/miniconda3/envs/fecuda/bin/python)
+set(Python_EXECUTABLE /home/criquelme/.conda/envs/fecuda/bin/python)
 set(PYBIND11_FINDPYTHON ON)
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development)

@@ -241,11 +241,16 @@ def sparse_supercritical_block_matrix2(n_N, n_M, c, seed=None):
     return E, p_N, p_M
 
 NS      = [100, 250, 500, 1_000, 2_500, 5_000, 10_000]
-CS      = [0.125, 0.250, 0.500, 1, 1.125, 1.250, 1.500, 1.750,2,3,4,6,8,10,25,50]
+# CS      = [0.125, 0.250, 0.500, 1, 1.125, 1.250, 1.500, 1.750,2,3,4,6,8,10,25,50]
+
+CS      = [1.500, 1.750]
+
+
+
 REPEATS = 20
 THR     = 0.5
 ORDER   = 100
-CSV_OUT = "sweep_n_block_02_06_order.csv"
+CSV_OUT = "sweep_n_block_03_06_order.csv"
 
 
 def run_sweep():
