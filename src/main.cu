@@ -193,10 +193,67 @@ bool run_and_validate(int B, int M, float thr, int n_runs = 3)
     return all_ok;
 }
 
-// ─── Main ────────────────────────────────────────────────────────────────────
-
-int main()
+// ─── Test solo GPU (sin referencia CPU) ──────────────────────────────────────
+// Una sola corrida del kernel en GPU, pensada para profiling con ncu/nsys:
+// un único lanzamiento, sin la referencia CPU O(M^3) que contaminaría el perfil.
+void run_gpu_only(int B, int M, float thr)
 {
+    printf("\n=== [GPU-ONLY] B=%d  M=%d  thr=%.2f ===\n", B, M, thr);
+
+    int blockSize      = 256;
+    int total_elements = M * M;
+    int gridSize       = (total_elements + blockSize - 1) / blockSize;
+
+    curandState_t *curand_state;
+    CHECK_CUDA(cudaMalloc(&curand_state, sizeof(curandState_t) * total_elements));
+    randomInit<<<gridSize, blockSize>>>(curand_state, RAND_SEED, total_elements);
+    CHECK_CUDA(cudaDeviceSynchronize());
+
+    __half *d_base;
+    CHECK_CUDA(cudaMalloc(&d_base, total_elements * sizeof(__half)));
+    randomFill<<<gridSize, blockSize>>>(d_base, total_elements, curand_state);
+    CHECK_CUDA(cudaDeviceSynchronize());
+    CHECK_CUDA(cudaFree(curand_state));
+
+    std::vector<__half> h_base_half(total_elements);
+    CHECK_CUDA(cudaMemcpy(h_base_half.data(), d_base, total_elements * sizeof(__half),
+                          cudaMemcpyDeviceToHost));
+    CHECK_CUDA(cudaFree(d_base));
+
+    std::vector<__half> h_tensor(B * M * M);
+    for (int b = 0; b < B; b++)
+        for (int i = 0; i < M * M; i++)
+            h_tensor[b * M * M + i] = h_base_half[i];
+
+    TensorResult<__half> t1(MemorySpace::Device, B, M, M);
+    TensorResult<__half> t2(MemorySpace::Device, B, M, M);
+    CHECK_CUDA(cudaMemcpy(t1.getData(), h_tensor.data(), B * M * M * sizeof(__half),
+                          cudaMemcpyHostToDevice));
+    CHECK_CUDA(cudaMemcpy(t2.getData(), h_tensor.data(), B * M * M * sizeof(__half),
+                          cudaMemcpyHostToDevice));
+
+    __half hthr = __float2half(thr);
+    auto result = maxmin(t1, t2, hthr, 1);
+    printf("  effective_order=%d\n", result.effective_order);
+}
+
+// ─── Main ────────────────────────────────────────────────────────────────────
+//
+// Uso:
+//   fecuda_main                 → suite de validación multi-tamaño (GPU vs CPU).
+//   fecuda_main M [B] [thr]     → una sola corrida GPU-only, para profiling con
+//                                 ncu/nsys (un kernel, un input-size limpio).
+int main(int argc, char **argv)
+{
+    // Modo profiling: tamaño por argumentos → una corrida GPU-only.
+    if (argc >= 2) {
+        int   M   = std::atoi(argv[1]);
+        int   B   = (argc >= 3) ? std::atoi(argv[2]) : 1;
+        float thr = (argc >= 4) ? std::atof(argv[3]) : 0.5f;
+        run_gpu_only(B, M, thr);
+        return 0;
+    }
+
     // printf("GPU: sm_75 (GTX 1650)\n");
     printf("Validando MaxMin: comparando GPU vs CPU reference, %d runs por config\n\n", 3);
 

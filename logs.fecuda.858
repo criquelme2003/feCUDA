@@ -1,0 +1,14 @@
+Ejecutando ncu (kernel=maxmin_threshold_kernel sizes=256 B=1 thr=0.5 set=full)
+==PROF== Connected to process 10365 (/home/criquelme/feCUDA/build/fecuda_main)
+==PROF== Profiling "randomInit" - 0: 0%....50%....100% - 44 passes
+==PROF== Profiling "randomFill" - 1: 0%....50%....100% - 44 passes
+
+=== [GPU-ONLY] B=1  M=256  thr=0.50 ===
+[MAXMIN C++] M: 256B: 1
+[MAXMIN C++] ORDER-1
+==PROF== Profiling "maxmin_threshold_kernel" - 2: 0%....50%....100% - 44 passes
+[MAXMIN C++] Efectos encontrados en orden 1 : 29194
+  effective_order=1
+==PROF== Disconnected from process 10365
+==PROF== Report: /home/criquelme/feCUDA/docs/nvidia-reports/maxmin_threshold_kernel_256.ncu-rep
+Perfil ncu completado → docs/nvidia-reports/maxmin_threshold_kernel_256.ncu-rep
