@@ -237,9 +237,23 @@ bool run_and_validate(int B, int M, float thr, int n_runs = 3)
 }
 
 // ─── Main ────────────────────────────────────────────────────────────────────
-
-int main()
+//
+// Uso:
+//   fecuda_main                 → suite de validación multi-tamaño (GPU vs CPU).
+//   fecuda_main M [B] [thr]     → una sola corrida GPU-only de maxminv2, pensada
+//                                 para profiling con ncu/nsys (un kernel, un
+//                                 input-size limpio, sin referencia CPU).
+int main(int argc, char **argv)
 {
+    // Modo profiling: tamaño por argumentos → una corrida GPU-only.
+    if (argc >= 2) {
+        int   M   = std::atoi(argv[1]);
+        int   B   = (argc >= 3) ? std::atoi(argv[2]) : 1;
+        float thr = (argc >= 4) ? std::atof(argv[3]) : 0.5f;
+        run_gpu_only(B, M, thr);
+        return 0;
+    }
+
     // // printf("GPU: sm_75 (GTX 1650)\n");
     // printf("Validando MaxMin: comparando GPU vs CPU reference, %d runs por config\n\n", 3);
 
