@@ -1,3 +1,4 @@
+#include "../../include/algorithms/assemble_paths.cuh"
 #include "../../include/core/types.cuh"
 #include "../../include/headers.cuh"
 #include "../../include/kernels/maxmin_kernels.cuh"
@@ -76,67 +77,6 @@ static inline bool check_alloc_size_or_fail(size_t bytes, const char *name) {
 //   y argmax[b,m,n2] == n (el kernel eligió n como pivote óptimo).
 //   Devuelve paths extendidos con n2 al final.
 //
-// A = C_{s-1},  C = C_s,  argmax = resultado del kernel para este step.
-using PathsAndValues = std::pair<std::vector<std::vector<int>>, std::vector<float>>;
-
-PathsAndValues assemble_pathsv2(
-    std::vector<std::vector<int>> prev_paths,
-    __half *d_A,
-    __half *d_C,
-    int *d_argmax,
-    float thr,
-    int M,
-    int N,
-    int B
-) {
-    std::vector<std::vector<int>> paths;
-    std::vector<float>            values;
-
-    int total = M * N * B;
-    std::vector<__half> h_A(total);
-    std::vector<__half> h_C(total);
-    std::vector<int> h_argmax(total);
-
-    cudaMemcpy(h_A.data(),      d_A,      total * sizeof(__half), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_C.data(),      d_C,      total * sizeof(__half), cudaMemcpyDeviceToHost);
-    cudaMemcpy(h_argmax.data(), d_argmax, total * sizeof(int),    cudaMemcpyDeviceToHost);
-
-    auto idx = [&](int b, int m, int n) { return b * M * N + m * N + n; };
-
-    if (!prev_paths.empty()) {
-        for (const auto &path : prev_paths) {
-            int b = path[0];
-            int m = path[1];     // nodo fuente, fijo en todos los steps
-            int n = path.back(); // cola actual del camino
-
-            for (int n2 = 0; n2 < N; n2++) {
-                int i = idx(b, m, n2);
-                float c_val = __half2float(h_C[i]);
-                if (c_val - __half2float(h_A[i]) < thr) continue;
-                if (h_argmax[i] != n) continue;
-
-                auto new_path = path;
-                new_path.push_back(n2);
-                paths.push_back(std::move(new_path));
-                values.push_back(c_val);
-            }
-        }
-    } else {
-        for (int b = 0; b < B; b++) {
-            for (int m = 0; m < M; m++) {
-                for (int n = 0; n < N; n++) {
-                    int i = idx(b, m, n);
-                    float c_val = __half2float(h_C[i]);
-                    if (c_val - __half2float(h_A[i]) < thr) continue;
-                    paths.push_back({b, m, h_argmax[i], n});
-                    values.push_back(c_val);
-                }
-            }
-        }
-    }
-    return {paths, values};
-}
-
 MaxminResult maxminv2(
     TensorResult<__half> &tensor1,
     TensorResult<__half> &tensor2,
@@ -155,9 +95,10 @@ MaxminResult maxminv2(
     int K = tensor1.getN(); // N del tensor1 actúa como K en el kernel
     int N = tensor2.getN();
 
-    // Padea a múltiplo de 32; el kernel v2 indexa con strides físicos.
-    tensor1.move_to_device();
-    tensor2.move_to_device();
+    // Padea a múltiplo de 32 (tamaño de tile del kernel v2). El kernel indexa
+    // con strides físicos.
+    tensor1.move_to_device(32);
+    tensor2.move_to_device(32);
     __half *d_A = (__half *)tensor1.getData();
     __half *d_B = (__half *)tensor2.getData();
 

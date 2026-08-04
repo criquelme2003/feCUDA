@@ -63,6 +63,8 @@ __global__ void maxmin_threshold_kernelv2(
 
     // Kpad es múltiplo de 32 ⇒ el loop divide exacto; las filas/columnas de
     // padding valen negativo y nunca ganan el max.
+
+
     for (int bkIdx = 0; bkIdx < Kpad; bkIdx += 32) {
       // FASE 1 — carga cooperativa: cada thread trae UN half de A y UNO de B.
       As[threadRow * 32 + threadCol] = A[threadRow * Kpad + threadCol];
@@ -74,7 +76,7 @@ __global__ void maxmin_threshold_kernelv2(
 
       // FASE 2 — cómputo del maxmin parcial, 100% desde SMEM.
       for (int dotIdx = 0; dotIdx < 32; ++dotIdx) {
-        __half mi = __hmin(As[threadRow * 32 + dotIdx], Bs[dotIdx * 32 + threadCol]);
+        __half mi = __hmin(As[threadRow * 32 + dotIdx], Bs[dotIdx * 32 + threadCol]); 
         if (__hgt(mi, max_val)) {
           max_val = mi;
           k_max = bkIdx + dotIdx;
