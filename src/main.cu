@@ -153,7 +153,7 @@ void run_gpu_only(int B, int M, float thr)
     CHECK_CUDA(cudaMemcpy(t2.getData(), h_tensor.data(), B * M * M * sizeof(__half), cudaMemcpyHostToDevice));
 
     __half hthr = __float2half(thr);
-    auto result = maxminv2(t1, t2, hthr, 1);
+    auto result = maxminv4(t1, t2, hthr, 1);
     printf("  effective_order=%d\n", result.effective_order);
 }
 
@@ -216,7 +216,7 @@ bool run_and_validate(int B, int M, float thr, int n_runs = 3)
         CHECK_CUDA(cudaMemcpy(t2.getData(), h_tensor.data(), B * M * M * sizeof(__half), cudaMemcpyHostToDevice));
 
         __half hthr = __float2half(thr);
-        auto result   = maxminv2(t1, t2, hthr, 1);
+        auto result   = maxminv4(t1, t2, hthr, 1);
         // Counter de efectos del orden 1 (misma semántica que cpu_maxmin_count_argmax).
         int gpu_count = result.effects_per_order.empty() ? 0 : result.effects_per_order[0];
 
@@ -292,6 +292,7 @@ int main(int argc, char **argv)
     // Rango [100,1000]; mezcla de múltiplos de 32 (256,640,800) y no-múltiplos
     // (100,400,1000) para ejercitar el padding y los tiles de borde.
     bool all_ok = true;
+    all_ok &= run_and_validate(1,  90, 0.5f, 1);
     all_ok &= run_and_validate(1,  100, 0.5f, 1);
     all_ok &= run_and_validate(1,  256, 0.5f, 1);
     all_ok &= run_and_validate(1,  400, 0.5f, 1);

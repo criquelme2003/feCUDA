@@ -72,10 +72,10 @@ cd "$BUILD_DIR"
 
 if [ "$TOOL" = "ncu" ]; then
   echo "Ejecutando ncu (kernel=$KERNEL sizes=$SIZES B=$BATCH thr=$THR)"
-  ncu -f -o "${ABS_REPORT_DIR}/${REPORT_NAME}" ./$BINARY $APP_ARGS
+  ncu --set full -f -o "${ABS_REPORT_DIR}/${REPORT_NAME}" ./$BINARY $APP_ARGS
   echo "Perfil ncu completado → ${REPORT_DIR}/${REPORT_NAME}.ncu-rep"
 elif [ "$TOOL" = "nsys" ]; then
-  echo "Ejecutando nsys (kernel=$KERNEL sizes=$SIZES B=$BATCH thr=$THR)"
+  echo "Ejecutando nsys (kenel=$KERNEL sizes=$SIZES B=$BATCH thr=$THR)"
   nsys profile --trace=cuda,nvtx --output "${ABS_REPORT_DIR}/${REPORT_NAME}" ./$BINARY $APP_ARGS
   nsys stats --force-export=true "${ABS_REPORT_DIR}/${REPORT_NAME}.nsys-rep" \
     > "${ABS_REPORT_DIR}/${REPORT_NAME}_stats.txt"

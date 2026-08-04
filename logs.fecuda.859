@@ -1,0 +1,29 @@
+-- Found Python: /home/criquelme/.conda/envs/fecuda/bin/python (found version "3.10.20") found components: Interpreter Development Development.Module Development.Embed
+-- Found pybind11: /home/criquelme/.conda/envs/fecuda/include (found version "3.0.3")
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/criquelme/feCUDA/build
+[  9%] Building CUDA object CMakeFiles/fecuda_main.dir/src/main.cu.o
+[ 18%] Building CUDA object CMakeFiles/fecuda_main.dir/src/algorithms/maxmin.cu.o
+[ 27%] Building CUDA object CMakeFiles/fecuda_main.dir/src/algorithms/maxminv2.cu.o
+[ 36%] Building CUDA object CMakeFiles/fecuda_main.dir/src/algorithms/maxminv3.cu.o
+[ 45%] Building CUDA object CMakeFiles/fecuda_main.dir/src/kernels/maxmin/kernel_v1.cu.o
+[ 54%] Building CUDA object CMakeFiles/fecuda_main.dir/src/utils/batched_ops.cu.o
+[ 63%] Building CUDA object CMakeFiles/fecuda_main.dir/src/utils/cuda_utils.cu.o
+[ 72%] Building CUDA object CMakeFiles/fecuda_main.dir/src/kernels/maxmin/kernel_v2.cu.o
+[ 81%] Building CUDA object CMakeFiles/fecuda_main.dir/src/kernels/maxmin/kernel_v3_multC.cu.o
+/home/criquelme/feCUDA/src/main.cu(102): warning #550-D: variable "best_k" was set but never used
+                  int best_k = 0;
+                      ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+[ 90%] Linking CUDA device code CMakeFiles/fecuda_main.dir/cmake_device_link.o
+[100%] Linking CUDA executable fecuda_main
+/usr/bin/ld: CMakeFiles/fecuda_main.dir/src/algorithms/maxminv3.cu.o: in function `assemble_pathsv2(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >, __half*, __half*, int*, float, int, int, int)':
+/home/criquelme/feCUDA/src/algorithms/maxminv3.cu:97: multiple definition of `assemble_pathsv2(std::vector<std::vector<int, std::allocator<int> >, std::allocator<std::vector<int, std::allocator<int> > > >, __half*, __half*, int*, float, int, int, int)'; CMakeFiles/fecuda_main.dir/src/algorithms/maxminv2.cu.o:/home/criquelme/feCUDA/src/algorithms/maxminv2.cu:91: first defined here
+collect2: error: ld returned 1 exit status
+make[3]: *** [CMakeFiles/fecuda_main.dir/build.make:279: fecuda_main] Error 1
+make[2]: *** [CMakeFiles/Makefile2:90: CMakeFiles/fecuda_main.dir/all] Error 2
+make[1]: *** [CMakeFiles/Makefile2:97: CMakeFiles/fecuda_main.dir/rule] Error 2
+make: *** [Makefile:169: fecuda_main] Error 2

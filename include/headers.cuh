@@ -31,4 +31,20 @@ MaxminResult maxminv2(
     int order
 );
 
+// Variante tiled BM×BN con 1D block-tiling (TM resultados por hilo, kernel v3).
+MaxminResult maxminv3(
+    TensorResult<__half> &tensor1,
+    TensorResult<__half> &tensor2,
+    __half thr,
+    int order
+);
+
+// Variante tiled BM×BN con 2D block-tiling (TM×TN resultados por hilo, kernel v4).
+MaxminResult maxminv4(
+    TensorResult<__half> &tensor1,
+    TensorResult<__half> &tensor2,
+    __half thr,
+    int order
+);
+
 #endif

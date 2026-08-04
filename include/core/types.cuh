@@ -59,14 +59,19 @@ template <typename T = float> struct TensorResult
     TensorResultDims dims; // Dimensiones LÓGICAS del tensor (lo que pidió el usuario)
     MemorySpace space;
     bool released = false;
-    bool is32Multiple = false;
+    bool isPaddedFlag = false;   // true tras padear en move_to_device()
+    int  padMultiple  = 1;       // múltiplo con el que se padeó (1 = sin padding)
     // Dimensiones FÍSICAS: iguales a las lógicas hasta que move_to_device() padea
-    // M, N y K al múltiplo de 32 superior. B nunca se padea.
+    // M, N y K al múltiplo superior indicado. B nunca se padea.
     // El buffer en device tiene layout [B, mPad, kPad] (para A) o [B, mPad, nPad],
     // con las filas lógicas colocadas en su offset físico y el relleno negativo.
     TensorResultDims physDims = dims;
 
-    static inline int roundUp32(int v) { return ((v + 31) / 32) * 32; }
+    // Redondeo dinámico al múltiplo superior (multiple >= 1).
+    static inline int roundUpTo(int v, int multiple)
+    {
+        return ((v + multiple - 1) / multiple) * multiple;
+    }
 
   public:
     DLManagedTensor *managed = nullptr;
@@ -180,7 +185,6 @@ template <typename T = float> struct TensorResult
 
         released = false;
 
-        // 🔥 Consumir el dlpack original
         managed->deleter(managed);
 
         // Marcar capsule como consumida (estándar dlpack)
@@ -250,7 +254,8 @@ template <typename T = float> struct TensorResult
     int getMPadded() const { return physDims.m; }
     int getNPadded() const { return physDims.n; }
     int getKPadded() const { return physDims.k; }
-    bool isPadded() const { return is32Multiple; }
+    bool isPadded() const { return isPaddedFlag; }
+    int getPadMultiple() const { return padMultiple; }
 
     bool isDevicePtr() const
     {
@@ -281,21 +286,27 @@ template <typename T = float> struct TensorResult
         return dims.getTotal();
     }
 
-    // Mueve el tensor a device padeando M, N y K al múltiplo de 32 superior.
-    // Layout físico resultante: [B, mPad, nPad] (con nPad = kPad para el factor A,
-    // donde N lógico actúa como K). Las filas lógicas se colocan en su offset
-    // físico; el relleno es negativo (0xBC ≈ -1.18 en half) para que nunca gane
-    // el max de maxmin, asumiendo entradas ≥ 0.
-    void move_to_device()
+    // Mueve el tensor a device padeando M, N y K al múltiplo superior indicado.
+    // `multiple` debe ser el tamaño de tile del kernel que consumirá el tensor
+    // (32 para v2, 64 para v3 con BM=BN=64). Layout físico resultante:
+    // [B, mPad, nPad] (con nPad = kPad para el factor A, donde N lógico actúa
+    // como K). Las filas lógicas se colocan en su offset físico; el relleno es
+    // negativo (0xBC ≈ -1.18 en half) para que nunca gane el max de maxmin,
+    // asumiendo entradas ≥ 0.
+    void move_to_device(int multiple = 32)
     {
-        if (space == MemorySpace::Device && is32Multiple)
-            return; // ya está en device y padeado
+        if (multiple < 1) multiple = 1;
 
-        // Dimensiones físicas: B intacto, M/N/K redondeadas a múltiplo de 32.
+        // Ya está en device y padeado con el MISMO múltiplo → nada que hacer.
+        // Si el múltiplo pedido difiere del aplicado, se vuelve a padear.
+        if (space == MemorySpace::Device && isPaddedFlag && padMultiple == multiple)
+            return;
+
+        // Dimensiones físicas: B intacto, M/N/K redondeadas al múltiplo pedido.
         TensorResultDims pd = dims;
-        pd.m = roundUp32(dims.m);
-        pd.n = roundUp32(dims.n);
-        pd.k = roundUp32(dims.k);
+        pd.m = roundUpTo(dims.m, multiple);
+        pd.n = roundUpTo(dims.n, multiple);
+        pd.k = roundUpTo(dims.k, multiple);
 
         // Este padding 2D sólo tiene sentido para tensores 3D (k lógico == 1).
         // Para k>1 el layout físico requeriría 4D; no soportado aquí.
@@ -340,7 +351,8 @@ template <typename T = float> struct TensorResult
         data = dev;
         space = MemorySpace::Device;
         physDims = pd;
-        is32Multiple = true;
+        isPaddedFlag = true;
+        padMultiple = multiple;
     }
 
     void move_to_host()

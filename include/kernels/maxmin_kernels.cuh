@@ -58,4 +58,39 @@ __global__ void maxmin_threshold_kernelv2(
     int batch_id
 );
 
+__global__ void maxmin_threshold_kernelv3(
+  const __half *__restrict__ A, // [B,Mpad,Kpad] factor izq. = C_prev
+  const __half *__restrict__ B, // [B,Kpad,Npad] factor der. = B_orig
+  __half *__restrict__ C,       // [B,Mpad,Npad] resultado
+  int *__restrict__ argmax,     // nullable — [B,Mpad,Npad] k ganador
+  int *__restrict__ counter,    // nullable — cuenta celdas con efecto >= thr
+  __half thr,
+  int numBatches,
+  int M,
+  int N,
+  int K,
+  int Kpad,
+  int Npad,
+  int batch_id
+);
+
+// Variante tiled BM×BN con 2D block-tiling (TM×TN resultados por hilo, kernel v4).
+// Requiere buffers padeados a múltiplo de 64 (BM=BN). M/N/K son extents lógicos;
+// Kpad/Npad son los strides físicos de fila.
+__global__ void maxmin_threshold_kernelv4(
+  const __half *__restrict__ A, // [B,Mpad,Kpad] factor izq. = C_prev
+  const __half *__restrict__ B, // [B,Kpad,Npad] factor der. = B_orig
+  __half *__restrict__ C,       // [B,Mpad,Npad] resultado
+  int *__restrict__ argmax,     // nullable — [B,Mpad,Npad] k ganador
+  int *__restrict__ counter,    // nullable — cuenta celdas con efecto >= thr
+  __half thr,
+  int numBatches,
+  int M,
+  int N,
+  int K,
+  int Kpad,
+  int Npad,
+  int batch_id
+);
+
 #endif
