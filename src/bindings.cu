@@ -1,5 +1,5 @@
-#include "../include/core/types.cuh"
-#include "../include/headers.cuh"
+#include "core/types.cuh"
+#include "headers.cuh"
 #include <dlpack/dlpack.h>
 #include <driver_types.h>
 #include <pybind11/pybind11.h>

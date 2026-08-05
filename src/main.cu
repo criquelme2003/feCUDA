@@ -1,17 +1,17 @@
-#include "../include/core/types.cuh"
-#include "../include/headers.cuh"
-#include "../include/utils.cuh"
+#include "utils.cuh"
 #include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
-#include <cub/cub.cuh>
 #include <cuda_device_runtime_api.h>
 #include <cuda_fp16.h>
 #include <cuda_runtime_api.h>
 #include <curand.h>
 #include <curand_kernel.h>
 #include <vector>
+
+#include "core/types.cuh"
+#include "headers.cuh"
 
 #define RAND_SEED 1111ULL
 #define MIN_DIFF  0.01f
