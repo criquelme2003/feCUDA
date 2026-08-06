@@ -14,10 +14,7 @@ def iterative_maxmin_cuadrado(tensor, thr, order):
 
     result_tensors_list = []
     result_values_list = []
-
-    result_tensors_paths = []
-    result_values_paths = []
-
+    effective_order = 1
     for i in range(order - 1):
         # Calcular min_result y maxmin_1_n
         min_result, maxmin_conjugado = maxmin(gen_tensor, original_tensor)
@@ -29,22 +26,23 @@ def iterative_maxmin_cuadrado(tensor, thr, order):
         # Almacenar resultados si no están vacíos
         if result_values.numpy().size == 0:  
             if i == 0:
-                raise ValueError(f"No effects found with thr {thr}.")
+                print(f"No effects found with thr {thr}.")
+                break
             else:
                 print(f"Effects were only found up to order {i + 1}")
                 break
 
         result_tensors_list.append(result_tensor)
         result_values_list.append(result_values)
-
+        effective_order += 1
         # Construcción de caminos para órdenes mayores a 1
-        if i >= 1:
-            previous_paths = result_tensors_paths[-1] if i > 1 else result_tensors_list[0]
-            paths, values = armar_caminos(previous_paths, result_tensor, result_values, i)
-            result_tensors_paths.append(paths)
-            result_values_paths.append(values)
+        # if i >= 1:
+        #     previous_paths = result_tensors_paths[-1] if i > 1 else result_tensors_list[0]
+        #     paths, values = armar_caminos(previous_paths, result_tensor, result_values, i)
+        #     result_tensors_paths.append(paths)
+        #     result_values_paths.append(values)
 
-            del previous_paths, paths, values
+        #     del previous_paths, paths, values
 
         # Actualizar gen_tensor para la siguiente iteración
         gen_tensor = maxmin_conjugado
@@ -52,8 +50,9 @@ def iterative_maxmin_cuadrado(tensor, thr, order):
         del min_result, maxmin_conjugado, prima, result_tensor, result_values
 
     # Agregar el primer resultado a las listas de caminos y valores
-    result_tensors_paths.insert(0, result_tensors_list[0])
-    result_values_paths.insert(0, result_values_list[0])
+    # result_tensors_paths.insert(0, result_tensors_list[0])
+    # result_values_paths.insert(0, result_values_list[0])
 
-    return result_tensors_paths, result_values_paths
+    # return result_tensors_paths, result_values_paths
+    return efective_order, result_tensors_list, result_values_list
 

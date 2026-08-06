@@ -5,7 +5,7 @@
 #SBATCH --no-requeue
 #SBATCH --output=logs.%x.%j
 
-source /home/criquelme/miniconda3/bin/activate
+source /opt/miniconda3/bin/activate
 conda activate fecuda
-python test2.py
+python comparativa.py
 
