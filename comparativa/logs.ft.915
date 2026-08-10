@@ -1,0 +1,106 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786326298.515469   95144 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786326299.084696   95144 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 25600B: 1
+[MAXMIN C++] ORDER-2
+[MAXMIN C++] Efectos encontrados en orden 1 : 25294
+[MAXMIN C++] Efectos encontrados en orden 2 : 24938
+testing 25600 dim
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786326742.451184   95456 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786326743.013762   95456 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786326754.743253   95471 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786326755.307752   95471 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 38400B: 1
+[MAXMIN C++] ORDER-2
+ERROR: allocation for C_dev_after is 5898240000 bytes (>2GB)
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786326763.676690   95487 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786326764.243817   95487 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 32000B: 1
+[MAXMIN C++] ORDER-2
+ERROR: allocation for C_dev_after is 4096000000 bytes (>2GB)
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786326770.214974   95503 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786326770.774432   95503 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 28800B: 1
+[MAXMIN C++] ORDER-2
+[MAXMIN C++] Efectos encontrados en orden 1 : 28443
+[MAXMIN C++] Efectos encontrados en orden 2 : 28016
+testing 28800 dim
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786327393.260991   95553 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786327393.829894   95553 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 30400B: 1
+[MAXMIN C++] ORDER-2
+[MAXMIN C++] Efectos encontrados en orden 1 : 29969
+[MAXMIN C++] Efectos encontrados en orden 2 : 29557
+testing 30400 dim
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786328143.116123   95619 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786328143.681668   95619 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 31200B: 1
+[MAXMIN C++] ORDER-2
+ERROR: allocation for C_dev_after is 3893760000 bytes (>2GB)
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786328149.436403   95635 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786328149.995102   95635 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 30800B: 1
+[MAXMIN C++] ORDER-2
+ERROR: allocation for C_dev_after is 3794560000 bytes (>2GB)
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786328155.645121   95651 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786328156.200505   95651 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 30600B: 1
+[MAXMIN C++] ORDER-2
+[MAXMIN C++] Efectos encontrados en orden 1 : 30633
+[MAXMIN C++] Efectos encontrados en orden 2 : 30807
+testing 30600 dim
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786328887.902706   95702 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786328888.467121   95702 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 30700B: 1
+[MAXMIN C++] ORDER-2
+ERROR: allocation for C_dev_after is 3769960000 bytes (>2GB)
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786328894.032009   95719 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786328894.595247   95719 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 30650B: 1
+[MAXMIN C++] ORDER-2
+[MAXMIN C++] Efectos encontrados en orden 1 : 30383
+[MAXMIN C++] Efectos encontrados en orden 2 : 30782
+testing 30650 dim
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786329644.861051   95791 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786329645.428308   95791 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 30674B: 1
+[MAXMIN C++] ORDER-2
+ERROR: allocation for C_dev_after is 3763577104 bytes (>2GB)
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786329651.032211   95807 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786329651.592150   95807 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 30662B: 1
+[MAXMIN C++] ORDER-2
+ERROR: allocation for C_dev_after is 3760632976 bytes (>2GB)
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786329657.212805   95824 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1786329657.768079   95824 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+[MAXMIN C++] M: 30656B: 1
+[MAXMIN C++] ORDER-2
+ERROR: allocation for C_dev_after is 3759161344 bytes (>2GB)
+max dim finded for forgethreads: 30650

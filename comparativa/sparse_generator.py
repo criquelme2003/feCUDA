@@ -1,10 +1,4 @@
 import numpy as np
-from forgeffects_modules.iterative_maxmin_cuadrado import iterative_maxmin_cuadrado
-
-SEED = 101
-gpus = tf.config.list_physical_devices('GPU')
-for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpu, True)
 
 
 def sparse_supercritical_block_matrix_julius(n_N, n_M, c, seed=None):
@@ -45,7 +39,7 @@ def sparse_supercritical_block_matrix_julius(n_N, n_M, c, seed=None):
             f"for n_N={n_N}, n_M={n_M}, c={c}."
         )
 
-    E = np.zeros((Ntot, Ntot), dtype=float)
+    E = np.zeros((Ntot, Ntot), dtype=np.float16)
 
     # N -> N and N -> M use p_N
     NN = rng.binomial(1, p_N, size=(n_N, n_N))
@@ -66,20 +60,5 @@ def sparse_supercritical_block_matrix_julius(n_N, n_M, c, seed=None):
 
     # Reflexivity
     np.fill_diagonal(E, 1)
-
+    E = E.reshape(1, Ntot, Ntot)
     return E, p_N, p_M
-  
-                    
-
-dim = 100
-
-while (True):
-  try:
-    n = dim/2
-    m = sparse_supercritical_block_matrix_julius(n,n,1,SEED)
-    eff_order = iterative_maxmin_cuadrado(m, 0.5, 100)
-  except (err):
-    print(f"N maxmimo alcanzado {dim}")
-    print(err)
-    break
-  dim*=10

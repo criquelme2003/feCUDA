@@ -54,5 +54,5 @@ def iterative_maxmin_cuadrado(tensor, thr, order):
     # result_values_paths.insert(0, result_values_list[0])
 
     # return result_tensors_paths, result_values_paths
-    return efective_order, result_tensors_list, result_values_list
+    return effective_order, result_tensors_list, result_values_list
 

@@ -7,5 +7,5 @@
 
 source /opt/miniconda3/bin/activate
 conda activate fecuda
-python comparativa/padre.py
+python memory_bounds.py
 
