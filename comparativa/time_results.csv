@@ -1,5 +1,4 @@
 dimension,funcion,repeticion,tiempo_s
-150,ft.maxmin,0,0.135908842086792
 150,ft.maxmin,1,0.00020360946655273438
 150,ft.maxmin,2,0.00017833709716796875
 150,ft.maxmin,3,0.00019812583923339844
@@ -9,7 +8,6 @@ dimension,funcion,repeticion,tiempo_s
 150,ft.maxmin,7,0.00017070770263671875
 150,ft.maxmin,8,0.00016427040100097656
 150,ft.maxmin,9,0.00016260147094726562
-150,iterative_maxmin_cuadrado,0,0.773221492767334
 150,iterative_maxmin_cuadrado,1,0.007874250411987305
 150,iterative_maxmin_cuadrado,2,0.007527828216552734
 150,iterative_maxmin_cuadrado,3,0.0076732635498046875

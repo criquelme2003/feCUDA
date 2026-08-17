@@ -40,7 +40,8 @@ def main():
     with open("time_results.csv", "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["dimension", "funcion", "repeticion", "tiempo_s"])
-
+        t_ft = run_ft(100, 101)
+        t_fe = run_fe(100, 101)
         for dim in DIMENSIONS:
             for rep in range(REPEATS):
                 t_ft = run_ft(dim, SEED + rep)
