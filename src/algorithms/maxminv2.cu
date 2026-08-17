@@ -9,7 +9,7 @@
 #include <cuda_runtime_api.h>
 #include <vector>
 
-bool g_verbose = true; // definición del global (extern en utils.cuh)
+// g_verbose se define en maxmin.cu (variante v1); aquí sólo se usa vía extern.
 
 #define MIN_DIFF 0.01f
 
@@ -77,7 +77,7 @@ static inline bool check_alloc_size_or_fail(size_t bytes, const char *name) {
 //   y argmax[b,m,n2] == n (el kernel eligió n como pivote óptimo).
 //   Devuelve paths extendidos con n2 al final.
 //
-MaxminResult maxmin(
+MaxminResult maxminv2(
     TensorResult<__half> &tensor1,
     TensorResult<__half> &tensor2,
     __half thr,
@@ -85,27 +85,35 @@ MaxminResult maxmin(
 ) {
 
     if (tensor1.getK() != 1 || tensor2.getK() != 1) {
-        printf("Error: maxmin solo acepta tensores 3D (K=1)\n");
+        printf("Error: maxminv2 solo acepta tensores 3D (K=1)\n");
         exit(0);
     }
 
-    // GET NECESARY DIMENSIONS
+    // GET NECESARY DIMENSIONS (extents lógicos)
     int B = tensor1.getBatch();
     int M = tensor1.getM();
     int K = tensor1.getN(); // N del tensor1 actúa como K en el kernel
     int N = tensor2.getN();
-    int total_elems = B * M * N;
-    tensor1.move_to_device();
-    tensor2.move_to_device();
+
+    // Padea a múltiplo de 32 (tamaño de tile del kernel v2). El kernel indexa
+    // con strides físicos.
+    tensor1.move_to_device(32);
+    tensor2.move_to_device(32);
     __half *d_A = (__half *)tensor1.getData();
     __half *d_B = (__half *)tensor2.getData();
+
+    // Dimensiones FÍSICAS (padded). En este flujo K==N ⇒ Kpad==Npad, pero se
+    // mantienen separadas por corrección general.
+    int Mpad = tensor1.getMPadded();
+    int Kpad = tensor1.getNPadded(); // N lógico de tensor1 = K → su padding es Kpad
+    int Npad = tensor2.getNPadded();
+
+    // Buffers internos con layout físico [B, Mpad, Npad] (== [B,Mpad,Kpad] aquí).
+    size_t padded_elems = (size_t)B * Mpad * Npad;
+
     // Configuración de lanzamiento (fija para todos los paths)
-    int blockDim = 128;
-    dim3 block(blockDim); // define septs for thread loop
-    size_t shmem =
-        K * sizeof(__half) +                 // columna B_mat[b,:,n] cacheada por bloque
-        blockDim * (sizeof(__half) +
-                    sizeof(int)); // shared memory save k_values and k_index for block reduction
+    int blockDim = BLOCKSIZE * BLOCKSIZE;
+    dim3 block(blockDim); // define steps for thread loop
 
     // ─────────────────────────────────────────────────────────────────────────
     // ORDEN > 1: iterativo con el mismo kernel
@@ -115,32 +123,37 @@ MaxminResult maxmin(
 
     LOG(std::cout << "[MAXMIN C++] ORDER-" << order << std::endl);
 
-    // Buffers iterativos: C_dev_before (= C_prev) y C_dev_after (= C_next)
+    // Buffers iterativos con layout físico padded: C_dev_before (= C_prev) y
+    // C_dev_after (= C_next). Se rellenan con negativo (0xBC) para que el padding
+    // no gane el max ni contamine el counter.
     __half *C_dev_before, *C_dev_after;
     int *argmax;
     {
-        size_t __alloc_bytes = (size_t)total_elems * sizeof(__half);
+        size_t __alloc_bytes = padded_elems * sizeof(__half);
         CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_dev_before");
         CHECK_CUDA(cudaMalloc(&C_dev_before, __alloc_bytes));
+        CHECK_CUDA(cudaMemset(C_dev_before, 0xBC, __alloc_bytes));
     }
     {
-        size_t __alloc_bytes = (size_t)total_elems * sizeof(__half);
+        size_t __alloc_bytes = padded_elems * sizeof(__half);
         CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_dev_after");
         CHECK_CUDA(cudaMalloc(&C_dev_after, __alloc_bytes));
+        CHECK_CUDA(cudaMemset(C_dev_after, 0xBC, __alloc_bytes));
     }
 
     {
-        size_t __alloc_bytes = (size_t)total_elems * sizeof(int);
-        CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "C_dev_after");
+        size_t __alloc_bytes = padded_elems * sizeof(int);
+        CHECK_ALLOC_SIZE_OR_EXIT(__alloc_bytes, "argmax");
         CHECK_CUDA(cudaMalloc(&argmax, __alloc_bytes));
         CHECK_CUDA(cudaMemset(argmax, -1, __alloc_bytes));
     }
-    // C_dev_before arranca como copia de d_A
+    // C_dev_before arranca como copia física de d_A (ambos [B,Mpad,Kpad]==[B,Mpad,Npad]).
     CHECK_CUDA(
-        cudaMemcpy(C_dev_before, d_A, total_elems * sizeof(__half), cudaMemcpyDeviceToDevice)
+        cudaMemcpy(C_dev_before, d_A, padded_elems * sizeof(__half), cudaMemcpyDeviceToDevice)
     );
 
-    dim3 grid(N, M, B);
+    // Número de tiles 32×32 (usar extent lógico; los tiles de borde cubren padding).
+    dim3 grid(CEIL_DIV(M, 32), CEIL_DIV(N, 32), B);
     float thr_f = __half2float(thr);
     int effective_order = 1;
 
@@ -153,8 +166,9 @@ MaxminResult maxmin(
     for (int s = 0; s < order; s++) {
         CHECK_CUDA(cudaMemset(d_counter, 0, sizeof(int)));
 
-        maxmin_threshold_kernel<<<grid, block, shmem>>>(
-            C_dev_before, d_B, C_dev_after, argmax, d_counter, thr, B, M, N, K, -1);
+        maxmin_threshold_kernelv2<<<grid, block>>>(
+            C_dev_before, d_B, C_dev_after, argmax, d_counter,
+            thr, B, M, N, K, Kpad, Npad, -1);
         CHECK_CUDA(cudaGetLastError());
         CHECK_CUDA(cudaDeviceSynchronize());
 
@@ -167,6 +181,9 @@ MaxminResult maxmin(
         }else{
           LOG(std::cout << "[MAXMIN C++] Efectos encontrados en orden "<< s +1 << " : " << h_counter<< std::endl);
         }
+
+        // Registrar los efectos de este orden (1 entrada por orden con efectos).
+        result.effects_per_order.push_back(h_counter);
 
         effective_order = s + 1;
 

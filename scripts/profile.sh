@@ -6,6 +6,12 @@
 #   <kernel>_<input-sizes>.nsys-rep  (nsight systems)
 #
 # Uso: ./profile.sh --kernel <nombre> --sizes <M> [opciones]
+# Script para profiling CUDA con ncu y nsys.
+# Acopla la salida a la convención de docs/nvidia-reports/rules.md:
+#   <kernel>_<input-sizes>.ncu-rep   (ncu)
+#   <kernel>_<input-sizes>.nsys-rep  (nsight systems)
+#
+# Uso: ./profile.sh --kernel <nombre> --sizes <M> [opciones]
 # Opciones:
 #   -k, --kernel:  nombre lógico del kernel (obligatorio) → prefijo del reporte
 #   -s, --sizes:   tamaño de entrada M (obligatorio) → sufijo del reporte y arg del binario
@@ -13,8 +19,7 @@
 #   -T, --thr:     threshold (por defecto: 0.5)
 #   -t, --tool:    herramienta ncu | nsys (por defecto: ncu)
 #   -b, --binary:  binario a perfilar (por defecto: fecuda_main)
-#   -S, --set:     set de secciones de ncu (por defecto: full → todas las secciones
-#                  en la ncu-ui). Alternativas: detailed, basic, roofline, …
+#   -m, --metrics: métricas para ncu (por defecto: algunas clave)
 
 set -e
 
@@ -25,9 +30,7 @@ TOOL="ncu"
 BINARY="fecuda_main"
 BUILD_DIR="build"
 REPORT_DIR="docs/nvidia-reports"
-# Set de secciones de ncu. "full" recolecta todas las secciones (reporte completo
-# en la ncu-ui); es lo más lento por el replay múltiple del kernel.
-NCU_SET="full"
+METRICS="l1tex__average_t_sectors_per_request_pipe_lsu_mem_global_op_ld.ratio,l1tex__average_t_sectors_per_request_pipe_lsu_mem_global_op_st.ratio,sm__warps_active.avg.pct_of_peak_sustained_active"
 KERNEL=""
 SIZES=""
 BATCH="1"
@@ -41,10 +44,10 @@ while [[ $# -gt 0 ]]; do
     -T|--thr)     THR="$2";     shift 2 ;;
     -t|--tool)    TOOL="$2";    shift 2 ;;
     -b|--binary)  BINARY="$2";  shift 2 ;;
-    -S|--set)     NCU_SET="$2"; shift 2 ;;
+    -m|--metrics) METRICS="$2"; shift 2 ;;
     *)
       echo "Opción desconocida: $1"
-      echo "Uso: $0 --kernel <nombre> --sizes <M> [-B batch] [-T thr] [-t ncu|nsys] [-b binario] [-S set]"
+      echo "Uso: $0 --kernel <nombre> --sizes <M> [-B batch] [-T thr] [-t ncu|nsys] [-b binario] [-m metrics]"
       exit 1
       ;;
   esac
@@ -74,11 +77,11 @@ APP_ARGS="$SIZES $BATCH $THR"
 cd "$BUILD_DIR"
 
 if [ "$TOOL" = "ncu" ]; then
-  echo "Ejecutando ncu (kernel=$KERNEL sizes=$SIZES B=$BATCH thr=$THR set=$NCU_SET)"
-  ncu --set "$NCU_SET" -f -o "${ABS_REPORT_DIR}/${REPORT_NAME}" ./$BINARY $APP_ARGS
+  echo "Ejecutando ncu (kernel=$KERNEL sizes=$SIZES B=$BATCH thr=$THR)"
+  ncu --set full -f -o "${ABS_REPORT_DIR}/${REPORT_NAME}" ./$BINARY $APP_ARGS
   echo "Perfil ncu completado → ${REPORT_DIR}/${REPORT_NAME}.ncu-rep"
 elif [ "$TOOL" = "nsys" ]; then
-  echo "Ejecutando nsys (kernel=$KERNEL sizes=$SIZES B=$BATCH thr=$THR)"
+  echo "Ejecutando nsys (kenel=$KERNEL sizes=$SIZES B=$BATCH thr=$THR)"
   nsys profile --trace=cuda,nvtx --output "${ABS_REPORT_DIR}/${REPORT_NAME}" ./$BINARY $APP_ARGS
   nsys stats --force-export=true "${ABS_REPORT_DIR}/${REPORT_NAME}.nsys-rep" \
     > "${ABS_REPORT_DIR}/${REPORT_NAME}_stats.txt"

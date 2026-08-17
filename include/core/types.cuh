@@ -56,9 +56,22 @@ template <typename T = float> struct TensorResult
 {
   private:
     T *data;               // Puntero a los datos
-    TensorResultDims dims; // Dimensiones del tensor (K para dimensiones adicionales)
+    TensorResultDims dims; // Dimensiones LÓGICAS del tensor (lo que pidió el usuario)
     MemorySpace space;
     bool released = false;
+    bool isPaddedFlag = false;   // true tras padear en move_to_device()
+    int  padMultiple  = 1;       // múltiplo con el que se padeó (1 = sin padding)
+    // Dimensiones FÍSICAS: iguales a las lógicas hasta que move_to_device() padea
+    // M, N y K al múltiplo superior indicado. B nunca se padea.
+    // El buffer en device tiene layout [B, mPad, kPad] (para A) o [B, mPad, nPad],
+    // con las filas lógicas colocadas en su offset físico y el relleno negativo.
+    TensorResultDims physDims = dims;
+
+    // Redondeo dinámico al múltiplo superior (multiple >= 1).
+    static inline int roundUpTo(int v, int multiple)
+    {
+        return ((v + multiple - 1) / multiple) * multiple;
+    }
 
   public:
     DLManagedTensor *managed = nullptr;
@@ -172,7 +185,6 @@ template <typename T = float> struct TensorResult
 
         released = false;
 
-        // 🔥 Consumir el dlpack original
         managed->deleter(managed);
 
         // Marcar capsule como consumida (estándar dlpack)
@@ -234,6 +246,17 @@ template <typename T = float> struct TensorResult
         return dims.k;
     }
 
+    // Dimensiones FÍSICAS (stride real del buffer en device). Antes de
+    // move_to_device() coinciden con las lógicas. El kernel debe usar estas
+    // como stride de indexación; las lógicas (getM/getN) marcan el extent real
+    // para bordes y counter.
+    int getBatchPadded() const { return physDims.b; } // = getBatch(), B no se padea
+    int getMPadded() const { return physDims.m; }
+    int getNPadded() const { return physDims.n; }
+    int getKPadded() const { return physDims.k; }
+    bool isPadded() const { return isPaddedFlag; }
+    int getPadMultiple() const { return padMultiple; }
+
     bool isDevicePtr() const
     {
         return space == MemorySpace::Device;
@@ -263,18 +286,73 @@ template <typename T = float> struct TensorResult
         return dims.getTotal();
     }
 
-    void move_to_device()
+    // Mueve el tensor a device padeando M, N y K al múltiplo superior indicado.
+    // `multiple` debe ser el tamaño de tile del kernel que consumirá el tensor
+    // (32 para v2, 64 para v3 con BM=BN=64). Layout físico resultante:
+    // [B, mPad, nPad] (con nPad = kPad para el factor A, donde N lógico actúa
+    // como K). Las filas lógicas se colocan en su offset físico; el relleno es
+    // negativo (0xBC ≈ -1.18 en half) para que nunca gane el max de maxmin,
+    // asumiendo entradas ≥ 0.
+    void move_to_device(int multiple = 32)
     {
-        if (space == MemorySpace::Device)
+        if (multiple < 1) multiple = 1;
+
+        // Ya está en device y padeado con el MISMO múltiplo → nada que hacer.
+        // Si el múltiplo pedido difiere del aplicado, se vuelve a padear.
+        if (space == MemorySpace::Device && isPaddedFlag && padMultiple == multiple)
             return;
 
-        T *dev;
-        CHECK_CUDA(cudaMalloc(&dev, size_bytes()));
-        CHECK_CUDA(cudaMemcpy(dev, data, size_bytes(), cudaMemcpyHostToDevice));
+        // Dimensiones físicas: B intacto, M/N/K redondeadas al múltiplo pedido.
+        TensorResultDims pd = dims;
+        pd.m = roundUpTo(dims.m, multiple);
+        pd.n = roundUpTo(dims.n, multiple);
+        pd.k = roundUpTo(dims.k, multiple);
 
-        std::free(data);
+        // Este padding 2D sólo tiene sentido para tensores 3D (k lógico == 1).
+        // Para k>1 el layout físico requeriría 4D; no soportado aquí.
+        const int rowsLog   = dims.m;                 // filas lógicas por batch
+        const int colsLog   = dims.n;                 // columnas lógicas por batch
+        const int rowsPad   = pd.m;
+        const int colsPad   = pd.n;
+        const size_t elemsPad = (size_t)pd.b * rowsPad * colsPad;
+
+        T *dev = nullptr;
+        CHECK_CUDA(cudaMalloc(&dev, elemsPad * sizeof(T)));
+        // Relleno negativo byte-a-byte: 0xBC → half ≈ -1.18 (neutro para maxmin
+        // con entradas no negativas). Basta con que sea < 0.
+        CHECK_CUDA(cudaMemset(dev, 0xBC, elemsPad * sizeof(T)));
+
+        // Copia por batch: cada bloque lógico [rowsLog × colsLog] se coloca en
+        // el sub-buffer físico [rowsPad × colsPad] correspondiente. Un memcpy2D
+        // por batch evita mezclar el padding de M entre batches contiguos.
+        const size_t srcPitch = (size_t)colsLog * sizeof(T); // fila lógica origen
+        const size_t dstPitch = (size_t)colsPad * sizeof(T); // fila física destino
+        const cudaMemcpyKind kind =
+            (space == MemorySpace::Device) ? cudaMemcpyDeviceToDevice : cudaMemcpyHostToDevice;
+
+        for (int b = 0; b < pd.b; ++b) {
+            const T *src = data + (size_t)b * rowsLog * colsLog;
+            T *dst       = dev  + (size_t)b * rowsPad * colsPad;
+            CHECK_CUDA(cudaMemcpy2D(
+                dst, dstPitch,
+                src, srcPitch,
+                colsLog * sizeof(T), // ancho válido (bytes) por fila = N lógico
+                rowsLog,             // número de filas lógicas
+                kind));
+        }
+
+        // Liberar el buffer anterior según su espacio original.
+        if (space == MemorySpace::Device) {
+            CHECK_CUDA(cudaFree(data));
+        } else {
+            std::free(data);
+        }
+
         data = dev;
         space = MemorySpace::Device;
+        physDims = pd;
+        isPaddedFlag = true;
+        padMultiple = multiple;
     }
 
     void move_to_host()

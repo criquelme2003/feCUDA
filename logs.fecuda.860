@@ -1,0 +1,11 @@
+-- Found pybind11: /home/criquelme/.conda/envs/fecuda/include (found version "3.0.3")
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/criquelme/feCUDA/build
+[  8%] Building CUDA object CMakeFiles/fecuda_main.dir/src/algorithms/assemble_paths.cu.o
+[ 16%] Building CUDA object CMakeFiles/fecuda_main.dir/src/algorithms/maxmin.cu.o
+[ 25%] Building CUDA object CMakeFiles/fecuda_main.dir/src/algorithms/maxminv2.cu.o
+[ 33%] Building CUDA object CMakeFiles/fecuda_main.dir/src/algorithms/maxminv3.cu.o
+[ 41%] Linking CUDA device code CMakeFiles/fecuda_main.dir/cmake_device_link.o
+[ 50%] Linking CUDA executable fecuda_main
+[100%] Built target fecuda_main

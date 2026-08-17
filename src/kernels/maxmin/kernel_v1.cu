@@ -19,7 +19,9 @@
 //   paths, values, counter → si counter==nullptr no se emiten aristas
 //   argmax                 → si nullptr no se guarda el k ganador
 //
-// shmem = blockDim.x * (sizeof(__half) + sizeof(int))
+// shmem = K * sizeof(__half) + blockDim.x * (sizeof(__half) + sizeof(int))
+//   - K * sizeof(__half): columna B_mat[b,:,n] cacheada una vez por bloque
+//   - blockDim.x * (sizeof(__half) + sizeof(int)): buffers de reducción
 // ─────────────────────────────────────────────────────────────────────────────
 __global__ void maxmin_threshold_kernel(
     const __half *__restrict__ A_mat, // [B,M,K] factor izq. = C_prev
@@ -43,11 +45,20 @@ __global__ void maxmin_threshold_kernel(
     int bsz = (int)blockDim.x;          // How many threads, (pow of 2)
     int out_id = b * M * N + m * N + n; // Write idx
 
-    // smem layout: [bsz × __half | bsz × int]
+    // smem layout: [K × __half (columna de B cacheada) | bsz × __half | bsz × int]
     extern __shared__ char smem_buf[];
-    __half *s_val = reinterpret_cast<__half *>(smem_buf); // Save value for reduction
-    int *s_k =
-        reinterpret_cast<int *>(smem_buf + bsz * sizeof(__half)); // save k idx's for reduction
+    __half *s_bcol = reinterpret_cast<__half *>(smem_buf); // B_mat[b,:,n] cacheada
+    __half *s_val = reinterpret_cast<__half *>(smem_buf + K * sizeof(__half)); // Save value for reduction
+    int *s_k = reinterpret_cast<int *>(
+        smem_buf + K * sizeof(__half) + bsz * sizeof(__half)); // save k idx's for reduction
+
+    // ── Carga cooperativa de la columna B_mat[b,:,n] a shared memory ────────
+    // Todos los bloques con distinto m comparten esta misma columna n; cachearla
+    // evita que cada bloque vuelva a pedirla repetidamente a L2.
+    for (int k = tid; k < K; k += bsz) {
+        s_bcol[k] = B_mat[b * K * N + k * N + n];
+    }
+    __syncthreads();
 
     // ── Reducción local por thread ──────────────────────────────────────────
     __half best_val = __float2half(-FLT_MAX);
@@ -58,8 +69,7 @@ __global__ void maxmin_threshold_kernel(
     // thread)
     for (int k = tid; k < K; k += bsz) {
         int a_idx = b * M * K + m * K + k;
-        int b_idx = b * K * N + k * N + n;
-        __half mi = __hmin(A_mat[a_idx], B_mat[b_idx]);
+        __half mi = __hmin(A_mat[a_idx], s_bcol[k]);
         if (__hgt(mi, best_val)) {
             best_val = mi;
             best_k = k;
