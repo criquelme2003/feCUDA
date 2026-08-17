@@ -6,6 +6,12 @@
 #   <kernel>_<input-sizes>.nsys-rep  (nsight systems)
 #
 # Uso: ./profile.sh --kernel <nombre> --sizes <M> [opciones]
+# Script para profiling CUDA con ncu y nsys.
+# Acopla la salida a la convención de docs/nvidia-reports/rules.md:
+#   <kernel>_<input-sizes>.ncu-rep   (ncu)
+#   <kernel>_<input-sizes>.nsys-rep  (nsight systems)
+#
+# Uso: ./profile.sh --kernel <nombre> --sizes <M> [opciones]
 # Opciones:
 #   -k, --kernel:  nombre lógico del kernel (obligatorio) → prefijo del reporte
 #   -s, --sizes:   tamaño de entrada M (obligatorio) → sufijo del reporte y arg del binario

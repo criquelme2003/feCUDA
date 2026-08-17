@@ -6,7 +6,7 @@ from datetime import datetime
 import time
 import csv
 import matplotlib.pyplot as plt
-from forgeffects_modules.iterative_maxmin_cuadrado import iterative_maxmin_cuadrado
+from comparativa.forgeffects_modules.iterative_maxmin_cuadrado import iterative_maxmin_cuadrado
 import tensorflow as tf
 import cupy as cp
 import gc

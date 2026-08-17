@@ -1,0 +1,14 @@
+=== modo profiling argv: M=256 ===
+
+=== [GPU-ONLY] B=1  M=256  thr=0.50 ===
+[MAXMIN C++] M: 256B: 1
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 29194
+  effective_order=1
+=== modo profiling argv: M=500 B=1 thr=0.3 ===
+
+=== [GPU-ONLY] B=1  M=500  thr=0.30 ===
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-1
+[MAXMIN C++] Efectos encontrados en orden 1 : 165035
+  effective_order=1
