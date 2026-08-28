@@ -16,51 +16,6 @@ bool g_verbose = true; // definición del global (extern en utils.cuh)
 #define MAX_GRID_SIZE 10000
 #define MAX_PATHS_PER_ITER 100000
 
-// Comprueba que una futura allocation no exceda 2GB
-// Comprueba que una futura allocation no exceda 2GB y deje 1GB libre en VRAM
-static inline bool check_alloc_size_or_fail(size_t bytes, const char *name) {
-    const size_t MAX_ALLOC = 3.5 * 1024 * 1024 * 1024ULL; // 3.5GB
-    const size_t RESERVED = 500 * 1024 * 1024ULL;         // 500MB
-
-    if (bytes > MAX_ALLOC) {
-        fprintf(stderr, "ERROR: allocation for %s is %zu bytes (>2GB)\n", name, bytes);
-        return false;
-    }
-
-    size_t free_bytes = 0, total_bytes = 0;
-    cudaError_t err = cudaMemGetInfo(&free_bytes, &total_bytes);
-    if (err != cudaSuccess) {
-        fprintf(
-            stderr,
-            "WARN: cudaMemGetInfo failed (%s). Allowing allocation for %s of %zu bytes\n",
-            cudaGetErrorString(err),
-            name,
-            bytes
-        );
-        return true; // no info available → be permissive (preserves previous behaviour)
-    }
-
-    if (free_bytes < bytes + RESERVED) {
-        fprintf(
-            stderr,
-            "ERROR: not enough free GPU memory for %s: requested=%zubytes free=%zubytes "
-            "reserved=%zubytes\n",
-            name,
-            bytes,
-            free_bytes,
-            RESERVED
-        );
-        return false;
-    }
-    return true;
-}
-
-#define CHECK_ALLOC_SIZE_OR_EXIT(bytes, name)                                                      \
-    do {                                                                                           \
-        if (!check_alloc_size_or_fail((bytes), (name)))                                            \
-            exit(EXIT_FAILURE);                                                                    \
-    } while (0)
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Prepend step_order a cada fila (b,m,k,n) y acumula en out_host.
 // raw4: buffer host con count*4 ints   layout: [b, m, k, n] por fila
@@ -99,6 +54,7 @@ MaxminResult maxmin(
     tensor2.move_to_device();
     __half *d_A = (__half *)tensor1.getData();
     __half *d_B = (__half *)tensor2.getData();
+    
     // Configuración de lanzamiento (fija para todos los paths)
     int blockDim = 128;
     dim3 block(blockDim); // define septs for thread loop
@@ -112,7 +68,6 @@ MaxminResult maxmin(
     // ─────────────────────────────────────────────────────────────────────────
 
     LOG(std::cout << "[MAXMIN C++] M: " << M << "B: " << B << std::endl);
-
     LOG(std::cout << "[MAXMIN C++] ORDER-" << order << std::endl);
 
     // Buffers iterativos: C_dev_before (= C_prev) y C_dev_after (= C_next)
@@ -155,9 +110,7 @@ MaxminResult maxmin(
 
         maxmin_threshold_kernel<<<grid, block, shmem>>>(
             C_dev_before, d_B, C_dev_after, argmax, d_counter, thr, B, M, N, K, -1);
-        CHECK_CUDA(cudaGetLastError());
         CHECK_CUDA(cudaDeviceSynchronize());
-
         int h_counter = 0;
         CHECK_CUDA(cudaMemcpy(&h_counter, d_counter, sizeof(int), cudaMemcpyDeviceToHost));
 

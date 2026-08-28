@@ -24,52 +24,6 @@
 #define BN 64
 
 
-// Comprueba que una futura allocation no exceda 2GB
-// Comprueba que una futura allocation no exceda 2GB y deje 1GB libre en VRAM
-
-static inline bool check_alloc_size_or_fail(size_t bytes, const char *name) {
-    const size_t MAX_ALLOC = 3.5 * 1024 * 1024 * 1024ULL; // 3.5GB
-    const size_t RESERVED = 500 * 1024 * 1024ULL;         // 500MB
-
-    if (bytes > MAX_ALLOC) {
-        fprintf(stderr, "ERROR: allocation for %s is %zu bytes (>2GB)\n", name, bytes);
-        return false;
-    }
-
-    size_t free_bytes = 0, total_bytes = 0;
-    cudaError_t err = cudaMemGetInfo(&free_bytes, &total_bytes);
-    if (err != cudaSuccess) {
-        fprintf(
-            stderr,
-            "WARN: cudaMemGetInfo failed (%s). Allowing allocation for %s of %zu bytes\n",
-            cudaGetErrorString(err),
-            name,
-            bytes
-        );
-        return true; // no info available → be permissive (preserves previous behaviour)
-    }
-
-    if (free_bytes < bytes + RESERVED) {
-        fprintf(
-            stderr,
-            "ERROR: not enough free GPU memory for %s: requested=%zubytes free=%zubytes "
-            "reserved=%zubytes\n",
-            name,
-            bytes,
-            free_bytes,
-            RESERVED
-        );
-        return false;
-    }
-    return true;
-}
-
-#define CHECK_ALLOC_SIZE_OR_EXIT(bytes, name)                                                      \
-    do {                                                                                           \
-        if (!check_alloc_size_or_fail((bytes), (name)))                                            \
-            exit(EXIT_FAILURE);                                                                    \
-    } while (0)
-
 MaxminResult maxminv4(
     TensorResult<__half> &tensor1,
     TensorResult<__half> &tensor2,
@@ -165,10 +119,12 @@ MaxminResult maxminv4(
         maxmin_threshold_kernelv4<<<grid, block>>>(
             C_dev_before, d_B, C_dev_after, argmax, d_counter,
             thr, B, M, N, K, Kpad, Npad, -1);
+
         CHECK_CUDA(cudaGetLastError());
         CHECK_CUDA(cudaDeviceSynchronize());
 
         int h_counter = 0;
+        
         CHECK_CUDA(cudaMemcpy(&h_counter, d_counter, sizeof(int), cudaMemcpyDeviceToHost));
 
         if (h_counter == 0) {
@@ -182,13 +138,6 @@ MaxminResult maxminv4(
         result.effects_per_order.push_back(h_counter);
 
         effective_order = s + 1;
-
-        // auto [new_paths, new_values] = assemble_paths(
-        //     current_paths, C_dev_before, C_dev_after, argmax, thr_f, M, N, B);
-        // result.paths.push_back(new_paths);
-        // result.values.push_back(new_values);
-        // current_paths = std::move(new_paths);
-
         std::swap(C_dev_before, C_dev_after);
     }
 

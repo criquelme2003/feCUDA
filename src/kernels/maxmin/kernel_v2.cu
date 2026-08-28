@@ -13,7 +13,7 @@
 // A; Npad para B/C/argmax) cubren siempre buffer válido.
 //
 // Dimensiones:
-//   M, N, K        → extents LÓGICOS (para escritura densa y counter).
+//   M, N, K         → extents LÓGICOS (para escritura densa y counter).
 //   Kpad, Npad     → strides FÍSICOS de fila (múltiplos de 32).
 //   El factor A es [B, Mpad, Kpad]; B/C/argmax son [B, Mpad, Npad].
 //

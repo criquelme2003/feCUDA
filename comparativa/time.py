@@ -37,7 +37,7 @@ def run_fe(dim, seed):
 
 
 def main():
-    with open("time_results.csv", "w", newline="") as f:
+    with open("time_results_v2.csv", "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["dimension", "funcion", "repeticion", "tiempo_s"])
         t_ft = run_ft(100, 101)

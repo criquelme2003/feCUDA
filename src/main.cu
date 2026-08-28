@@ -236,49 +236,7 @@ bool run_and_validate(int B, int M, float thr, int n_runs = 3)
     return all_ok;
 }
 
-// ─── Test solo GPU (sin referencia CPU) ──────────────────────────────────────
-// Una sola corrida del kernel en GPU, pensada para profiling con ncu/nsys:
-// un único lanzamiento, sin la referencia CPU O(M^3) que contaminaría el perfil.
-void run_gpu_only(int B, int M, float thr)
-{
-    printf("\n=== [GPU-ONLY] B=%d  M=%d  thr=%.2f ===\n", B, M, thr);
 
-    int blockSize      = 256;
-    int total_elements = M * M;
-    int gridSize       = (total_elements + blockSize - 1) / blockSize;
-
-    curandState_t *curand_state;
-    CHECK_CUDA(cudaMalloc(&curand_state, sizeof(curandState_t) * total_elements));
-    randomInit<<<gridSize, blockSize>>>(curand_state, RAND_SEED, total_elements);
-    CHECK_CUDA(cudaDeviceSynchronize());
-
-    __half *d_base;
-    CHECK_CUDA(cudaMalloc(&d_base, total_elements * sizeof(__half)));
-    randomFill<<<gridSize, blockSize>>>(d_base, total_elements, curand_state);
-    CHECK_CUDA(cudaDeviceSynchronize());
-    CHECK_CUDA(cudaFree(curand_state));
-
-    std::vector<__half> h_base_half(total_elements);
-    CHECK_CUDA(cudaMemcpy(h_base_half.data(), d_base, total_elements * sizeof(__half),
-                          cudaMemcpyDeviceToHost));
-    CHECK_CUDA(cudaFree(d_base));
-
-    std::vector<__half> h_tensor(B * M * M);
-    for (int b = 0; b < B; b++)
-        for (int i = 0; i < M * M; i++)
-            h_tensor[b * M * M + i] = h_base_half[i];
-
-    TensorResult<__half> t1(MemorySpace::Device, B, M, M);
-    TensorResult<__half> t2(MemorySpace::Device, B, M, M);
-    CHECK_CUDA(cudaMemcpy(t1.getData(), h_tensor.data(), B * M * M * sizeof(__half),
-                          cudaMemcpyHostToDevice));
-    CHECK_CUDA(cudaMemcpy(t2.getData(), h_tensor.data(), B * M * M * sizeof(__half),
-                          cudaMemcpyHostToDevice));
-
-    __half hthr = __float2half(thr);
-    auto result = maxmin(t1, t2, hthr, 1);
-    printf("  effective_order=%d\n", result.effective_order);
-}
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 //
@@ -289,54 +247,23 @@ void run_gpu_only(int B, int M, float thr)
 //                                 input-size limpio, sin referencia CPU).
 int main(int argc, char **argv)
 {
-    // printf("GPU: sm_75 (GTX 1650)\n");
-    printf("Validando MaxMin: comparando GPU vs CPU reference, %d runs por config\n\n", 3);
 
-    // bool all_passed = true;
-
-    // // ── Límites de dimensiones ───────────────────────────────────────────────
-    // // M pequeño
-    // all_passed &= run_and_validate(1,   4,  0.3f);
-    // all_passed &= run_and_validate(1,   8,  0.3f);
-    // all_passed &= run_and_validate(1,  16,  0.3f);
-    // all_passed &= run_and_validate(1,  32,  0.3f);
-    // all_passed &= run_and_validate(1,  64,  0.3f);
-    // all_passed &= run_and_validate(1, 128,  0.3f);
-
-    // // ── Variación de threshold ───────────────────────────────────────────────
-    // all_passed &= run_and_validate(1, 16, 0.0f);   // thr=0: todos los paths donde k_max > A[m,n]
-    // all_passed &= run_and_validate(1, 16, 0.5f);
-    // all_passed &= run_and_validate(1, 16, 0.9f);   // thr alto: pocos paths
-
-    // // ── Batch > 1 ────────────────────────────────────────────────────────────
-    // all_passed &= run_and_validate(4,  16, 0.3f);
-    // all_passed &= run_and_validate(8,  32, 0.3f);
-    // all_passed &= run_and_validate(10, 16, 0.4f);  // mismo que test original
-
-    // // ── Batch grande que dispara el camino BATCHED del algoritmo ─────────────
-    // // MAX_PATHS_PER_ITER = 100000; B*M*N*K > 100000 → batched path
-    // // Con M=64, B=30: 30*64*64*64 = 7,864,320 >> 100000
-    // all_passed &= run_and_validate(30, 64, 0.3f);
+    // bool all_ok = true;
+    // all_ok &= run_and_validate(1,  90, 0.5f, 1);
+    // all_ok &= run_and_validate(1,  100, 0.5f, 1);
+    // all_ok &= run_and_validate(1,  256, 0.5f, 1);
+    // all_ok &= run_and_validate(1,  400, 0.5f, 1);
+    // all_ok &= run_and_validate(1,  640, 0.5f, 1);
+    // all_ok &= run_and_validate(1,  800, 0.5f, 1);
+    // all_ok &= run_and_validate(1, 1000, 0.5f, 1);
 
     // printf("\n==============================\n");
-    // printf("Resultado final: %s\n", all_passed ? "TODOS OK" : "HAY FALLOS");
+    // printf("Resultado final: %s\n", all_ok ? "TODOS OK" : "HAY FALLOS");
     // printf("==============================\n");
+    // return all_ok ? 0 : 1;
+    size_t try_size = 3 * std::pow(10,10) * sizeof(u_int8_t);
+    std::cout << "size: " << try_size << "bytes" << std::endl;
+    check_alloc_size_or_fail(try_size, "try size");
 
-    // return all_passed ? 0 : 1;
-
-    // Rango [100,1000]; mezcla de múltiplos de 32 (256,640,800) y no-múltiplos
-    // (100,400,1000) para ejercitar el padding y los tiles de borde.
-    bool all_ok = true;
-    all_ok &= run_and_validate(1,  90, 0.5f, 1);
-    all_ok &= run_and_validate(1,  100, 0.5f, 1);
-    all_ok &= run_and_validate(1,  256, 0.5f, 1);
-    all_ok &= run_and_validate(1,  400, 0.5f, 1);
-    all_ok &= run_and_validate(1,  640, 0.5f, 1);
-    all_ok &= run_and_validate(1,  800, 0.5f, 1);
-    all_ok &= run_and_validate(1, 1000, 0.5f, 1);
-
-    printf("\n==============================\n");
-    printf("Resultado final: %s\n", all_ok ? "TODOS OK" : "HAY FALLOS");
-    printf("==============================\n");
-    return all_ok ? 0 : 1;
+    
 }

@@ -247,9 +247,6 @@ template <typename T = float> struct TensorResult
     }
 
     // Dimensiones FÍSICAS (stride real del buffer en device). Antes de
-    // move_to_device() coinciden con las lógicas. El kernel debe usar estas
-    // como stride de indexación; las lógicas (getM/getN) marcan el extent real
-    // para bordes y counter.
     int getBatchPadded() const { return physDims.b; } // = getBatch(), B no se padea
     int getMPadded() const { return physDims.m; }
     int getNPadded() const { return physDims.n; }
@@ -287,12 +284,6 @@ template <typename T = float> struct TensorResult
     }
 
     // Mueve el tensor a device padeando M, N y K al múltiplo superior indicado.
-    // `multiple` debe ser el tamaño de tile del kernel que consumirá el tensor
-    // (32 para v2, 64 para v3 con BM=BN=64). Layout físico resultante:
-    // [B, mPad, nPad] (con nPad = kPad para el factor A, donde N lógico actúa
-    // como K). Las filas lógicas se colocan en su offset físico; el relleno es
-    // negativo (0xBC ≈ -1.18 en half) para que nunca gane el max de maxmin,
-    // asumiendo entradas ≥ 0.
     void move_to_device(int multiple = 32)
     {
         if (multiple < 1) multiple = 1;

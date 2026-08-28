@@ -6,7 +6,7 @@ from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 
-CSV_PATH = "time_results.csv"
+CSV_PATH = "time_results_v2.csv"
 
 LABELS = {
     "ft.maxmin": "ft.maxmin",
@@ -30,12 +30,12 @@ def load_times(path=CSV_PATH):
     return times
 
 
-def plot_comparison(times, out_path="time_comparison.png"):
+def plot_comparison(times, out_path="time_comparisonv_median.png"):
     _, ax = plt.subplots(figsize=(9, 5))
 
     for funcion, per_dim in times.items():
         dims = sorted(per_dim)
-        means = [np.mean(per_dim[d]) for d in dims]
+        means = [np.median(per_dim[d]) for d in dims]
         stds = [np.std(per_dim[d]) for d in dims]
         ax.errorbar(
             dims, means, yerr=stds,
@@ -50,7 +50,7 @@ def plot_comparison(times, out_path="time_comparison.png"):
 
     ax.set_xlabel("dimension")
     ax.set_ylabel("tiempo (s)")
-    ax.set_ylim(0, 0.1)
+    ax.set_yscale("log")
     ax.set_title("Comparacion de tiempos: ft.maxmin vs iterative_maxmin_cuadrado")
     ax.legend()
     ax.grid(True, linestyle="--", alpha=0.5)

@@ -1,0 +1,64 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189072.533137  308630 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189073.096120  308630 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1200 dim
+{'current': 0, 'peak': 0}
+{'current': 2884352, 'peak': 6917761280}
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189074.791759  308730 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189075.363050  308730 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 2400 dim
+{'current': 0, 'peak': 0}
+Error {{function_node __wrapped__Minimum_device_/job:localhost/replica:0/task:0/device:GPU:0}} failed to allocate memory [Op:Minimum] name: 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189086.586875  308852 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189087.154285  308852 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1800 dim
+{'current': 0, 'peak': 0}
+Error {{function_node __wrapped__Transpose_device_/job:localhost/replica:0/task:0/device:GPU:0}} OOM when allocating tensor with shape[1,1800,1800,1800] and type half on /job:localhost/replica:0/task:0/device:GPU:0 by allocator GPU_0_bfc [Op:Transpose]
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189098.384080  308941 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189098.962549  308941 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1500 dim
+{'current': 0, 'peak': 0}
+Error {{function_node __wrapped__Max_device_/job:localhost/replica:0/task:0/device:GPU:0}} CUB segmented reduce erroran illegal memory access was encountered [Op:Max] name: 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189100.263382  309000 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189100.828991  309000 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1350 dim
+{'current': 0, 'peak': 0}
+Error {{function_node __wrapped__Max_device_/job:localhost/replica:0/task:0/device:GPU:0}} CUB segmented reduce erroran illegal memory access was encountered [Op:Max] name: 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189102.124836  309062 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189102.693740  309062 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1274 dim
+{'current': 0, 'peak': 0}
+{'current': 3250944, 'peak': 8277689600}
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189104.346838  309138 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189104.913163  309138 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1312 dim
+{'current': 0, 'peak': 0}
+Error {{function_node __wrapped__Max_device_/job:localhost/replica:0/task:0/device:GPU:0}} CUB segmented reduce erroran illegal memory access was encountered [Op:Max] name: 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189106.221614  309197 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189106.792504  309197 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1292 dim
+{'current': 0, 'peak': 0}
+Error {{function_node __wrapped__Max_device_/job:localhost/replica:0/task:0/device:GPU:0}} CUB segmented reduce erroran illegal memory access was encountered [Op:Max] name: 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189108.101608  309256 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787189108.669211  309256 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1282 dim
+{'current': 0, 'peak': 0}
+{'current': 3291648, 'peak': 8434567424}
+max dim finded for forgethreads: 1282

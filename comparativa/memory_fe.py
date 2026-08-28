@@ -1,7 +1,6 @@
-from comparativa.sparse_generator import sparse_supercritical_block_matrix_julius as generator
+from sparse_generator import sparse_supercritical_block_matrix_julius as generator
 import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
-from comparativa.forgeffects_modules.iterative_maxmin_cuadrado import iterative_maxmin_cuadrado
+from forgeffects_modules.iterative_maxmin_cuadrado import iterative_maxmin_cuadrado
 import tensorflow as tf
 import tensorflow.errors as tf_errors
 import numpy as np
@@ -17,7 +16,7 @@ def test_dim(dim):
   try:
     n = dim//2
     m,_,_ = generator(n,n,1,SEED)
-    eff_order = iterative_maxmin_cuadrado(m, 0.5, 100)
+    eff_order = iterative_maxmin_cuadrado(m, 0.5, 3)
     sys.exit(0)
   except tf_errors.OpError as error:
     print(f"Error {error}")

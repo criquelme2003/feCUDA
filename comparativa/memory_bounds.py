@@ -69,7 +69,7 @@ def find_sizebounds(init_dim=100,exp_factor = 2,tol=10,abs_limit=100000,test_dim
   return dim_ok,dim_fail
 
 
-# max_dim_fe,_  = find_sizebounds(init_dim=100,test_dim=test_fe)
-max_dim_ft,_  = find_sizebounds(init_dim=25600,test_dim=test_ft)
+max_dim_fe,_  = find_sizebounds(init_dim=1200,test_dim=test_fe)
+# max_dim_ft,_  = find_sizebounds(init_dim=25600,test_dim=test_ft)
 
-print(f"max dim finded for forgethreads: {max_dim_ft}")
+print(f"max dim finded for forgethreads: {max_dim_fe}")

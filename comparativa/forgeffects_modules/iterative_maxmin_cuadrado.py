@@ -1,6 +1,8 @@
-from .maxmin import maxmin
-from .indices import indices
-from .armar_caminos import armar_caminos
+from maxmin import maxmin
+from indices import indices
+from armar_caminos import armar_caminos
+import tensorflow as tf
+from sparse_generator import sparse_supercritical_block_matrix_julius as generator
 
 def iterative_maxmin_cuadrado(tensor, thr, order):
     if not (0 <= thr <= 1):
@@ -16,8 +18,9 @@ def iterative_maxmin_cuadrado(tensor, thr, order):
     result_values_list = []
     effective_order = 1
     for i in range(order - 1):
+        print(tf.config.experimental.get_memory_info('GPU:0'))
         # Calcular min_result y maxmin_1_n
-        min_result, maxmin_conjugado = maxmin(gen_tensor, original_tensor)
+        min_result, maxmin_conjugado = maxmin(gen_tensor, original_tensor) # 3 * n² + n³
         prima = maxmin_conjugado - gen_tensor  # Efectos de n generación
         
         # Calcular indices con prima y el threshold
@@ -56,3 +59,7 @@ def iterative_maxmin_cuadrado(tensor, thr, order):
     # return result_tensors_paths, result_values_paths
     return effective_order, result_tensors_list, result_values_list
 
+
+m,_,_ = generator(800,800,1,101)
+eff_order = iterative_maxmin_cuadrado(m, 0.5, 10)
+print("listo")

@@ -217,7 +217,7 @@ py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order)
     TensorResult<__half> t1(a);
     TensorResult<__half> t2(b);
 
-    auto result = maxmin(t1, t2, __float2half(thr), order);
+    auto result = maxminv4(t1, t2, __float2half(thr), order);
 
     py::list paths_list;
     py::list values_list;
