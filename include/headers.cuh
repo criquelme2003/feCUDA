@@ -47,4 +47,6 @@ MaxminResult maxminv4(
     int order
 );
 
+void try_cuco();
+
 #endif
