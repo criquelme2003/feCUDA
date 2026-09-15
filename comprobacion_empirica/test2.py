@@ -6,14 +6,11 @@ import time
 import csv
 import matplotlib.pyplot as plt
 import cupy as cp
-
+from matrix_construction import sparse_supercritical_block_matrix2
 ft.set_verbose(True)
 
 NS      = [100]
-
 CS      = [50]
-
-
 
 REPEATS = 20
 THR     = 0.5
@@ -42,7 +39,6 @@ def run_sweep():
                 _n = int(n/2)
                 if(c < _n):
                   orders = []
-
                   for rep in range(REPEATS):
                       cp.get_default_memory_pool().free_all_blocks()
                       seed = rep * 1000 + n
@@ -102,16 +98,5 @@ def plot_results(results):
 
 
 results = run_sweep()
-
-# import pandas as pd
-
-# df = pd.read_csv('sweep_n_order.csv')
-
-# results = (
-#     df.groupby(['c', 'n'])['orden_efectivo']
-#     .apply(list)
-#     .unstack(level='n')
-#     .to_dict(orient='index')
-# )
 
 plot_results(results)

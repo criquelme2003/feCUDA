@@ -386,7 +386,7 @@ template <typename T = float> struct TensorResult
 
         managed->dl_tensor.dtype = {kDLBfloat, 16, 1};
 
-        // 🔥 guardar puntero al tensor
+        // guardar puntero al tensor
         managed->manager_ctx = this;
 
         managed->deleter = [](DLManagedTensor *self)
@@ -396,7 +396,7 @@ template <typename T = float> struct TensorResult
             delete[] self->dl_tensor.shape;
             std::free(self->dl_tensor.strides);
 
-            delete tensor; // 🔥 destruye el TensorResult
+            delete tensor; // destruye el TensorResult
             delete self;
         };
 

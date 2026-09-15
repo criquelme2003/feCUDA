@@ -15,8 +15,8 @@ set(DLPACK_ROUTE "/home/criquelme/feCUDA/extern/dlpack")
 
 find_package(CUDAToolkit REQUIRED)
 
-set(Python_EXECUTABLE /home/criquelme/.conda/envs/fecuda/bin/python)
-set(PYBIND11_FINDPYTHON ON)
+#set(Python_EXECUTABLE /home/criquelme/.conda/envs/fecuda/bin/python)
+#set(PYBIND11_FINDPYTHON ON)
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 
@@ -107,7 +107,10 @@ target_include_directories(forgethreads
 target_link_libraries(forgethreads
   PRIVATE
   CUDA::curand
-  Python::Python
+)
+
+set_source_files_properties(src/bindings.cu PROPERTIES
+  COMPILE_OPTIONS "-Xcompiler=-O1"
 )
 
 
