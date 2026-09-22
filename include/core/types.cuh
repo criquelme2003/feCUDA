@@ -2,6 +2,7 @@
 #define TYPES_CUH
 #include "../../include/utils.cuh"
 #include "dlpack/dlpack.h"
+#include <pybind11/pybind11.h>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
@@ -15,7 +16,6 @@
 #include <limits>
 #include <vector>
 
-#include <pybind11/pybind11.h>
 namespace py = pybind11;
 
 enum class MemorySpace

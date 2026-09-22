@@ -1,10 +1,8 @@
-cmake_minimum_required(VERSION 4.0)
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
-
+cmake_minimum_required(VERSION 3.22)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_COMPILER /usr/bin/g++)
-set(CMAKE_CUDA_COMPILER /usr/local/cuda-13.2/bin/nvcc)
+set(CMAKE_CUDA_COMPILER nvcc)
 
 project(FeCUDA LANGUAGES CXX CUDA)
 
@@ -21,54 +19,43 @@ find_package(CUDAToolkit REQUIRED)
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
 
-
 include(FetchContent)
-include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/CPM.cmake)
 
-#==== pybind11 =====
 FetchContent_Declare(
   pybind11
   GIT_REPOSITORY https://github.com/pybind/pybind11.git
   GIT_TAG v2.13.6  # fija una versión estable
 )
-
 FetchContent_MakeAvailable(pybind11)
-  
-# ==== DLPACK ======
 
+# ===== cuCollections ======
+set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+  cuco
+  GIT_REPOSITORY https://github.com/NVIDIA/cuCollections.git
+  GIT_TAG dev
+)
+FetchContent_MakeAvailable(cuco)
+
+# ======== DLpack ==========
 FetchContent_Declare(
   dlpack
   GIT_REPOSITORY https://github.com/dmlc/dlpack.git
-  GIT_TAG v0.8              # o el commit/tag que necesites
-  EXCLUDE_FROM_ALL
-  )
-
-
+  GIT_TAG v1.3  # fija una versión estable
+)
 FetchContent_MakeAvailable(dlpack)
 
-# ===== cuCollections ======    
-CPMAddPackage(
-  NAME cuco
-  GITHUB_REPOSITORY NVIDIA/cuCollections
-  GIT_TAG dev
-  OPTIONS 
-      "BUILD_TESTS OFF" 
-      "BUILD_BENCHMARKS OFF" 
-      "BUILD_EXAMPLES OFF" 
-  
-)
 
-if(TARGET cuco)
-  message(STATUS "cuco target: OK")
-else()
-  message(FATAL_ERROR "cuco target NO existe")
-endif()
 
-# ==== GLOBS ========
+
 file(GLOB ALGORITHM_SOURCES "src/algorithms/*.cu")
 file(GLOB UTILS_SOURCES "src/utils/*.cu")
 file(GLOB_RECURSE KERNEL_SOURCES "src/kernels/*.cu")
 
+# ===== Ejecutable =====
 add_executable(fecuda_main
   src/main.cu
   ${ALGORITHM_SOURCES}
@@ -86,8 +73,8 @@ target_link_libraries(fecuda_main
   CUDA::curand
   pybind11::headers
   Python::Python
+  dlpack
   cuco
-  dlpack::dlpack
 )
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
@@ -96,7 +83,6 @@ target_compile_options(fecuda_main
   PRIVATE
   $<$<COMPILE_LANGUAGE:CUDA>:
   -lineinfo
-  --expt-extended-lambda
   >
 )
 
@@ -124,24 +110,17 @@ set_target_properties(forgethreads PROPERTIES
 
 target_include_directories(forgethreads
   PRIVATE include
-
 )
 target_link_libraries(forgethreads
   PRIVATE
   CUDA::curand
+  dlpack
+  cuco
 )
 
 set_source_files_properties(src/bindings.cu PROPERTIES
   COMPILE_OPTIONS "-Xcompiler=-O1"
 )
-
-
-
-
-#install(
-#  TARGETS forgethreads
-#  LIBRARY DESTINATION /lib/python3/site-packages
-#)
 
 target_compile_options(forgethreads
   PRIVATE
@@ -149,6 +128,19 @@ target_compile_options(forgethreads
   --expt-extended-lambda
   >
 )
+
+target_compile_options(fecuda_main
+  PRIVATE
+  $<$<COMPILE_LANGUAGE:CUDA>:
+  --expt-extended-lambda
+  >
+)
+
+#install(
+#  TARGETS forgethreads
+#  LIBRARY DESTINATION /lib/python3/site-packages
+#)
+
 install(
   TARGETS fecuda_main
   LIBRARY DESTINATION /lib/python3/site-packages
