@@ -22,7 +22,7 @@ DLDataType half_dtype()
 
 DLDataType int4_dtype()
 {
-    return DLDataType{kDLInt, 32, 4}; // 👈 lanes = 4
+    return DLDataType{kDLInt, 32, 4}; //
 }
 
 template <typename T> struct DlpackTensorCuda

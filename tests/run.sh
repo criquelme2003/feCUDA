@@ -5,4 +5,7 @@
 #SBATCH --no-requeue
 #SBATCH --output=../logs/logs.%x.%j
 
-../build/fecuda_main
+source /opt/miniconda3/bin/activate
+conda activate fecuda
+python /home/criquelme/feCUDA/tests/test2.py
+

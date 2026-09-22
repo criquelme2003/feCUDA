@@ -1,0 +1,15 @@
+[MAXMIN C++] M: 200B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 2666
+[MAXMIN C++] Efectos encontrados en orden 2 : 6502
+[MAXMIN C++] Efectos encontrados en orden 3 : 7655
+[MAXMIN C++] Efectos encontrados en orden 4 : 4000
+[MAXMIN C++] Efectos encontrados en orden 5 : 1596
+[MAXMIN C++] Efectos encontrados en orden 6 : 798
+[MAXMIN C++] Efectos encontrados en orden 7 : 437
+[MAXMIN C++] Efectos encontrados en orden 8 : 235
+[MAXMIN C++] Efectos encontrados en orden 9 : 120
+[MAXMIN C++] Efectos encontrados en orden 10 : 40
+[MAXMIN C++] Efectos encontrados en orden 11 : 8
+[MAXMIN C++] Convergencia en step 12
+Guardado: sweep_n_order_02_06_block50.png
