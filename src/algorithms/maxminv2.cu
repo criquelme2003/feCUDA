@@ -32,12 +32,8 @@
 //   y argmax[b,m,n2] == n (el kernel eligió n como pivote óptimo).
 //   Devuelve paths extendidos con n2 al final.
 //
-MaxminResult maxminv2(
-    TensorResult<__half> &tensor1,
-    TensorResult<__half> &tensor2,
-    __half thr,
-    int order
-) {
+MaxminResult
+maxminv2(TensorResult<__half> &tensor1, TensorResult<__half> &tensor2, __half thr, int order) {
 
     if (tensor1.getK() != 1 || tensor2.getK() != 1) {
         printf("Error: maxminv2 solo acepta tensores 3D (K=1)\n");
@@ -108,11 +104,11 @@ MaxminResult maxminv2(
     );
 
     // Número de tiles 32×32 (usar extent lógico; los tiles de borde cubren padding).
-    dim3 grid(CEIL_DIV(M, 32), CEIL_DIV(N, 32), B);
+    dim3 grid(CEIL_DIV(Mpad, 32), CEIL_DIV(Npad, 32), B);
     float thr_f = __half2float(thr);
     int effective_order = 1;
 
-    int* d_counter;
+    int *d_counter;
     CHECK_CUDA(cudaMalloc(&d_counter, sizeof(int)));
 
     std::vector<std::vector<int>> current_paths;
@@ -122,8 +118,20 @@ MaxminResult maxminv2(
         CHECK_CUDA(cudaMemset(d_counter, 0, sizeof(int)));
 
         maxmin_threshold_kernelv2<<<grid, block>>>(
-            C_dev_before, d_B, C_dev_after, argmax, d_counter,
-            thr, B, M, N, K, Kpad, Npad, -1);
+            C_dev_before,
+            d_B,
+            C_dev_after,
+            argmax,
+            d_counter,
+            thr,
+            B,
+            M,
+            N,
+            K,
+            Kpad,
+            Npad,
+            -1
+        );
         CHECK_CUDA(cudaGetLastError());
         CHECK_CUDA(cudaDeviceSynchronize());
 
@@ -133,8 +141,9 @@ MaxminResult maxminv2(
         if (h_counter == 0) {
             LOG(std::cout << "[MAXMIN C++] Convergencia en step " << s + 1 << std::endl);
             break;
-        }else{
-          LOG(std::cout << "[MAXMIN C++] Efectos encontrados en orden "<< s +1 << " : " << h_counter<< std::endl);
+        } else {
+            LOG(std::cout << "[MAXMIN C++] Efectos encontrados en orden " << s + 1 << " : "
+                          << h_counter << std::endl);
         }
 
         // Registrar los efectos de este orden (1 entrada por orden con efectos).

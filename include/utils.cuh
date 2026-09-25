@@ -39,6 +39,25 @@
         }                                                                                          \
     } while (0)
 
+// Devuelve el máximo de bytes que se pueden reservar sin que la VRAM ocupada supere
+// max_vram_fraction (0..1) del total. Con max_vram_fraction = 1 equivale a la memoria libre.
+// Devuelve 0 si cudaMemGetInfo falla.
+static inline size_t get_max_available_vram_bytes(float max_vram_fraction = 0.7f) {
+    size_t free_bytes = 0, total_bytes = 0;
+    cudaError_t err = cudaMemGetInfo(&free_bytes, &total_bytes);
+    if (err != cudaSuccess) {
+        fprintf(stderr, "WARN: cudaMemGetInfo failed (%s)\n", cudaGetErrorString(err));
+        return 0;
+    }
+
+    size_t max_occupied = (size_t)(max_vram_fraction * (double)total_bytes);
+    size_t used = total_bytes - free_bytes;
+    if (used >= max_occupied) return 0;
+
+    size_t budget = max_occupied - used;
+    return budget < free_bytes ? budget : free_bytes;
+}
+
 // Comprueba que una futura allocation no deje la VRAM ocupada por encima de
 // max_vram_fraction (0..1) del total detectado vía cudaMemGetInfo.
 static inline bool

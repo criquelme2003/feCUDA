@@ -48,6 +48,14 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(dlpack)
 
+# ======== nlohmann/json (lectura de manifest.json en path_dag) ==========
+FetchContent_Declare(
+  nlohmann_json
+  GIT_REPOSITORY https://github.com/nlohmann/json.git
+  GIT_TAG v3.11.3  # fija una versión estable
+)
+FetchContent_MakeAvailable(nlohmann_json)
+
 
 
 
@@ -75,6 +83,7 @@ target_link_libraries(fecuda_main
   Python::Python
   dlpack
   cuco
+  nlohmann_json::nlohmann_json
 )
 
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
@@ -116,6 +125,7 @@ target_link_libraries(forgethreads
   CUDA::curand
   dlpack
   cuco
+  nlohmann_json::nlohmann_json
 )
 
 set_source_files_properties(src/bindings.cu PROPERTIES
@@ -133,6 +143,7 @@ target_compile_options(fecuda_main
   PRIVATE
   $<$<COMPILE_LANGUAGE:CUDA>:
   --expt-extended-lambda
+  -lineinfo
   >
 )
 

@@ -1,53 +1,47 @@
+#include "algorithms/path_dag.cuh"
 #include "core/types.cuh"
 #include "headers.cuh"
 #include <dlpack/dlpack.h>
 #include <driver_types.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
-
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 // g_verbose está definido en maxmin.cu (compilado en ambos targets)
 
-DLDataType float_dtype()
-{
+DLDataType float_dtype() {
     return DLDataType{kDLFloat, 32, 1};
 }
 
-DLDataType half_dtype()
-{
+DLDataType half_dtype() {
     return DLDataType{kDLBfloat, 16, 1};
 }
 
-DLDataType int4_dtype()
-{
+DLDataType int4_dtype() {
     return DLDataType{kDLInt, 32, 4}; //
 }
 
-template <typename T> struct DlpackTensorCuda
-{
+template <typename T> struct DlpackTensorCuda {
     T *data;
     std::vector<int64_t> shape;
     std::vector<int64_t> strides;
     DLDataType dtype;
 
     DlpackTensorCuda(T *ptr, std::vector<int64_t> shape_, DLDataType dtype_)
-        : data(ptr), shape(shape_), dtype(dtype_)
-    {
+        : data(ptr), shape(shape_), dtype(dtype_) {
 
         // C-contiguous strides
         strides.resize(shape.size());
         int64_t stride = 1;
-        for (int i = shape.size() - 1; i >= 0; --i)
-        {
+        for (int i = shape.size() - 1; i >= 0; --i) {
             strides[i] = stride;
             stride *= shape[i];
         }
     }
 
-    static void deleter(DLManagedTensor *self)
-    {
+    static void deleter(DLManagedTensor *self) {
         LOG(std::cout << "¡! BINDING Destructor Called" << std::endl);
 
         // // ⚠️ IMPORTANTE: esta memoria es CUDA
@@ -57,21 +51,18 @@ template <typename T> struct DlpackTensorCuda
         // // Comentado porque el free se invoca desde el owner (python)
         // // printf("Deleted from managed (CUDA)\n");
 
-        if (self->dl_tensor.data && self->dl_tensor.device.device_type == kDLCUDA)
-        {
+        if (self->dl_tensor.data && self->dl_tensor.device.device_type == kDLCUDA) {
             cudaFree(self->dl_tensor.data);
         }
         // Liberar shape si se asignó por separado
-        if (self->manager_ctx)
-        {
+        if (self->manager_ctx) {
             auto *ctx = static_cast<DlpackTensorCuda *>(self->manager_ctx);
             delete ctx;
         }
         delete self;
     }
 
-    py::capsule __dlpack__(py::object stream = py::none())
-    {
+    py::capsule __dlpack__(py::object stream = py::none()) {
 
         // Asignar shape dinámicamente
         int64_t *shape_copy = new int64_t[shape.size()];
@@ -90,12 +81,10 @@ template <typename T> struct DlpackTensorCuda
         managed->dl_tensor.byte_offset = 0;
         managed->manager_ctx = this;
 
-        managed->deleter = [](DLManagedTensor *self)
-        {
+        managed->deleter = [](DLManagedTensor *self) {
             if (!self)
                 return;
-            if (self->dl_tensor.device.device_type == kDLCUDA)
-            {
+            if (self->dl_tensor.device.device_type == kDLCUDA) {
                 cudaFree(self->dl_tensor.data);
             }
             delete[] self->dl_tensor.shape;
@@ -113,44 +102,41 @@ template <typename T> struct DlpackTensorCuda
 // Toma ownership del DLManagedTensor* (lo libera en el destructor si no fue
 // consumido antes por el runtime de numpy/tf).
 // ─────────────────────────────────────────────────────────────────────────────
-struct DlpackHolder
-{
+struct DlpackHolder {
     DLManagedTensor *managed;
     bool consumed = false;
 
     explicit DlpackHolder(DLManagedTensor *m) : managed(m) {}
 
-    ~DlpackHolder()
-    {
+    ~DlpackHolder() {
         if (!consumed && managed && managed->deleter)
             managed->deleter(managed);
     }
 
-    py::capsule __dlpack__(py::object /*stream*/ = py::none())
-    {
+    py::capsule __dlpack__(py::object /*stream*/ = py::none()) {
         consumed = true;
         return py::capsule(managed, "dltensor");
     }
 
-    py::object __dlpack_device__() const
-    {
+    py::object __dlpack_device__() const {
         return py::make_tuple(
             (int)managed->dl_tensor.device.device_type,
-            (int)managed->dl_tensor.device.device_id);
+            (int)managed->dl_tensor.device.device_id
+        );
     }
 
     // Copia los datos desde GPU a un numpy array (útil para debugging)
-    py::object to_numpy() const
-    {
+    py::object to_numpy() const {
         auto &dl = managed->dl_tensor;
         int64_t total = 1;
-        for (int i = 0; i < dl.ndim; i++) total *= dl.shape[i];
+        for (int i = 0; i < dl.ndim; i++)
+            total *= dl.shape[i];
 
-        bool is_int32 = (dl.dtype.code == kDLInt   && dl.dtype.bits == 32);
-        bool is_fp16  = (dl.dtype.code == kDLFloat  && dl.dtype.bits == 16);
+        bool is_int32 = (dl.dtype.code == kDLInt && dl.dtype.bits == 32);
+        bool is_fp16 = (dl.dtype.code == kDLFloat && dl.dtype.bits == 16);
 
         size_t elem_size = dl.dtype.bits / 8;
-        size_t nbytes    = total * elem_size;
+        size_t nbytes = total * elem_size;
 
         std::vector<uint8_t> host(nbytes);
         if (dl.device.device_type == kDLCUDA)
@@ -161,30 +147,34 @@ struct DlpackHolder
         // Construir shape para numpy
         std::vector<ssize_t> shape(dl.ndim), strides(dl.ndim);
         for (int i = 0; i < dl.ndim; i++) {
-            shape[i]   = (ssize_t)dl.shape[i];
+            shape[i] = (ssize_t)dl.shape[i];
             strides[i] = (ssize_t)(dl.strides[i] * elem_size);
         }
 
         py::str fmt = is_int32 ? py::str("i") : (is_fp16 ? py::str("e") : py::str("f"));
 
-        return py::array(py::buffer_info(
-            host.data(), (ssize_t)elem_size, fmt.cast<std::string>(),
-            (ssize_t)dl.ndim, shape, strides
-        )).attr("copy")();
+        return py::array(
+                   py::buffer_info(
+                       host.data(),
+                       (ssize_t)elem_size,
+                       fmt.cast<std::string>(),
+                       (ssize_t)dl.ndim,
+                       shape,
+                       strides
+                   )
+        )
+            .attr("copy")();
     }
 };
 
-static DlpackHolder* make_int32_holder(int* d_ptr, int64_t rows, int64_t cols)
-{
-    auto *managed  = new DLManagedTensor();
-    auto *shape_   = new int64_t[2]{rows, cols};
+static DlpackHolder *make_int32_holder(int *d_ptr, int64_t rows, int64_t cols) {
+    auto *managed = new DLManagedTensor();
+    auto *shape_ = new int64_t[2]{rows, cols};
     auto *strides_ = new int64_t[2]{cols, 1};
 
-    managed->dl_tensor = {d_ptr, {kDLCUDA, 0}, 2,
-                          {kDLInt, 32, 1}, shape_, strides_, 0};
+    managed->dl_tensor = {d_ptr, {kDLCUDA, 0}, 2, {kDLInt, 32, 1}, shape_, strides_, 0};
     managed->manager_ctx = nullptr;
-    managed->deleter = [](DLManagedTensor *self)
-    {
+    managed->deleter = [](DLManagedTensor *self) {
         cudaFree(self->dl_tensor.data);
         delete[] self->dl_tensor.shape;
         delete[] self->dl_tensor.strides;
@@ -193,17 +183,14 @@ static DlpackHolder* make_int32_holder(int* d_ptr, int64_t rows, int64_t cols)
     return new DlpackHolder(managed);
 }
 
-static DlpackHolder* make_half_holder(__half* d_ptr, int64_t count)
-{
-    auto *managed  = new DLManagedTensor();
-    auto *shape_   = new int64_t[1]{count};
+static DlpackHolder *make_half_holder(__half *d_ptr, int64_t count) {
+    auto *managed = new DLManagedTensor();
+    auto *shape_ = new int64_t[1]{count};
     auto *strides_ = new int64_t[1]{1};
 
-    managed->dl_tensor = {d_ptr, {kDLCUDA, 0}, 1,
-                          {kDLFloat, 16, 1}, shape_, strides_, 0};
+    managed->dl_tensor = {d_ptr, {kDLCUDA, 0}, 1, {kDLFloat, 16, 1}, shape_, strides_, 0};
     managed->manager_ctx = nullptr;
-    managed->deleter = [](DLManagedTensor *self)
-    {
+    managed->deleter = [](DLManagedTensor *self) {
         cudaFree(self->dl_tensor.data);
         delete[] self->dl_tensor.shape;
         delete[] self->dl_tensor.strides;
@@ -212,8 +199,7 @@ static DlpackHolder* make_half_holder(__half* d_ptr, int64_t count)
     return new DlpackHolder(managed);
 }
 
-py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order)
-{
+py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order) {
     TensorResult<__half> t1(a);
     TensorResult<__half> t2(b);
 
@@ -223,19 +209,20 @@ py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order)
     py::list values_list;
 
     for (int s = 0; s < (int)result.paths.size(); s++) {
-        const auto& sp = result.paths[s];
-        const auto& sv = result.values[s];
+        const auto &sp = result.paths[s];
+        const auto &sv = result.values[s];
 
         int count = (int)sp.size();
         int width = count > 0 ? (int)sp[0].size() : 0;
 
-        auto paths_arr  = py::array_t<int32_t>({(ssize_t)count, (ssize_t)width});
+        auto paths_arr = py::array_t<int32_t>({(ssize_t)count, (ssize_t)width});
         auto values_arr = py::array_t<float>({(ssize_t)count});
         auto pb = paths_arr.mutable_unchecked<2>();
         auto vb = values_arr.mutable_unchecked<1>();
 
         for (int i = 0; i < count; i++) {
-            for (int j = 0; j < width; j++) pb(i, j) = sp[i][j];
+            for (int j = 0; j < width; j++)
+                pb(i, j) = sp[i][j];
             vb(i) = sv[i];
         }
 
@@ -246,18 +233,73 @@ py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order)
     return py::make_tuple(paths_list, values_list, result.effective_order);
 }
 
+py::tuple maxmin_count_pivot_dlpack(py::object a, py::object b, float thr, int order,char* output_dir) {
+    TensorResult<__half> t1(a);
+    TensorResult<__half> t2(b);
 
-PYBIND11_MODULE(forgethreads, m)
-{
+    auto result = maxminv2_count(t1, t2, __float2half(thr), order,output_dir);
+
+    py::list paths_list;
+    py::list values_list;
+
+    for (int s = 0; s < (int)result.paths.size(); s++) {
+        const auto &sp = result.paths[s];
+        const auto &sv = result.values[s];
+
+        int count = (int)sp.size();
+        int width = count > 0 ? (int)sp[0].size() : 0;
+
+        auto paths_arr = py::array_t<int32_t>({(ssize_t)count, (ssize_t)width});
+        auto values_arr = py::array_t<float>({(ssize_t)count});
+        auto pb = paths_arr.mutable_unchecked<2>();
+        auto vb = values_arr.mutable_unchecked<1>();
+
+        for (int i = 0; i < count; i++) {
+            for (int j = 0; j < width; j++)
+                pb(i, j) = sp[i][j];
+            vb(i) = sv[i];
+        }
+
+        paths_list.append(paths_arr);
+        values_list.append(values_arr);
+    }
+
+    return py::make_tuple(paths_list, values_list, result.effective_order);
+}
+
+// Reconstrucción on-demand del DAG de testigos a partir de los CSR
+// persistidos en dump_dir (ver maxminv2_count / path_dag.cuh). Considera
+// como raíces TODOS los órdenes en que (m, n_target) tuvo testigos propios
+// (caminos de distinta longitud hacia el mismo destino conviven en el
+// resultado); cada testigo se expande sólo si tiene soporte exactamente en
+// el nivel anterior — si no, se descarta esa rama (poda local).
+//
+// Retorno: dict Python { (n, s): {"weight": float, "witnesses": list[int]} }.
+py::dict path_dag_dlpack(const std::string &dump_dir, int m, int n_target) {
+    PathManifest manifest = load_path_manifest(dump_dir);
+    PathDag dag = build_path_dag(manifest, m, n_target);
+
+    py::dict out;
+    for (const auto &[node, entry] : dag) {
+        py::tuple key = py::make_tuple(node.n, node.s);
+        py::dict value;
+        value["weight"] = entry.weight;
+        value["witnesses"] = entry.witnesses; // conversión automática a list[int]
+        out[key] = value;
+    }
+    return out;
+}
+
+PYBIND11_MODULE(forgethreads, m) {
     py::class_<TensorResult<__half>>(m, "TensorResult")
         .def(py::init<py::capsule>())
-        .def("__dlpack__",        &TensorResult<__half>::__dlpack__)
+        .def("__dlpack__", &TensorResult<__half>::__dlpack__)
         .def("__dlpack_device__", &TensorResult<__half>::__dlpack_device__);
 
     py::class_<DlpackHolder>(m, "DlpackHolder")
-        .def("__dlpack__",        &DlpackHolder::__dlpack__, py::arg("stream") = py::none())
+        .def("__dlpack__", &DlpackHolder::__dlpack__, py::arg("stream") = py::none())
         .def("__dlpack_device__", &DlpackHolder::__dlpack_device__)
-        .def("to_numpy",          &DlpackHolder::to_numpy);
+        .def("to_numpy", &DlpackHolder::to_numpy);
 
     py::class_<DlpackTensorCuda<int4>>(m, "DlpackInt4")
         .def("__dlpack__", &DlpackTensorCuda<int4>::__dlpack__, py::arg("stream") = py::none());
@@ -266,10 +308,25 @@ PYBIND11_MODULE(forgethreads, m)
         .def("__dlpack__", &DlpackTensorCuda<__half>::__dlpack__, py::arg("stream") = py::none());
 
     m.def("set_verbose", [](bool v) { g_verbose = v; });
-    m.def("get_verbose", []()       { return g_verbose; });
+    m.def("get_verbose", []() { return g_verbose; });
 
-    m.def("maxmin", &maxmin_dlpack,
-          py::arg("a"), py::arg("b"), py::arg("thr"), py::arg("order"));
+    m.def("maxmin", &maxmin_dlpack, py::arg("a"), py::arg("b"), py::arg("thr"), py::arg("order"));
 
+    m.def(
+        "maxmin_count_pivot",
+        &maxmin_count_pivot_dlpack,
+        py::arg("a"),
+        py::arg("b"),
+        py::arg("thr"),
+        py::arg("order"),
+        py::arg("output_dir")
+    );
 
+    m.def(
+        "path_dag",
+        &path_dag_dlpack,
+        py::arg("dump_dir"),
+        py::arg("m"),
+        py::arg("n_target")
+    );
 }

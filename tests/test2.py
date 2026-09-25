@@ -1,11 +1,8 @@
 
 import forgethreads as ft
 import numpy as np
-from numba import njit
-import time
 import csv
 import matplotlib.pyplot as plt
-import cupy as cp
 
 ft.set_verbose(True)
 
@@ -240,16 +237,16 @@ def sparse_supercritical_block_matrix2(n_N, n_M, c, seed=None):
 
     return E, p_N, p_M
 
-NS      = [100]
+NS      = [1000]
 
-CS      = [50]
+CS      = [10]
 
 
 
-REPEATS = 20
+REPEATS = 1
 THR     = 0.5
-ORDER   = 100
-CSV_OUT = "sweep_100n_50c_order.csv"
+ORDER   = 10
+CSV_OUT = "test_10000.csv"
 
 
 def run_sweep():
@@ -275,13 +272,12 @@ def run_sweep():
                   orders = []
 
                   for rep in range(REPEATS):
-                      cp.get_default_memory_pool().free_all_blocks()
                       seed = rep * 1000 + n
                       N_tot = n
                       E, _, _ = sparse_supercritical_block_matrix2(_n, _n, c, seed=seed)
                       m1 = E.reshape(1, N_tot, N_tot).astype(np.float16)
                       m2 = m1.copy()
-                      _, _, eff_order = ft.maxmin(m1, m2, THR, ORDER)
+                      _, _, eff_order = ft.maxmin_count_pivot(m1, m2, THR, ORDER,"csr_bin")
                       orders.append(eff_order)
 
                   results[c][n] = orders
@@ -345,4 +341,4 @@ results = run_sweep()
 #     .to_dict(orient='index')
 # )
 
-plot_results(results)
+# plot_results(results)
