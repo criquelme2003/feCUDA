@@ -51,6 +51,14 @@ def run_once(ft, dim, c, seed, kernel):
 def measure(args):
     import forgethreads as ft
 
+    print(f"forgethreads cargado desde: {ft.__file__}", flush=True)
+    if "kernel" not in (ft.maxmin.__doc__ or ""):
+        raise SystemExit(
+            "El módulo forgethreads cargado no acepta kernel=: es una compilación anterior.\n"
+            f"  Archivo cargado: {ft.__file__}\n"
+            "  Recompila (./scripts/build.sh desde la raíz) y elimina o reemplaza esa copia,\n"
+            "  o ejecuta con PYTHONPATH apuntando a la raíz del repo, donde CMake deja el .so nuevo.")
+
     ft.set_verbose(False)
     new_file = not os.path.exists(args.out)
     done = set()

@@ -12,4 +12,6 @@
 source /opt/miniconda3/bin/activate
 conda activate fecuda
 
+# El .so nuevo queda en la raíz del repo (LIBRARY_OUTPUT_DIRECTORY).
+export PYTHONPATH="$(cd .. && pwd):$PYTHONPATH"
 python bench_etapa3.py "$@"
