@@ -41,3 +41,6 @@ forgeffects
 csr_*
 webapp
 
+docs/etapa3/*.aux
+docs/etapa3/*.log
+docs/etapa3/*.out
