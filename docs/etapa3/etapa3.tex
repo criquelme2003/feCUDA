@@ -87,9 +87,8 @@ La Etapa 3 tiene tres objetivos:
 % ===========================================================================
 \section{Incorporación de la retroalimentación}
 % ===========================================================================
-\pend{transcribir aquí los comentarios concretos del profesor guía sobre la Etapa 2 y, para
-cada uno, el cambio aplicado. Los puntos siguientes recogen los compromisos que la propia
-Etapa 2 dejó abiertos y cómo se resolvieron.}
+No se recibió retroalimentación formal sobre la Etapa 2. Esta sección recoge los compromisos
+que la propia Etapa 2 dejó abiertos y cómo se resolvieron.
 
 \begin{itemize}
   \item \textbf{Optimización medida, no supuesta.} La Etapa 2 dejó como línea base el perfil
@@ -358,24 +357,9 @@ estándar)}\label{tab:versiones}
 \end{itemize}
 
 \paragraph{Perfil de las variantes.}
-La Tabla~\ref{tab:variantes} reúne las métricas de Nsight Compute.
-\pend{completar las celdas marcadas con \pc{} con \texttt{scripts/profile.sh}
-(\texttt{ncu --set full}) en la misma configuración.}
-
-\begin{table}[h]
-\centering
-\caption{Perfil de las variantes (Nsight Compute, $B=1$, $n=\num{1000}$)}\label{tab:variantes}
-\begin{tabular}{lrrrrr}
-\toprule
-\textbf{Métrica} & \textbf{v1} & \textbf{v1b} & \textbf{v2} & \textbf{v3} & \textbf{v4}\\
-\midrule
-Duración [ms]           & 14,58 & 11,39 & \pc & \pc & \pc\\
-Cómputo (SM) [\%]       & 5,19  & 10,45 & \pc & \pc & \pc\\
-L2 [\%]                 & 87,09 & 90,71 & \pc & \pc & \pc\\
-Ocupancia lograda [\%]  & 99,16 & 99,55 & \pc & \pc & \pc\\
-\bottomrule
-\end{tabular}
-\end{table}
+La comparación de esta etapa se hace por tiempo medido con las mismas entradas
+(Tabla~\ref{tab:versiones}). El perfil de Nsight Compute de v4 se realizará en la Etapa 4, junto
+con la validación final de OBJ2 (ocupancia y throughput $\geq 80\%$).
 
 % ===========================================================================
 \section{Avance de la implementación}\label{sec:demo}
@@ -610,7 +594,7 @@ Superar el límite de forgeffects &
 \num{37886} frente a \num{1286} nodos (Tabla~\ref{tab:limites}). & Cumple\\
 \addlinespace
 Ocupancia y throughput $\geq 80\%$ (OBJ2) &
-Ocupancia 99,55\% y memoria 90,71\% en v1b. \pend{medir v4.} & Parcial\\
+Ocupancia 99,55\% y memoria 90,71\% en v1b; perfil de v4 en la Etapa 4. & Parcial\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -672,6 +656,9 @@ caminos reduce el tiempo de las \num{2640} corridas. Se implementa en la Etapa 4
   \item \textbf{Barrido de threshold (T1.1.1) a la Etapa 4.} Se priorizó la optimización, que
         es el camino crítico para las \num{2640} corridas. Del perfil de forgeffects (T1.1.5)
         ya están medidos el límite de dimensión y el pico de memoria; falta el perfil Nsight.
+  \item \textbf{Perfil Nsight de v2--v4 (T2.1.3) a la Etapa 4.} La mejora se demostró con
+        tiempos medidos sobre las mismas entradas; el perfil de v4 se hará junto con la
+        validación final de los criterios de ocupancia y throughput de OBJ2.
   \item \textbf{Prueba de ausencia de copias (T2.4.2) a la Etapa 4.} Hoy la salida de caminos
         pasa necesariamente por el host; la prueba sólo tiene sentido una vez integrada la
         reconstrucción en GPU.
@@ -712,7 +699,7 @@ Refs: T2.2.2
   \foreach \i in {0,...,5} \draw[gray!30] (\i,0.3) -- (\i,-9.6);
   \def\gbar#1#2#3#4#5{\node[anchor=east] at (-0.1,-#1) {#5};
      \fill[#2] (#3,-#1-0.35) rectangle (#4,-#1+0.35);}
-  \gbar{1}{blue!60}{0}{1.5}{T2.1.3 perfil Nsight de v2--v4}
+  \gbar{1}{blue!60}{0}{1.5}{T2.1.3 perfil Nsight de v4 (OBJ2)}
   \gbar{2}{blue!60}{0}{2}{T2.1.2c caminos en GPU (integración)}
   \gbar{3}{blue!60}{0}{1}{v2 frente a v4 en $n=\num{10000}$}
   \gbar{4}{blue!60}{0}{1}{Sincronización de forgeffects y re-medición}
@@ -727,7 +714,7 @@ Refs: T2.2.2
 \caption{Carta Gantt de la Etapa 4}\label{fig:gantt}
 \end{figure}
 
-La Etapa 4 empieza por cerrar lo que la Etapa 3 dejó abierto: perfilar v2--v4, integrar la
+La Etapa 4 empieza por cerrar lo que la Etapa 3 dejó abierto: perfilar v4 con Nsight, integrar la
 reconstrucción de caminos en GPU y confirmar que la elección de v4 se mantiene en
 $n=\num{10000}$. Con eso se
 lanzan las \num{2640} corridas en Slurm, en paralelo con el empaquetado. El análisis
