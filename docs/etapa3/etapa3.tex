@@ -1,0 +1,665 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla,es-nodecimaldot]{babel}
+\usepackage[margin=2.3cm]{geometry}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,longtable,array,multirow}
+\usepackage{xcolor}
+\usepackage{graphicx}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.17}
+\usetikzlibrary{positioning,arrows.meta,shapes,calc,patterns}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{caption}
+\usepackage[hidelinks]{hyperref}
+\usepackage{siunitx}
+\usepackage{microtype}
+\emergencystretch=2em
+\newcommand{\pc}{\textcolor{red}{\textbf{?}}}
+\sisetup{output-decimal-marker={,},group-separator={.},group-minimum-digits=4}
+
+% ---------------------------------------------------------------------------
+% Marcador de datos pendientes: todo lo que aparece en rojo debe completarse
+% con mediciones reales antes de entregar.
+\newcommand{\pend}[1]{\textcolor{red}{\textbf{[PENDIENTE: #1]}}}
+% ---------------------------------------------------------------------------
+
+\definecolor{hecho}{RGB}{46,125,50}
+\definecolor{prog}{RGB}{230,140,0}
+\definecolor{pendc}{RGB}{160,160,160}
+\newcommand{\Hecho}{\textcolor{hecho}{Hecho}}
+\newcommand{\EnProg}{\textcolor{prog}{En progreso}}
+\newcommand{\Pend}{\textcolor{pendc}{Pendiente}}
+\newcommand{\N}{$^{[N]}$}
+
+\lstset{basicstyle=\ttfamily\small,columns=fullflexible,keepspaces=true,
+  frame=single,framerule=0.3pt,rulecolor=\color{gray},xleftmargin=4pt,
+  literate={á}{{\'a}}1 {é}{{\'e}}1 {í}{{\'i}}1 {ó}{{\'o}}1 {ú}{{\'u}}1 {ñ}{{\~n}}1}
+
+\setlist{itemsep=2pt,topsep=4pt}
+
+\title{Documentación trabajo de título ``forgethreads''\\[2pt]
+\large Etapa 3: Mejoras, Pruebas Adicionales y Validación Preliminar}
+\author{Carlos Riquelme Ávila}
+\date{30 de octubre de 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Este documento corresponde a la Etapa 3 del trabajo de título \textbf{forgethreads}, una
+librería en CUDA C++ expuesta a Python para calcular efectos olvidados a gran escala en GPU.
+Se presentan los ajustes derivados de la revisión de la Etapa 2, la secuencia de
+optimizaciones aplicadas al kernel max--min (de la versión v1 a la v4 con \emph{tiling}
+bidimensional), las pruebas de correctitud y de rendimiento realizadas, la validación
+preliminar sobre matrices de \num{10000} nodos y la documentación técnica actualizada.
+Al cierre de la etapa, el 100\% de las tareas de diseño y el 69\% de las de
+implementación están completados.
+\end{abstract}
+
+% ===========================================================================
+\section{Introducción}
+% ===========================================================================
+En las etapas anteriores se definió el problema (foRgotten~\cite{forgotten} y forgeffects no
+alcanzan las dimensiones que exige la investigación del Dr.\ Julio Rojas Mora: \num{2640}
+ejecuciones sobre matrices de hasta \num{10000} nodos), se diseñó la arquitectura en capas de
+forgethreads y se implementó una primera versión correcta: el kernel v1, el orquestador
+iterativo y los bindings PyBind11/DLPack.
+
+La Etapa 3 tiene tres objetivos:
+\begin{enumerate}
+  \item \textbf{Optimizar} el cómputo partiendo de la línea base medida en la Etapa 2
+        (kernel v1 limitado por L2), aplicando una mejora a la vez y midiéndola antes y
+        después con Nsight Compute.
+  \item \textbf{Probar} la solución: correctitud de cada variante frente a la referencia CPU,
+        rendimiento frente a forgeffects y comportamiento en los tamaños objetivo.
+  \item \textbf{Validar preliminarmente} el sistema completo en condiciones equivalentes a las
+        de los experimentos de la Etapa 4 (servidor \texttt{cuda3}, RTX~4090, $n=\num{10000}$),
+        y dejar preparada la entrega final.
+\end{enumerate}
+
+% ===========================================================================
+\section{Incorporación de la retroalimentación}
+% ===========================================================================
+\pend{transcribir aquí los comentarios concretos del profesor guía sobre la Etapa 2 y, para
+cada uno, el cambio aplicado. Los puntos siguientes recogen los compromisos que la propia
+Etapa 2 dejó abiertos y cómo se resolvieron.}
+
+\begin{itemize}
+  \item \textbf{Optimización medida, no supuesta.} La Etapa 2 dejó como línea base el perfil
+        del kernel v1 (Tabla~3 de esa etapa). En esta etapa cada mejora se aplicó por separado
+        con el protocolo \emph{perfil antes $\rightarrow$ cambio $\rightarrow$ perfil después}
+        documentado en \texttt{mejoras.md}, y se reportan también los resultados que no
+        mejoraron lo esperado (Sección~\ref{sec:mejoras}).
+  \item \textbf{Ajustes de diseño.} El orquestador pasó a trabajar con buffers
+        \emph{padeados} a múltiplos del tamaño de tile y rellenos con un valor negativo
+        (ADR-8), lo que permitió eliminar las guardas de borde del bucle interno de los kernels
+        con \emph{tiling}. La interfaz pública no cambió: los bindings pasaron de invocar
+        \texttt{maxmin} (v1) a \texttt{maxminv4} sin modificar la firma de
+        \texttt{ft.maxmin}, como preveía la arquitectura en capas.
+  \item \textbf{Modificaciones técnicas.} La reconstrucción de caminos (T2.1.2b) se integró en
+        el orquestador y el resultado se entrega como la tupla
+        \texttt{(paths, values, eta0)} prometida en los requerimientos transversales.
+  \item \textbf{Planificación.} El backlog se actualizó con las tareas surgidas durante la
+        etapa (marcadas con \N) y la carta Gantt de la Etapa 4 se rehízo con las
+        desviaciones registradas (Sección~\ref{sec:plan}).
+  \item \textbf{Repositorio.} Se adopta Conventional Commits~\cite{cc} con referencia al ID
+        del backlog para todos los commits nuevos (Sección~\ref{sec:git}).
+\end{itemize}
+
+% ===========================================================================
+\section{Registro de avance del backlog}
+% ===========================================================================
+La Tabla~\ref{tab:backlog} muestra el estado de cada tarea al cierre de la Etapa 3. Las
+tareas marcadas con \N\ se agregaron durante esta etapa.
+
+{\small
+\begin{longtable}{p{1.45cm}p{7.3cm}p{1.6cm}p{1.75cm}p{0.9cm}}
+\caption{Estado del backlog al cierre de la Etapa 3}\label{tab:backlog}\\
+\toprule
+\textbf{ID} & \textbf{Tarea} & \textbf{Tipo} & \textbf{Estado} & \textbf{Etapa}\\
+\midrule\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Tarea} & \textbf{Tipo} & \textbf{Estado} & \textbf{Etapa}\\
+\midrule\endhead
+\multicolumn{5}{l}{\emph{Épica 1 -- Límites de forgeffects (OBJ1)}}\\
+T1.0.1\N & Diseñar la búsqueda de límites & Diseño & \Hecho & 1--2\\
+T1.1.1 & Script de barrido de dimensión y threshold & Implem. & \EnProg & 4\\
+T1.1.2 & Medición de tiempo con sincronización forzada & Implem. & \Hecho & 1--2\\
+T1.1.3 & Ejecución planificada en Slurm sobre cuda3 & Implem. & \Hecho & 1--2\\
+T1.1.4 & Exportación de resultados (media y desviación) & Implem. & \Hecho & 1--2\\
+T1.1.5 & Perfilado de recursos de forgeffects & Validación & \Pend & 4\\
+\midrule
+\multicolumn{5}{l}{\emph{Épica 2 -- Diseño e implementación de forgethreads (OBJ2)}}\\
+T2.0.1\N & Diseñar la arquitectura en capas & Diseño & \Hecho & 2\\
+T2.1.1 & Estrategia de memoria y presupuesto de VRAM & Diseño & \Hecho & 2\\
+T2.0.3\N & Diseñar el kernel v1 & Diseño & \Hecho & 2\\
+T2.0.4\N & Diseñar la reconstrucción de caminos & Diseño & \Hecho & 2\\
+T2.0.2\N & Contrato de interfaz y ciclo de vida DLPack & Diseño & \Hecho & 2\\
+T2.0.5\N & Diseñar las variantes con \emph{tiling} (v2--v4) y el padding & Diseño & \Hecho & 3\\
+T2.1.2a & Kernel v1 y orquestador iterativo & Implem. & \Hecho & 2\\
+T2.1.4\N & Verificar el kernel v1 (CPU, compute-sanitizer) & Validación & \Hecho & 2\\
+T2.3.1 & Bindings PyBind11 de \texttt{maxmin} & Implem. & \Hecho & 2\\
+T2.3.3\N & Integración del módulo en CMake & Implem. & \Hecho & 2\\
+T2.4.1 & Importación de tensores vía DLPack & Implem. & \Hecho & 2\\
+T2.4.3\N & Exportación de buffers vía DLPack & Implem. & \Hecho & 2\\
+T2.1.2b & Reconstrucción de caminos (host) & Implem. & \Hecho & 3\\
+T2.5.1 & Empaquetado del resultado (caminos, valores, $\eta_0$) & Implem. & \Hecho & 3\\
+T2.2.2 & Optimizar los kernels (shared memory, tiling) & Implem. & \Hecho & 3\\
+T2.1.5\N & Verificar v4 frente a la referencia CPU & Validación & \Hecho & 3\\
+T2.1.3 & Perfilar con Nsight y ajustar a los criterios de OBJ2 & Validación & \EnProg & 3--4\\
+T2.2.1 & Benchmark comparativo frente a forgeffects & Implem. & \EnProg & 3--4\\
+T2.1.2c\N & Reconstrucción de caminos en GPU (CSR de pivotes) & Implem. & \EnProg & 4\\
+T2.4.2 & Prueba de ausencia de copias host--device & Validación & \Pend & 4\\
+T2.3.2 & Empaquetado instalable vía pip & Implem. & \Pend & 4\\
+T2.6.1 & Versiones mínimas de CUDA, driver y Python & Document. & \Pend & 4\\
+\midrule
+\multicolumn{5}{l}{\emph{Épica 3 -- Validación de la solución (OBJ3)}}\\
+T3.1.1 & Diseñar el pipeline de experimentos de profundidad & Diseño & \Hecho & 2\\
+T3.2.1 & Diseñar el protocolo de toma de tiempo & Diseño & \Hecho & 2\\
+T3.2.2 & Implementar el protocolo de medición & Implem. & \EnProg & 3--4\\
+T3.2.3 & Calcular y reportar el speedup & Validación & \EnProg & 3--4\\
+T3.1.2 & Ejecutar y reportar las \num{2640} corridas & Validación & \Pend & 4\\
+T3.3.1 & Análisis estadístico de los resultados & Validación & \Pend & 4\\
+\midrule
+\multicolumn{5}{l}{\emph{Documentación}}\\
+T4.1\N & Documento de la Etapa 2 & Document. & \Hecho & 2\\
+T4.3\N & Documento de la Etapa 3 & Document. & \Hecho & 3\\
+T4.2\N & Informe final & Document. & \Pend & 4\\
+\bottomrule
+\end{longtable}
+}
+
+\begin{table}[h]
+\centering
+\caption{Avance por tipo de tarea (Etapa 2 $\rightarrow$ Etapa 3)}\label{tab:avance}
+\begin{tabular}{lrrrrrr}
+\toprule
+\textbf{Tipo} & \textbf{Total} & \textbf{Hecho} & \textbf{En progreso} & \textbf{Pendiente} &
+\textbf{\% Etapa 2} & \textbf{\% Etapa 3}\\
+\midrule
+Diseño         & 9  & 9  & 0 & 0  & 100\% & \textbf{100\%}\\
+Implementación & 16 & 11 & 4 & 1  & 53\%  & \textbf{69\%}\\
+Validación     & 9  & 2  & 2 & 5  & 14\%  & \textbf{22\%}\\
+Documentación  & 4  & 2  & 0 & 2  & 33\%  & \textbf{50\%}\\
+\midrule
+Total          & 38 & 24 & 6 & 8  & 55\%  & \textbf{63\%}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+El avance de implementación (69\%) supera el 50\% exigido para esta etapa. Cada tarea
+marcada como \emph{Hecho} tiene respaldo verificable en el repositorio
+(Sección~\ref{sec:demo}).
+
+% ===========================================================================
+\section{Mejoras para optimizar el diseño}\label{sec:mejoras}
+% ===========================================================================
+
+\subsection{Punto de partida}
+El perfil de Nsight Compute del kernel v1 en la Etapa 2 mostró una ocupancia de 99,16\%,
+un throughput de cómputo de sólo 5,19\% y un throughput de L2 de 87,09\%: el kernel está
+\textbf{limitado por el acceso a L2}. La causa es estructural: v1 asigna un bloque por celda
+de salida, de modo que cada fila de $C_s$ y cada columna de $A$ se vuelven a pedir a la
+jerarquía de memoria una vez por cada celda que las usa. El máximo y el mínimo cuestan una
+instrucción cada uno; el kernel pasa casi todo su tiempo esperando datos.
+
+La composición max--min tiene la misma estructura de accesos que un GEMM, con
+$(\min,\max)$ en lugar de $(\times,+)$. Por eso la estrategia sigue la progresión de
+Boehm~\cite{boehm} para GEMM: \emph{aumentar la reutilización de cada dato cargado}, primero
+en shared memory y luego en registros, hasta que el kernel deje de estar limitado por la
+memoria.
+
+\subsection{Variantes implementadas}
+
+\paragraph{v1b -- columna de $A$ en shared memory.}
+Cada bloque copia una vez la columna $A[b,:,n]$ completa ($K$ elementos, 2\,KB para
+$K=\num{1000}$) a shared memory mediante una carga cooperativa, y el bucle de reducción lee
+de ahí. El bucle interno pasa de dos accesos globales por iteración a uno global y uno a
+shared memory.
+
+\paragraph{v2 -- tiling $32\times32$.}
+Un bloque calcula un tile de $32\times32$ celdas de salida. En cada paso carga a shared memory
+un tile de $C_s$ y uno de $A$, y cada hilo calcula su celda recorriendo los 32 elementos del
+tile. Cada dato traído de memoria global se reutiliza 32 veces.
+
+\paragraph{v3 -- \emph{blocktiling} 1D.}
+Tiles de bloque de $64\times64$ ($BM=BN=64$, $BK=8$) y \textbf{8 resultados por hilo} en una
+columna ($TM=8$). Cada hilo mantiene en registros los 8 máximos parciales con sus
+\emph{argmax}; el valor de $A$ leído de shared memory se reutiliza 8 veces desde un registro.
+
+\paragraph{v4 -- \emph{blocktiling} 2D.}
+Mismos tiles de bloque, pero cada hilo calcula un sub-tile de $8\times8 = 64$ celdas
+($TM=TN=8$), con 64 hilos por bloque. En cada paso del bucle interno el hilo carga 8 valores
+de $C_s$ y 8 de $A$ desde shared memory a registros y evalúa los 64 pares
+$\min(\cdot,\cdot)$ con su máximo y \emph{argmax}. La escritura final respeta los límites
+lógicos $M\times N$ y aplica el umbral diferencial de la Ecuación~(2) de la Etapa 2.
+
+\paragraph{Padding.}
+Las variantes v2--v4 suponen dimensiones múltiplo del tile. El orquestador
+\texttt{maxminv4} reserva los buffers con dimensiones \emph{padeadas} y los rellena con un
+valor negativo (patrón \texttt{0xBC} en \texttt{half}). Como las incidencias están en
+$[0,1]$, un valor negativo es neutro para el máximo y nunca supera el umbral, por lo que el
+bucle interno no necesita condicionales de borde.
+
+\subsection{Análisis de reutilización}
+La Tabla~\ref{tab:reuso} cuantifica, para una celda de salida y un orden, cuántos accesos
+requiere cada variante. Es un análisis independiente del hardware que explica por qué cada
+paso debería reducir la presión sobre L2.
+
+\begin{table}[h]
+\centering
+\caption{Accesos por celda de salida y por orden ($K$ = dimensión de la reducción)}
+\label{tab:reuso}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Variante} & \textbf{Lecturas globales} & \textbf{Lecturas de shared} &
+\textbf{Reutilización}\\
+\midrule
+v1   & $2K$        & 0           & 1\\
+v1b  & $2K$        & $K$         & 1\\
+v2 ($32\times32$)            & $2K/32$ & $2K$     & 32\\
+v3 ($64\times64$, $TM=8$)    & $2K/64$ & $1{,}125\,K$ & 64\\
+v4 ($64\times64$, $8\times8$) & $2K/64$ & $0{,}25\,K$  & 64\\
+\bottomrule
+\end{tabular}
+
+\smallskip
+{\footnotesize Reutilización: veces que se usa cada dato traído de memoria global. En v1b la
+columna se lee de shared memory, lo que quita un acceso global del bucle interno.}
+\end{table}
+
+Para $n=\num{10000}$, v1 hace $2\cdot 10^4$ lecturas globales por celda y v4 hace 313; y v4
+reduce además 8 veces las lecturas de shared memory respecto de v2, desplazando la
+reutilización hacia los registros.
+
+\subsection{Comparación antes y después}
+
+\paragraph{Mejora v1 $\rightarrow$ v1b (medida).}
+La Tabla~\ref{tab:v1b} resume el perfil de Nsight Compute antes y después del cambio, con
+$B=1$, $n=\num{1000}$, $\theta=0{,}5$, en la RTX~4090 de \texttt{cuda3}. El conteo de
+efectos coincide con la referencia CPU en ambos casos (\num{472326}).
+
+\begin{table}[h]
+\centering
+\caption{Kernel v1 frente a v1b (Nsight Compute, $B=1$, $n=\num{1000}$)}\label{tab:v1b}
+\begin{tabular}{lrrr}
+\toprule
+\textbf{Métrica} & \textbf{v1} & \textbf{v1b} & \textbf{$\Delta$}\\
+\midrule
+Duración [ms]                 & 14,58 & 11,39 & $-21{,}9\%$\\
+Cómputo (SM) [\%]             & 5,19  & 10,45 & $+5{,}26$ pp\\
+Memoria [\%]                  & 87,09 & 90,71 & $+3{,}62$ pp\\
+L1/TEX [\%]                   & 37,87 & 39,64 & $+1{,}77$ pp\\
+L2 [\%]                       & 87,09 & 90,71 & $+3{,}62$ pp\\
+DRAM [\%]                     & 0,03  & 0,04  & $\approx$\\
+Ocupancia lograda [\%]        & 99,16 & 99,55 & $\approx$\\
+Registros por hilo            & 16    & 26    & $+10$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La duración bajó un 22\%, pero \textbf{no por la razón esperada}. La hipótesis era que
+cachear la columna reduciría la presión sobre L2; el throughput de L2 en cambio
+\emph{subió}. Cada bloque sigue trayendo la columna completa una vez, así que el volumen total
+de datos no cambia. La ganancia viene de quitar un acceso global del bucle interno, lo que
+duplica el throughput de cómputo y hace que el kernel sature L2 durante menos tiempo. El
+perfil de Nsight Systems de la misma configuración confirma un tiempo de kernel de 11,24\,ms.
+
+Este resultado negativo parcial fue decisivo para el diseño: mostró que, mientras cada
+bloque calcule una sola celda, ninguna caché por bloque reduce el volumen de datos. La
+reutilización debe ocurrir \emph{entre celdas}, lo que justifica el cambio a \emph{tiling}
+(v2--v4) en lugar de seguir ajustando v1.
+
+\paragraph{Variantes v2--v4.}
+\pend{completar las celdas marcadas con \pc{} en la Tabla~\ref{tab:variantes} con \texttt{scripts/profile.sh}
+(\texttt{ncu --set full}) para cada variante en la misma configuración ($B=1$,
+$n=\num{1000}$, $\theta=0{,}5$) y para $n=\num{10000}$.}
+
+\begin{table}[h]
+\centering
+\caption{Perfil de las variantes (Nsight Compute, $B=1$, $n=\num{1000}$)}\label{tab:variantes}
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Métrica} & \textbf{v1} & \textbf{v1b} & \textbf{v2} & \textbf{v3} & \textbf{v4}\\
+\midrule
+Duración [ms]           & 14,58 & 11,39 & \pc & \pc & \pc\\
+Cómputo (SM) [\%]       & 5,19  & 10,45 & \pc & \pc & \pc\\
+L2 [\%]                 & 87,09 & 90,71 & \pc & \pc & \pc\\
+Ocupancia lograda [\%]  & 99,16 & 99,55 & \pc & \pc & \pc\\
+Speedup sobre v1        & 1,00$\times$ & 1,28$\times$ & \pc & \pc & \pc\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ===========================================================================
+\section{Avance de la implementación}\label{sec:demo}
+% ===========================================================================
+
+\subsection{Funcionalidades implementadas}
+\begin{itemize}
+  \item \textbf{Kernels} (\texttt{src/kernels/maxmin/}): \texttt{kernel\_v1.cu} (v1b),
+        \texttt{kernel\_v2.cu}, \texttt{kernel\_v3\_multC.cu} y
+        \texttt{kernel\_v4\_2D\_blocktiling.cu}, todos con la misma firma (valor, \emph{argmax}
+        y contador), lo que permite cambiar de variante sin tocar los bindings.
+  \item \textbf{Orquestadores} (\texttt{src/algorithms/maxmin\{,v2,v3,v4\}.cu}): bucle por
+        orden con doble buffer, padding y convergencia anticipada ($\eta_0$).
+  \item \textbf{Reconstrucción de caminos} (\texttt{src/algorithms/assemble\_paths.cu}): a
+        partir del \emph{argmax} de cada orden, sin recalcular la composición.
+  \item \textbf{Interfaz Python} (\texttt{src/bindings.cu}): \texttt{ft.maxmin} invoca
+        \texttt{maxminv4} y devuelve \texttt{(paths, values, eta0)} como arreglos NumPy, un
+        par por orden.
+  \item \textbf{Reconstrucción en GPU} (rama \texttt{csr-paths-construction}, en progreso):
+        kernels \texttt{count\_pivots} y \texttt{write\_pivots} que registran, por orden, los
+        pivotes de cada celda en formato CSR, y un DAG de caminos (\texttt{path\_dag.cu}) que
+        reconstruye los caminos de $m$ a $n$ sin copiar las matrices densas al host.
+\end{itemize}
+
+\subsection{Demostración}
+\begin{lstlisting}[language=Python]
+import numpy as np
+import forgethreads as ft
+
+a = np.load("input/CC.npy").astype(np.float16)[None]   # [1, n, n]
+paths, values, eta0 = ft.maxmin(a, a, 0.5, 100)
+print("profundidad de detención:", eta0)
+for s, (p, v) in enumerate(zip(paths, values), start=1):
+    print(f"orden {s}: {p.shape[0]} efectos, ancho de camino {p.shape[1]}")
+\end{lstlisting}
+
+El arnés C++ (\texttt{src/main.cu}) ejecuta la misma ruta con \texttt{maxminv4} y la compara
+con la referencia CPU (Sección~\ref{sec:pruebas}).
+
+% ===========================================================================
+\section{Pruebas iniciales y resultados preliminares}\label{sec:pruebas}
+% ===========================================================================
+
+\subsection{Correctitud}
+\begin{itemize}
+  \item \textbf{v4 frente a la referencia CPU.} Con $B=1$, $n=\num{1000}$ y $\theta=0{,}5$,
+        el arnés GPU (\texttt{src/main.cu}, que invoca \texttt{maxminv4}) encuentra
+        \num{472326} efectos en el orden 1, exactamente el mismo conteo que la referencia CPU y
+        que v1 (logs \texttt{fecuda.848} y \texttt{fecuda.850}). El cambio completo de
+        estrategia de cómputo (bloque por celda $\rightarrow$ tiles $64\times64$ con padding)
+        preserva el resultado. \pend{repetir la corrida registrando la variante en el log, ya
+        que los logs actuales no la indican.}
+  \item \textbf{Determinismo.} Ejecuciones repetidas sobre la misma entrada producen la misma
+        secuencia de conteos por orden; por ejemplo, para $n=200$ y \texttt{order = 100} se
+        obtiene siempre \num{2666}, \num{6502}, \num{7655}, \num{4000}, \ldots{} en las ocho
+        corridas registradas con esa configuración (logs \texttt{fecuda.513} a \texttt{fecuda.926}).
+  \item \textbf{compute-sanitizer.} memcheck, racecheck, initcheck y synccheck: 0 errores
+        para v1 (Etapa 2). \pend{repetir los cuatro modos con v4 vía
+        \texttt{scripts/sanitize.sh}.}
+\end{itemize}
+
+\subsection{Rendimiento preliminar frente a forgeffects}
+Se midió el tiempo de extremo a extremo de \texttt{ft.maxmin} y de
+\texttt{iterative\_maxmin\_cuadrado} de forgeffects (en GPU y en CPU) con \texttt{tests/test.py}:
+$\theta=0{,}3$, 4 órdenes, 10 repeticiones tras calentamiento, matrices de $2n\times2n$ con
+semilla fija, en \texttt{cuda3}. La Tabla~\ref{tab:prelim} y la Figura~\ref{fig:prelim}
+muestran los resultados.
+
+\begin{table}[h]
+\centering
+\caption{Tiempo de extremo a extremo (ms, media $\pm$ desviación estándar, 10 repeticiones)}
+\label{tab:prelim}
+\begin{tabular}{rrrr}
+\toprule
+\textbf{Nodos} & \textbf{forgeffects GPU} & \textbf{forgeffects CPU} & \textbf{ft.maxmin}\\
+\midrule
+200   & $28{,}1 \pm 6{,}0$     & $27{,}0 \pm 0{,}6$     & $5{,}4 \pm 0{,}7$\\
+400   & $51{,}6 \pm 10{,}7$    & $75{,}8 \pm 2{,}2$     & $33{,}2 \pm 0{,}1$\\
+600   & $107{,}7 \pm 28{,}5$   & $207{,}9 \pm 7{,}3$    & $111{,}7 \pm 0{,}8$\\
+800   & $217{,}9 \pm 64{,}9$   & $430{,}3 \pm 9{,}4$    & $259{,}0 \pm 1{,}2$\\
+1.000 & $394{,}3 \pm 111{,}4$  & $843{,}6 \pm 13{,}7$   & $497{,}5 \pm 1{,}6$\\
+1.200 & $610{,}0 \pm 14{,}7$   & $\num{1457.9} \pm 48{,}4$  & $859{,}1 \pm 0{,}8$\\
+1.600 & ---                    & $\num{3682.1} \pm 152{,}0$ & $\num{2039.3} \pm 5{,}2$\\
+1.800 & ---                    & $\num{5158.1} \pm 220{,}7$ & $\num{2896.7} \pm 6{,}4$\\
+2.000 & ---                    & ---                    & $\num{3969.3} \pm 7{,}8$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[width=0.78\textwidth,height=6.3cm,xlabel={Nodos},ylabel={Tiempo [ms]},
+  ymode=log,legend pos=south east,grid=both,grid style={gray!20},
+  legend style={font=\small},xtick={200,600,1000,1400,1800},
+  x tick label style={/pgf/number format/.cd,1000 sep={.}}]
+\addplot+[mark=o,thick] coordinates {(200,28.1)(400,51.6)(600,107.7)(800,217.9)(1000,394.3)(1200,610.0)};
+\addlegendentry{forgeffects GPU}
+\addplot+[mark=triangle,thick] coordinates {(200,27.0)(400,75.8)(600,207.9)(800,430.3)(1000,843.6)(1200,1457.9)(1600,3682.1)(1800,5158.1)};
+\addlegendentry{forgeffects CPU}
+\addplot+[mark=square,thick] coordinates {(200,5.4)(400,33.2)(600,111.7)(800,259.0)(1000,497.5)(1200,859.1)(1600,2039.3)(1800,2896.7)(2000,3969.3)};
+\addlegendentry{ft.maxmin}
+\end{axis}
+\end{tikzpicture}
+\caption{Tiempo de extremo a extremo según el número de nodos (escala logarítmica)}
+\label{fig:prelim}
+\end{figure}
+
+\paragraph{Análisis.}
+\begin{itemize}
+  \item forgethreads es 5,2 veces más rápido que forgeffects en GPU para 200 nodos, pero
+        \textbf{a partir de 600 nodos es más lento}: 1,26 veces a \num{1000} nodos y 1,41 veces
+        a \num{1200}. El objetivo de OBJ2 (speedup medio $\geq 10\times$) \textbf{no se cumple
+        en esta medición}.
+  \item El kernel no explica esa diferencia. Para $n=\num{1000}$ el kernel tarda 11,24\,ms por
+        orden (Nsight Systems), unos 45\,ms en 4 órdenes, frente a 497\,ms de extremo a extremo.
+        Más del 90\% del tiempo de \texttt{ft.maxmin} se gasta fuera del kernel. Los
+        candidatos son la reconstrucción de caminos en el host, que copia $C_s$, $C_{s+1}$ y
+        \emph{argmax} completos a la CPU en cada orden y recorre los caminos en un solo hilo,
+        y la conversión de los caminos a listas de arreglos NumPy.
+        \pend{confirmar el reparto con un perfil \texttt{nsys} de \texttt{ft.maxmin} completo.}
+  \item forgethreads completa \num{1600}, \num{1800} y \num{2000} nodos, donde la medición de
+        forgeffects en GPU ya no se ejecuta, y su desviación estándar es en general un orden de
+        magnitud menor que la de forgeffects en GPU (0,1--1,6\,ms frente a 6--111\,ms), lo que
+        indica tiempos mucho más estables.
+\end{itemize}
+
+\paragraph{Problemas de método detectados.}
+La revisión del script reveló dos defectos que impiden usar esta tabla como el speedup oficial
+(T3.2.3):
+\begin{enumerate}
+  \item \textbf{Entradas distintas.} forgeffects recibe matrices construidas con densidad
+        $2n\log(2n)$ y forgethreads con $n\log n$. Ambas usan la misma semilla, pero no son la
+        misma matriz, y la cantidad de efectos (y por lo tanto el costo de reconstruir
+        caminos) difiere.
+  \item \textbf{Versión del kernel no registrada.} El CSV no guarda el commit ni la variante
+        de kernel usada, por lo que no es posible atribuir los tiempos a v1 o v4 con certeza.
+\end{enumerate}
+
+\subsection{Ajustes derivados de las pruebas}
+\begin{itemize}
+  \item \textbf{Reconstrucción de caminos en GPU} (T2.1.2c\N). Como el costo está fuera del
+        kernel, optimizar más el kernel no cerraría la brecha. Se diseñó e implementó en la
+        rama \texttt{csr-paths-construction} el registro de pivotes por orden en formato CSR
+        directamente en GPU, de modo que sólo se transfieran al host los caminos que superan el
+        umbral y no las matrices densas.
+  \item \textbf{Dos modos de uso (planificado).} Los experimentos de profundidad de la Etapa 4
+        sólo necesitan $\eta_0$ y los conteos por orden, no los caminos. Se agregará un modo que
+        omita la reconstrucción, de modo que las \num{2640} corridas paguen sólo el costo del
+        kernel (ADR-11).
+  \item \textbf{Protocolo de medición corregido} (T3.2.2). La versión definitiva usa la misma
+        matriz para ambas librerías, registra el commit y la variante en cada fila del CSV y
+        separa tiempo de kernel (eventos CUDA) de tiempo de extremo a extremo.
+\end{itemize}
+
+% ===========================================================================
+\section{Validación preliminar}\label{sec:validacion}
+% ===========================================================================
+La validación preliminar se ejecutó en el entorno real de la Etapa 4: servidor
+\texttt{cuda3} (RTX~4090, 24\,GB), trabajos Slurm y matrices del tamaño objetivo.
+
+\begin{table}[h]
+\centering
+\caption{Validación preliminar frente a los requerimientos}\label{tab:validacion}
+\begin{tabular}{p{4.3cm}p{6.6cm}p{2.6cm}}
+\toprule
+\textbf{Requerimiento} & \textbf{Evidencia} & \textbf{Estado}\\
+\midrule
+Soportar $n=\num{10000}$ (crítico) &
+Corridas completas con $n=\num{10000}$ y \texttt{order} entre 10 y 25 hasta la convergencia
+(logs \texttt{fecuda.468}--\texttt{472}); por ejemplo, \num{26644}, \num{26711},
+\num{21191}, \ldots{} efectos por orden. & Cumple\\
+\addlinespace
+Profundidad de detención en $n=\num{10000}$ &
+$\eta_0 = 3$ con $c=50$ y $\eta_0 = 37$ con $c=2$
+(\texttt{tests/test\_10000.csv}, rama de caminos). & Cumple\\
+\addlinespace
+Prueba de estrés de memoria &
+Con $n=\num{100000}$ la guardia rechaza la reserva antes de lanzar el kernel
+(``allocation for C\_dev\_after is \num{5640261632} bytes'', log \texttt{fecuda.473}): falla
+de forma controlada, sin corromper el contexto CUDA. & Cumple\\
+\addlinespace
+Correctitud frente a CPU &
+Conteo idéntico (\num{472326}) para v1 y v4. & Cumple\\
+\addlinespace
+Tiempo en $n=\num{10000}$ &
+\num{26532}\,ms de extremo a extremo para 4 órdenes con $\theta=0{,}3$
+(\texttt{output/timing\_results2.csv}, una corrida). & Preliminar\\
+\addlinespace
+Speedup medio $\geq 10\times$ (OBJ2) &
+No se cumple de extremo a extremo (Tabla~\ref{tab:prelim}); en curso con la reconstrucción
+en GPU. & No cumple aún\\
+\addlinespace
+Ocupancia y throughput $\geq 80\%$ (OBJ2) &
+Ocupancia 99,55\% y memoria 90,71\% en v1b. \pend{medir v4.} & Parcial\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Estimación del costo de la Etapa 4.}
+Con el tiempo medido en $n=\num{10000}$ (unos 6,6\,s por orden de extremo a extremo), las
+corridas con profundidad alta (por ejemplo $\eta_0 = 37$ con $c = 2$) tardarían varios minutos
+cada una. Sin reconstrucción de caminos, el costo por orden queda determinado por el kernel.
+\pend{medir el tiempo del kernel v4 por orden en $n=\num{10000}$ y recalcular la duración
+estimada de las \num{2640} corridas.}
+
+% ===========================================================================
+\section{Documentación del proyecto}
+% ===========================================================================
+\subsection{Decisiones técnicas (ADR)}
+Se mantienen ADR-1 a ADR-6 de la Etapa 2 y se agregan:
+
+{\small
+\begin{longtable}{p{1.3cm}p{4.6cm}p{9.2cm}}
+\caption{Nuevas decisiones de la Etapa 3}\\
+\toprule
+\textbf{ID} & \textbf{Decisión} & \textbf{Justificación y consecuencia}\\
+\midrule
+ADR-7 & \emph{Blocktiling} 2D (v4) como kernel por defecto &
+Máxima reutilización por dato global y en registros (Tabla~\ref{tab:reuso}). Los bindings
+cambian a \texttt{maxminv4} sin alterar la API. A cambio, el kernel es más complejo y requiere
+dimensiones padeadas.\\
+\addlinespace
+ADR-8 & Padding a múltiplos del tile con relleno negativo &
+Elimina las guardas de borde del bucle interno; el valor negativo es neutro para el máximo
+porque las incidencias están en $[0,1]$. Cuesta hasta 63 filas y columnas extra de memoria
+(48 para $n=\num{10000}$, menos del 1\%).\\
+\addlinespace
+ADR-9 & Mantener v1--v3 en el repositorio &
+Sirven como referencia de correctitud y como evidencia de la progresión de optimización;
+comparten firma con v4, por lo que pueden compararse en el mismo arnés.\\
+\addlinespace
+ADR-10 & Reconstrucción de caminos en GPU con CSR de pivotes &
+Las pruebas mostraron que el costo de extremo a extremo está fuera del kernel. Registrar
+pivotes en CSR en la GPU evita copiar matrices densas al host en cada orden.\\
+\addlinespace
+ADR-11 & Modo sin caminos para los experimentos &
+Los experimentos de profundidad sólo necesitan $\eta_0$ y los conteos por orden; omitir los
+caminos reduce el tiempo de las \num{2640} corridas. Se implementa en la Etapa 4.\\
+\bottomrule
+\end{longtable}
+}
+
+\subsection{Desviaciones del plan}
+\begin{itemize}
+  \item \textbf{Speedup oficial (T2.2.1, T3.2.3) desplazado a la Etapa 4.} La medición
+        preliminar mostró que el cuello de botella está en la reconstrucción de caminos, y
+        reveló defectos en el script. Reportar un speedup antes de corregirlos habría
+        producido una cifra no comparable.
+  \item \textbf{Nueva tarea T2.1.2c\N.} No estaba planificada; surgió del análisis de la
+        Tabla~\ref{tab:prelim}.
+  \item \textbf{Barrido de threshold y perfil de forgeffects (T1.1.1, T1.1.5) a la Etapa 4.}
+        Se priorizó la optimización, que es el camino crítico para las \num{2640} corridas.
+  \item \textbf{Prueba de ausencia de copias (T2.4.2) a la Etapa 4.} Hoy la salida de caminos
+        pasa necesariamente por el host; la prueba sólo tiene sentido una vez integrada la
+        reconstrucción en GPU.
+\end{itemize}
+
+\subsection{Repositorio git}\label{sec:git}
+El proyecto se versiona en \url{https://github.com/criquelme2003/feCUDA}. El trabajo de esta
+etapa se encuentra en las ramas \texttt{gpu\_paths} (kernels v2--v4 y orquestadores) y
+\texttt{csr-paths-construction} (reconstrucción en GPU). Commits relevantes:
+\texttt{cf44ae8} (kernel v2), \texttt{17f70a4} (kernels v3 y v4), \texttt{fa645cf}
+(optimización de los kernels max--min), \texttt{322cef9} (corrección de caminos fallidos) y
+\texttt{96c2da7} (registro CSR por orden y reconstrucción de caminos de $m$ a $n$).
+
+Desde esta etapa los commits siguen Conventional Commits~\cite{cc}:
+\begin{lstlisting}
+perf(kernels): add 2D blocktiling maxmin kernel (v4)
+
+Each thread computes an 8x8 sub-tile so values loaded from shared
+memory are reused 8 times from registers. Matches CPU reference
+(472326 effects, n=1000, thr=0.5).
+
+Refs: T2.2.2
+\end{lstlisting}
+
+% ===========================================================================
+\section{Planificación: Etapa 4}\label{sec:plan}
+% ===========================================================================
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}[x=1.45cm,y=0.5cm,font=\small]
+  % semanas: 0 = 2 nov, 1 = 9 nov, 2 = 16 nov, 3 = 23 nov, 4 = 30 nov, 5 = 4 dic
+  \foreach \i/\l in {0/2 nov,1/9 nov,2/16 nov,3/23 nov,4/30 nov}
+    \node[anchor=south] at (\i+0.5,0.3) {\l};
+  \draw[gray!40] (0,0) -- (5,0);
+  \foreach \i in {0,...,5} \draw[gray!30] (\i,0.3) -- (\i,-9.6);
+  \def\gbar#1#2#3#4#5{\node[anchor=east] at (-0.1,-#1) {#5};
+     \fill[#2] (#3,-#1-0.35) rectangle (#4,-#1+0.35);}
+  \gbar{1}{blue!60}{0}{1.5}{T2.1.3 perfil Nsight de v2--v4}
+  \gbar{2}{blue!60}{0}{2}{T2.1.2c caminos en GPU (integración)}
+  \gbar{3}{blue!60}{0}{1}{T3.2.2 protocolo de medición corregido}
+  \gbar{4}{blue!60}{1}{2}{T2.2.1 / T3.2.3 benchmark y speedup}
+  \gbar{5}{blue!60}{1}{2}{T1.1.1 / T1.1.5 barrido y perfil FE}
+  \gbar{6}{orange!80}{1}{3.5}{T3.1.2 \num{2640} corridas (Slurm)}
+  \gbar{7}{orange!80}{2}{3}{T2.4.2, T2.3.2, T2.6.1 pip y README}
+  \gbar{8}{orange!80}{3}{4}{T3.3.1 análisis estadístico}
+  \gbar{9}{red!60}{3}{4.6}{T4.2 informe final}
+  \fill[black] (4.6,-9.6) -- ++(0.12,0.25) -- ++(-0.24,0) -- cycle;
+  \node[anchor=north] at (4.6,-9.7) {Entrega 4 dic};
+\end{tikzpicture}
+\caption{Carta Gantt de la Etapa 4}\label{fig:gantt}
+\end{figure}
+
+La Etapa 4 empieza por cerrar lo que la Etapa 3 dejó abierto: perfilar v2--v4, integrar la
+reconstrucción de caminos en GPU y medir el speedup con el protocolo corregido. Con eso se
+lanzan las \num{2640} corridas en Slurm, en paralelo con el empaquetado. El análisis
+estadístico y el informe final cierran el trabajo antes del 4 de diciembre.
+
+\begin{thebibliography}{9}
+\bibitem{kaufmann} A. Kaufmann y J. Gil Aluja, \emph{Modelos para la investigación de efectos
+  olvidados}. Vigo: Milladoiro, 1988.
+\bibitem{forgotten} E. Mardones-Arias y J. Rojas-Mora, \emph{foRgotten: paquete de GNU R para
+  el análisis de efectos olvidados}, 2022.
+\bibitem{boehm} S. Boehm, «How to Optimize a CUDA Matmul Kernel for cuBLAS-like Performance:
+  a Worklog», 2022. [En línea]. Disponible: \url{https://siboehm.com/articles/22/CUDA-MMM}
+\bibitem{bpg} NVIDIA Corporation, \emph{CUDA C++ Best Practices Guide}, v12.5, 2024.
+\bibitem{ncu} NVIDIA Corporation, \emph{Nsight Compute Documentation}, 2024. [En línea].
+  Disponible: \url{https://docs.nvidia.com/nsight-compute/}
+\bibitem{nygard} M. Nygard, «Documenting Architecture Decisions», 2011. [En línea].
+  Disponible: \url{https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions}
+\bibitem{cc} «Conventional Commits 1.0.0». [En línea]. Disponible:
+  \url{https://www.conventionalcommits.org}
+\end{thebibliography}
+
+\end{document}
