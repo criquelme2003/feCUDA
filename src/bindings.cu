@@ -4,6 +4,7 @@
 #include <driver_types.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <stdexcept>
 
 
 namespace py = pybind11;
@@ -212,12 +213,21 @@ static DlpackHolder* make_half_holder(__half* d_ptr, int64_t count)
     return new DlpackHolder(managed);
 }
 
-py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order)
+py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order, int kernel)
 {
     TensorResult<__half> t1(a);
     TensorResult<__half> t2(b);
 
-    auto result = maxminv4(t1, t2, __float2half(thr), order);
+    // Variante del kernel max-min. v4 (blocktiling 2D) es la de producción;
+    // las demás se exponen para benchmarks comparativos.
+    MaxminResult result;
+    switch (kernel) {
+        case 1: result = maxmin(t1, t2, __float2half(thr), order);   break;
+        case 2: result = maxminv2(t1, t2, __float2half(thr), order); break;
+        case 3: result = maxminv3(t1, t2, __float2half(thr), order); break;
+        case 4: result = maxminv4(t1, t2, __float2half(thr), order); break;
+        default: throw std::invalid_argument("kernel debe ser 1, 2, 3 o 4");
+    }
 
     py::list paths_list;
     py::list values_list;
@@ -269,7 +279,8 @@ PYBIND11_MODULE(forgethreads, m)
     m.def("get_verbose", []()       { return g_verbose; });
 
     m.def("maxmin", &maxmin_dlpack,
-          py::arg("a"), py::arg("b"), py::arg("thr"), py::arg("order"));
+          py::arg("a"), py::arg("b"), py::arg("thr"), py::arg("order"),
+          py::arg("kernel") = 4);
 
 
 }
