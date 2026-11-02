@@ -58,8 +58,9 @@ Se presentan los ajustes derivados de la revisión de la Etapa 2, la secuencia d
 optimizaciones aplicadas al kernel max--min (de la versión v1 a la v4 con \emph{tiling}
 bidimensional), las pruebas de correctitud y de rendimiento realizadas, la validación
 preliminar sobre matrices de \num{10000} nodos y la documentación técnica actualizada.
-Al cierre de la etapa, el 100\% de las tareas de diseño y el 69\% de las de
-implementación están completados.
+Al cierre de la etapa, el 100\% de las tareas de diseño y el 81\% de las de
+implementación están completados. Con el kernel v4, forgethreads es en promedio 21,8 veces más
+rápido que forgeffects y procesa matrices de hasta \num{37886} nodos, frente a \num{1286}.
 \end{abstract}
 
 % ===========================================================================
@@ -133,7 +134,7 @@ T1.1.1 & Script de barrido de dimensión y threshold & Implem. & \EnProg & 4\\
 T1.1.2 & Medición de tiempo con sincronización forzada & Implem. & \Hecho & 1--2\\
 T1.1.3 & Ejecución planificada en Slurm sobre cuda3 & Implem. & \Hecho & 1--2\\
 T1.1.4 & Exportación de resultados (media y desviación) & Implem. & \Hecho & 1--2\\
-T1.1.5 & Perfilado de recursos de forgeffects & Validación & \Pend & 4\\
+T1.1.5 & Perfilado de recursos de forgeffects & Validación & \EnProg & 3--4\\
 \midrule
 \multicolumn{5}{l}{\emph{Épica 2 -- Diseño e implementación de forgethreads (OBJ2)}}\\
 T2.0.1\N & Diseñar la arquitectura en capas & Diseño & \Hecho & 2\\
@@ -153,7 +154,7 @@ T2.5.1 & Empaquetado del resultado (caminos, valores, $\eta_0$) & Implem. & \Hec
 T2.2.2 & Optimizar los kernels (shared memory, tiling) & Implem. & \Hecho & 3\\
 T2.1.5\N & Verificar v4 frente a la referencia CPU & Validación & \Hecho & 3\\
 T2.1.3 & Perfilar con Nsight y ajustar a los criterios de OBJ2 & Validación & \EnProg & 3--4\\
-T2.2.1 & Benchmark comparativo frente a forgeffects & Implem. & \EnProg & 3--4\\
+T2.2.1 & Benchmark comparativo frente a forgeffects & Implem. & \Hecho & 3\\
 T2.1.2c\N & Reconstrucción de caminos en GPU (CSR de pivotes) & Implem. & \EnProg & 4\\
 T2.4.2 & Prueba de ausencia de copias host--device & Validación & \Pend & 4\\
 T2.3.2 & Empaquetado instalable vía pip & Implem. & \Pend & 4\\
@@ -162,8 +163,8 @@ T2.6.1 & Versiones mínimas de CUDA, driver y Python & Document. & \Pend & 4\\
 \multicolumn{5}{l}{\emph{Épica 3 -- Validación de la solución (OBJ3)}}\\
 T3.1.1 & Diseñar el pipeline de experimentos de profundidad & Diseño & \Hecho & 2\\
 T3.2.1 & Diseñar el protocolo de toma de tiempo & Diseño & \Hecho & 2\\
-T3.2.2 & Implementar el protocolo de medición & Implem. & \EnProg & 3--4\\
-T3.2.3 & Calcular y reportar el speedup & Validación & \EnProg & 3--4\\
+T3.2.2 & Implementar el protocolo de medición & Implem. & \Hecho & 3\\
+T3.2.3 & Calcular y reportar el speedup & Validación & \Hecho & 3\\
 T3.1.2 & Ejecutar y reportar las \num{2640} corridas & Validación & \Pend & 4\\
 T3.3.1 & Análisis estadístico de los resultados & Validación & \Pend & 4\\
 \midrule
@@ -184,16 +185,16 @@ T4.2\N & Informe final & Document. & \Pend & 4\\
 \textbf{\% Etapa 2} & \textbf{\% Etapa 3}\\
 \midrule
 Diseño         & 9  & 9  & 0 & 0  & 100\% & \textbf{100\%}\\
-Implementación & 16 & 11 & 4 & 1  & 53\%  & \textbf{69\%}\\
-Validación     & 9  & 2  & 2 & 5  & 14\%  & \textbf{22\%}\\
+Implementación & 16 & 13 & 2 & 1  & 53\%  & \textbf{81\%}\\
+Validación     & 8  & 3  & 2 & 3  & 14\%  & \textbf{38\%}\\
 Documentación  & 4  & 2  & 0 & 2  & 33\%  & \textbf{50\%}\\
 \midrule
-Total          & 38 & 24 & 6 & 8  & 55\%  & \textbf{63\%}\\
+Total          & 37 & 27 & 4 & 6  & 55\%  & \textbf{73\%}\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-El avance de implementación (69\%) supera el 50\% exigido para esta etapa. Cada tarea
+El avance de implementación (81\%) supera el 50\% exigido para esta etapa. Cada tarea
 marcada como \emph{Hecho} tiene respaldo verificable en el repositorio
 (Sección~\ref{sec:demo}).
 
@@ -316,10 +317,50 @@ bloque calcule una sola celda, ninguna caché por bloque reduce el volumen de da
 reutilización debe ocurrir \emph{entre celdas}, lo que justifica el cambio a \emph{tiling}
 (v2--v4) en lugar de seguir ajustando v1.
 
-\paragraph{Variantes v2--v4.}
-\pend{completar las celdas marcadas con \pc{} en la Tabla~\ref{tab:variantes} con \texttt{scripts/profile.sh}
-(\texttt{ncu --set full}) para cada variante en la misma configuración ($B=1$,
-$n=\num{1000}$, $\theta=0{,}5$) y para $n=\num{10000}$.}
+\paragraph{Variantes v1 $\rightarrow$ v2 $\rightarrow$ v4 (medida).}
+La Tabla~\ref{tab:versiones} compara el tiempo de extremo a extremo de \texttt{ft.maxmin} con
+cada versión del kernel. Las tres series se midieron con el mismo script
+(\texttt{comparativa/time.py}), las mismas matrices (generador \emph{supercrítico} por bloques,
+$c=1$, semillas 101--110), $\theta=0{,}5$, 3 órdenes y 10 repeticiones por dimensión, en la
+RTX~4090 de \texttt{cuda3}.
+
+\begin{table}[h]
+\centering
+\caption{Tiempo de \texttt{ft.maxmin} por versión del kernel (ms, media $\pm$ desviación
+estándar)}\label{tab:versiones}
+\begin{tabular}{rrrrr}
+\toprule
+\textbf{Dimensión} & \textbf{v1} & \textbf{v2} & \textbf{v4} & \textbf{v1 / v4}\\
+\midrule
+150   & $0{,}18 \pm 0{,}02$  & $0{,}18 \pm 0{,}05$ & $0{,}32 \pm 0{,}05$ & 0,5$\times$\\
+300   & $0{,}96 \pm 0{,}05$  & $0{,}23 \pm 0{,}03$ & $0{,}46 \pm 0{,}04$ & 2,1$\times$\\
+600   & $6{,}33 \pm 0{,}04$  & $0{,}75 \pm 0{,}05$ & $1{,}02 \pm 0{,}03$ & 6,2$\times$\\
+700   & $9{,}62 \pm 0{,}02$  & $1{,}02 \pm 0{,}05$ & $1{,}16 \pm 0{,}05$ & 8,3$\times$\\
+900   & $24{,}41 \pm 0{,}09$ & $1{,}87 \pm 0{,}05$ & $1{,}72 \pm 0{,}04$ & 14,2$\times$\\
+1.200 & $75{,}17 \pm 0{,}10$ & $4{,}47 \pm 0{,}25$ & $4{,}08 \pm 0{,}07$ & \textbf{18,4$\times$}\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{itemize}
+  \item \textbf{v1 crece de forma cúbica}: de 300 a \num{1200} (4 veces la dimensión) su tiempo
+        se multiplica por 78, cerca del factor 64 que predice $O(n^3)$ con un kernel limitado por
+        memoria.
+  \item \textbf{v2 y v4 crecen mucho más lento}: en el mismo rango se multiplican por 20 y 9. Con
+        estas dimensiones la GPU no se llega a llenar, y el tiempo queda dominado por costos fijos
+        (lanzamientos, reservas y copias) más que por el cómputo.
+  \item \textbf{v4 es 18,4 veces más rápido que v1 en \num{1200}}, y la ventaja crece con la
+        dimensión, como predice la Tabla~\ref{tab:reuso}.
+  \item \textbf{v2 gana en dimensiones pequeñas} (hasta 700): con 64 hilos por bloque, v4 lanza
+        pocos bloques y deja SM ociosos cuando la matriz es chica. Desde 900 v4 es más rápido
+        (un 9\% en \num{1200}). Como el objetivo son matrices de hasta \num{10000} nodos, se elige
+        v4 como kernel por defecto (ADR-7). \pend{confirmar v2 frente a v4 en $n=\num{10000}$.}
+\end{itemize}
+
+\paragraph{Perfil de las variantes.}
+La Tabla~\ref{tab:variantes} reúne las métricas de Nsight Compute.
+\pend{completar las celdas marcadas con \pc{} con \texttt{scripts/profile.sh}
+(\texttt{ncu --set full}) en la misma configuración.}
 
 \begin{table}[h]
 \centering
@@ -332,7 +373,6 @@ Duración [ms]           & 14,58 & 11,39 & \pc & \pc & \pc\\
 Cómputo (SM) [\%]       & 5,19  & 10,45 & \pc & \pc & \pc\\
 L2 [\%]                 & 87,09 & 90,71 & \pc & \pc & \pc\\
 Ocupancia lograda [\%]  & 99,16 & 99,55 & \pc & \pc & \pc\\
-Speedup sobre v1        & 1,00$\times$ & 1,28$\times$ & \pc & \pc & \pc\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -397,100 +437,137 @@ con la referencia CPU (Sección~\ref{sec:pruebas}).
         \texttt{scripts/sanitize.sh}.}
 \end{itemize}
 
-\subsection{Rendimiento preliminar frente a forgeffects}
-Se midió el tiempo de extremo a extremo de \texttt{ft.maxmin} y de
-\texttt{iterative\_maxmin\_cuadrado} de forgeffects (en GPU y en CPU) con \texttt{tests/test.py}:
-$\theta=0{,}3$, 4 órdenes, 10 repeticiones tras calentamiento, matrices de $2n\times2n$ con
-semilla fija, en \texttt{cuda3}. La Tabla~\ref{tab:prelim} y la Figura~\ref{fig:prelim}
-muestran los resultados.
+\subsection{Rendimiento frente a forgeffects}
+El benchmark comparativo (\texttt{comparativa/time.py}) ejecuta \texttt{ft.maxmin} e
+\texttt{iterative\_maxmin\_\allowbreak cuadrado} de forgeffects sobre \textbf{las mismas matrices}: 6
+dimensiones, 10 repeticiones por dimensión con semillas distintas, una ejecución previa de
+calentamiento, $\theta=0{,}5$ y 3 órdenes, en \texttt{cuda3}. Esto corresponde al requerimiento
+de benchmarking de OBJ3 (6 dimensiones, 10 ejecuciones por dimensión). La Tabla~\ref{tab:prelim}
+y la Figura~\ref{fig:prelim} muestran los resultados.
 
 \begin{table}[h]
 \centering
-\caption{Tiempo de extremo a extremo (ms, media $\pm$ desviación estándar, 10 repeticiones)}
+\caption{Tiempo frente a forgeffects (ms, media $\pm$ desviación estándar, 10 repeticiones)}
 \label{tab:prelim}
-\begin{tabular}{rrrr}
+\begin{tabular}{rrrrrr}
 \toprule
-\textbf{Nodos} & \textbf{forgeffects GPU} & \textbf{forgeffects CPU} & \textbf{ft.maxmin}\\
+\textbf{Dimensión} & \textbf{forgeffects} & \textbf{ft v4} &
+\textbf{Speedup v1} & \textbf{Speedup v2} & \textbf{Speedup v4}\\
 \midrule
-200   & $28{,}1 \pm 6{,}0$     & $27{,}0 \pm 0{,}6$     & $5{,}4 \pm 0{,}7$\\
-400   & $51{,}6 \pm 10{,}7$    & $75{,}8 \pm 2{,}2$     & $33{,}2 \pm 0{,}1$\\
-600   & $107{,}7 \pm 28{,}5$   & $207{,}9 \pm 7{,}3$    & $111{,}7 \pm 0{,}8$\\
-800   & $217{,}9 \pm 64{,}9$   & $430{,}3 \pm 9{,}4$    & $259{,}0 \pm 1{,}2$\\
-1.000 & $394{,}3 \pm 111{,}4$  & $843{,}6 \pm 13{,}7$   & $497{,}5 \pm 1{,}6$\\
-1.200 & $610{,}0 \pm 14{,}7$   & $\num{1457.9} \pm 48{,}4$  & $859{,}1 \pm 0{,}8$\\
-1.600 & ---                    & $\num{3682.1} \pm 152{,}0$ & $\num{2039.3} \pm 5{,}2$\\
-1.800 & ---                    & $\num{5158.1} \pm 220{,}7$ & $\num{2896.7} \pm 6{,}4$\\
-2.000 & ---                    & ---                    & $\num{3969.3} \pm 7{,}8$\\
+150   & $8{,}50 \pm 1{,}49$  & $0{,}32 \pm 0{,}05$ & 42,8$\times$ & 44,0$\times$ & 30,4$\times$\\
+300   & $8{,}83 \pm 0{,}62$  & $0{,}46 \pm 0{,}04$ & 8,5$\times$  & 39,3$\times$ & 20,7$\times$\\
+600   & $15{,}44 \pm 1{,}71$ & $1{,}02 \pm 0{,}03$ & 2,5$\times$  & 20,7$\times$ & 15,0$\times$\\
+700   & $22{,}52 \pm 5{,}42$ & $1{,}16 \pm 0{,}05$ & 2,2$\times$  & 19,4$\times$ & 23,2$\times$\\
+900   & $41{,}67 \pm 8{,}42$ & $1{,}72 \pm 0{,}04$ & 1,6$\times$  & 21,7$\times$ & 26,2$\times$\\
+1.200 & $58{,}94 \pm 3{,}23$ & $4{,}08 \pm 0{,}07$ & 0,8$\times$  & 12,8$\times$ & 15,0$\times$\\
+\midrule
+\multicolumn{3}{r}{\textbf{Speedup medio}} & 9,7$\times$ & 26,3$\times$ & \textbf{21,8$\times$}\\
 \bottomrule
 \end{tabular}
+
+\smallskip
+{\footnotesize La columna forgeffects reúne las 30 corridas de forgeffects de las tres
+campañas. Cada speedup se calcula contra las corridas de forgeffects de su propia campaña.}
 \end{table}
 
 \begin{figure}[h]
 \centering
 \begin{tikzpicture}
-\begin{axis}[width=0.78\textwidth,height=6.3cm,xlabel={Nodos},ylabel={Tiempo [ms]},
+\begin{axis}[width=0.78\textwidth,height=6.3cm,xlabel={Dimensión},ylabel={Tiempo [ms]},
   ymode=log,legend pos=south east,grid=both,grid style={gray!20},
-  legend style={font=\small},xtick={200,600,1000,1400,1800},
+  legend style={font=\small},xtick={150,300,600,900,1200},
   x tick label style={/pgf/number format/.cd,1000 sep={.}}]
-\addplot+[mark=o,thick] coordinates {(200,28.1)(400,51.6)(600,107.7)(800,217.9)(1000,394.3)(1200,610.0)};
-\addlegendentry{forgeffects GPU}
-\addplot+[mark=triangle,thick] coordinates {(200,27.0)(400,75.8)(600,207.9)(800,430.3)(1000,843.6)(1200,1457.9)(1600,3682.1)(1800,5158.1)};
-\addlegendentry{forgeffects CPU}
-\addplot+[mark=square,thick] coordinates {(200,5.4)(400,33.2)(600,111.7)(800,259.0)(1000,497.5)(1200,859.1)(1600,2039.3)(1800,2896.7)(2000,3969.3)};
-\addlegendentry{ft.maxmin}
+\addplot+[mark=o,thick] coordinates {(150,8.50)(300,8.83)(600,15.44)(700,22.52)(900,41.67)(1200,58.94)};
+\addlegendentry{forgeffects}
+\addplot+[mark=triangle,thick] coordinates {(150,0.176)(300,0.958)(600,6.333)(700,9.624)(900,24.406)(1200,75.165)};
+\addlegendentry{forgethreads v1}
+\addplot+[mark=diamond,thick] coordinates {(150,0.183)(300,0.226)(600,0.753)(700,1.019)(900,1.874)(1200,4.465)};
+\addlegendentry{forgethreads v2}
+\addplot+[mark=square,thick] coordinates {(150,0.324)(300,0.457)(600,1.015)(700,1.156)(900,1.717)(1200,4.075)};
+\addlegendentry{forgethreads v4}
 \end{axis}
 \end{tikzpicture}
-\caption{Tiempo de extremo a extremo según el número de nodos (escala logarítmica)}
+\caption{Tiempo de extremo a extremo según la dimensión (escala logarítmica)}
 \label{fig:prelim}
 \end{figure}
 
 \paragraph{Análisis.}
 \begin{itemize}
-  \item forgethreads es 5,2 veces más rápido que forgeffects en GPU para 200 nodos, pero
-        \textbf{a partir de 600 nodos es más lento}: 1,26 veces a \num{1000} nodos y 1,41 veces
-        a \num{1200}. El objetivo de OBJ2 (speedup medio $\geq 10\times$) \textbf{no se cumple
-        en esta medición}.
-  \item El kernel no explica esa diferencia. Para $n=\num{1000}$ el kernel tarda 11,24\,ms por
-        orden (Nsight Systems), unos 45\,ms en 4 órdenes, frente a 497\,ms de extremo a extremo.
-        Más del 90\% del tiempo de \texttt{ft.maxmin} se gasta fuera del kernel. Los
-        candidatos son la reconstrucción de caminos en el host, que copia $C_s$, $C_{s+1}$ y
-        \emph{argmax} completos a la CPU en cada orden y recorre los caminos en un solo hilo,
-        y la conversión de los caminos a listas de arreglos NumPy.
-        \pend{confirmar el reparto con un perfil \texttt{nsys} de \texttt{ft.maxmin} completo.}
-  \item forgethreads completa \num{1600}, \num{1800} y \num{2000} nodos, donde la medición de
-        forgeffects en GPU ya no se ejecuta, y su desviación estándar es en general un orden de
-        magnitud menor que la de forgeffects en GPU (0,1--1,6\,ms frente a 6--111\,ms), lo que
-        indica tiempos mucho más estables.
+  \item \textbf{Criterio de OBJ2 cumplido en el rango medido.} Con v4, forgethreads es en
+        promedio \textbf{21,8 veces más rápido} que forgeffects (entre 15,0$\times$ y
+        30,4$\times$), por encima del $10\times$ exigido. El mínimo de cada versión está en
+        \num{1200}, la dimensión más grande que forgeffects puede procesar.
+  \item \textbf{La optimización era necesaria.} Con v1, forgethreads pierde su ventaja al
+        crecer la dimensión y en \num{1200} es más lento que forgeffects (0,8$\times$). Sin el
+        \emph{tiling}, OBJ2 no se habría cumplido.
+  \item \textbf{Estabilidad.} La desviación estándar de forgethreads es de 0,03 a 0,07\,ms
+        desde 600, frente a 1,7--8,4\,ms en forgeffects. Los tiempos de forgethreads son
+        predecibles, lo que simplifica estimar la duración de las \num{2640} corridas.
 \end{itemize}
 
-\paragraph{Problemas de método detectados.}
-La revisión del script reveló dos defectos que impiden usar esta tabla como el speedup oficial
-(T3.2.3):
-\begin{enumerate}
-  \item \textbf{Entradas distintas.} forgeffects recibe matrices construidas con densidad
-        $2n\log(2n)$ y forgethreads con $n\log n$. Ambas usan la misma semilla, pero no son la
-        misma matriz, y la cantidad de efectos (y por lo tanto el costo de reconstruir
-        caminos) difiere.
-  \item \textbf{Versión del kernel no registrada.} El CSV no guarda el commit ni la variante
-        de kernel usada, por lo que no es posible atribuir los tiempos a v1 o v4 con certeza.
-\end{enumerate}
+\paragraph{Limitación del método.} \texttt{time.py} mide con \texttt{time.time()} alrededor de
+cada llamada. \texttt{ft.maxmin} es síncrona (devuelve arreglos NumPy), pero forgeffects puede
+devolver tensores de TensorFlow aún en cálculo. \pend{verificar que el resultado de forgeffects
+se materializa (p.\ ej.\ con \texttt{.numpy()}) antes de detener el reloj, como exige el
+requerimiento de medición de OBJ1.}
+
+\subsection{Límites de dimensión y memoria}
+La búsqueda de límites (\texttt{comparativa/memory\_bounds.py}: búsqueda exponencial y luego
+bisección con tolerancia de 10, cada prueba en un subproceso aislado, 2 órdenes) dio los
+resultados de la Tabla~\ref{tab:limites}.
+
+\begin{table}[h]
+\centering
+\caption{Dimensión máxima procesable en la RTX~4090 (24\,GB)}\label{tab:limites}
+\begin{tabular}{p{3.9cm}rp{8.2cm}}
+\toprule
+\textbf{Implementación} & \textbf{Máximo} & \textbf{Primer fallo}\\
+\midrule
+forgeffects & \num{1286} & \num{1292}: \emph{illegal memory access} en la reducción CUB.
+Desde \num{1500}, \emph{OOM} al reservar un tensor $[1,n,n,n]$. Pico de 8,43\,GB en \num{1282}.\\
+\addlinespace
+forgethreads (versión anterior) & \num{30650} & \num{30656}: un control fijo rechazaba
+reservas de más de 2\,GB por buffer.\\
+\addlinespace
+forgethreads (actual) & \textbf{\num{37886}} & \num{37892}: la guardia rechaza
+\emph{argmax} porque superaría el 70\% de la VRAM (17,68\,GB).\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+forgethreads procesa matrices \textbf{29 veces más grandes} que forgeffects (en número de
+elementos, unas 870 veces más). El máximo medido (\num{37886}) coincide con el límite teórico de
+$\approx\num{38700}$ que la Etapa 2 calculó a partir del presupuesto $12Bn^2$ bytes, lo que valida
+el modelo de memoria. Además, la búsqueda confirmó dos comportamientos de forgeffects: falla con
+un error de índices antes de quedarse sin memoria (Etapa 2) y su consumo pico (8,43\,GB para
+\num{1282}) es del orden de $n^3$.
+
+\subsection{Prueba con matrices densas}
+Una medición anterior (\texttt{tests/test.py}, $\theta=0{,}3$, 4 órdenes, matrices densas)
+mostró el caso opuesto: con \num{1000} nodos \texttt{ft.maxmin} tardó 497\,ms y forgeffects en
+GPU 394\,ms, aunque el kernel sólo toma 11,24\,ms por orden (Nsight Systems). Con matrices
+densas hay cientos de miles de efectos por orden, y la reconstrucción de caminos en el host
+(copia de $C_s$, $C_{s+1}$ y \emph{argmax} a la CPU y recorrido en un hilo) domina el tiempo.
+Esa prueba además construía matrices distintas para cada librería, por eso se reemplazó por
+\texttt{comparativa/time.py}. \pend{confirmar el reparto con un perfil \texttt{nsys} de
+\texttt{ft.maxmin} sobre matrices densas.}
 
 \subsection{Ajustes derivados de las pruebas}
 \begin{itemize}
-  \item \textbf{Reconstrucción de caminos en GPU} (T2.1.2c\N). Como el costo está fuera del
-        kernel, optimizar más el kernel no cerraría la brecha. Se diseñó e implementó en la
-        rama \texttt{csr-paths-construction} el registro de pivotes por orden en formato CSR
-        directamente en GPU, de modo que sólo se transfieran al host los caminos que superan el
-        umbral y no las matrices densas.
-  \item \textbf{Dos modos de uso (planificado).} Los experimentos de profundidad de la Etapa 4
-        sólo necesitan $\eta_0$ y los conteos por orden, no los caminos. Se agregará un modo que
-        omita la reconstrucción, de modo que las \num{2640} corridas paguen sólo el costo del
-        kernel (ADR-11).
-  \item \textbf{Protocolo de medición corregido} (T3.2.2). La versión definitiva usa la misma
-        matriz para ambas librerías, registra el commit y la variante en cada fila del CSV y
-        separa tiempo de kernel (eventos CUDA) de tiempo de extremo a extremo.
+  \item \textbf{Kernel v4 por defecto} (ADR-7). El benchmark mostró que v1 no cumple OBJ2 y que
+        v4 supera a v2 desde 900.
+  \item \textbf{Guardia de VRAM relativa.} La búsqueda de límites mostró que el control fijo de
+        2\,GB por buffer cortaba la dimensión en \num{30650}, por debajo de lo que la GPU
+        soporta. Se reemplazó por una guardia del 70\% de la VRAM total, con lo que el límite
+        subió a \num{37886} (+24\%).
+  \item \textbf{Reconstrucción de caminos en GPU} (T2.1.2c\N). La prueba con matrices densas
+        mostró que, con muchos efectos, el costo está fuera del kernel. En la rama
+        \texttt{csr-paths-construction} se registran los pivotes de cada orden en formato CSR en
+        la GPU, de modo que sólo se transfieran al host los caminos y no las matrices densas.
+  \item \textbf{Modo sin caminos (planificado).} Los experimentos de profundidad sólo necesitan
+        $\eta_0$ y los conteos por orden. Se agregará un modo que omita la reconstrucción
+        (ADR-11).
 \end{itemize}
-
 % ===========================================================================
 \section{Validación preliminar}\label{sec:validacion}
 % ===========================================================================
@@ -514,9 +591,9 @@ $\eta_0 = 3$ con $c=50$ y $\eta_0 = 37$ con $c=2$
 (\texttt{tests/test\_10000.csv}, rama de caminos). & Cumple\\
 \addlinespace
 Prueba de estrés de memoria &
-Con $n=\num{100000}$ la guardia rechaza la reserva antes de lanzar el kernel
-(``allocation for C\_dev\_after is \num{5640261632} bytes'', log \texttt{fecuda.473}): falla
-de forma controlada, sin corromper el contexto CUDA. & Cumple\\
+La búsqueda de límites llevó la dimensión hasta \num{38400}; sobre el límite la guardia
+rechaza la reserva antes de lanzar el kernel y la prueba siguiente continúa sin errores
+(\texttt{comparativa/logs.fecuda.917}). & Cumple\\
 \addlinespace
 Correctitud frente a CPU &
 Conteo idéntico (\num{472326}) para v1 y v4. & Cumple\\
@@ -526,8 +603,11 @@ Tiempo en $n=\num{10000}$ &
 (\texttt{output/timing\_results2.csv}, una corrida). & Preliminar\\
 \addlinespace
 Speedup medio $\geq 10\times$ (OBJ2) &
-No se cumple de extremo a extremo (Tabla~\ref{tab:prelim}); en curso con la reconstrucción
-en GPU. & No cumple aún\\
+21,8$\times$ en promedio con v4, mínimo 15,0$\times$, mismas entradas, 6 dimensiones y 10
+repeticiones (Tabla~\ref{tab:prelim}). & Cumple (hasta \num{1200})\\
+\addlinespace
+Superar el límite de forgeffects &
+\num{37886} frente a \num{1286} nodos (Tabla~\ref{tab:limites}). & Cumple\\
 \addlinespace
 Ocupancia y throughput $\geq 80\%$ (OBJ2) &
 Ocupancia 99,55\% y memoria 90,71\% en v1b. \pend{medir v4.} & Parcial\\
@@ -536,7 +616,7 @@ Ocupancia 99,55\% y memoria 90,71\% en v1b. \pend{medir v4.} & Parcial\\
 \end{table}
 
 \paragraph{Estimación del costo de la Etapa 4.}
-Con el tiempo medido en $n=\num{10000}$ (unos 6,6\,s por orden de extremo a extremo), las
+Con el tiempo medido en $n=\num{10000}$ con matrices densas y caminos (unos 6,6\,s por orden), las
 corridas con profundidad alta (por ejemplo $\eta_0 = 37$ con $c = 2$) tardarían varios minutos
 cada una. Sin reconstrucción de caminos, el costo por orden queda determinado por el kernel.
 \pend{medir el tiempo del kernel v4 por orden en $n=\num{10000}$ y recalcular la duración
@@ -581,14 +661,17 @@ caminos reduce el tiempo de las \num{2640} corridas. Se implementa en la Etapa 4
 
 \subsection{Desviaciones del plan}
 \begin{itemize}
-  \item \textbf{Speedup oficial (T2.2.1, T3.2.3) desplazado a la Etapa 4.} La medición
-        preliminar mostró que el cuello de botella está en la reconstrucción de caminos, y
-        reveló defectos en el script. Reportar un speedup antes de corregirlos habría
-        producido una cifra no comparable.
-  \item \textbf{Nueva tarea T2.1.2c\N.} No estaba planificada; surgió del análisis de la
-        Tabla~\ref{tab:prelim}.
-  \item \textbf{Barrido de threshold y perfil de forgeffects (T1.1.1, T1.1.5) a la Etapa 4.}
-        Se priorizó la optimización, que es el camino crítico para las \num{2640} corridas.
+  \item \textbf{Speedup en $n=\num{10000}$ a la Etapa 4.} forgeffects no supera \num{1286}
+        nodos, así que el speedup sólo puede medirse hasta \num{1200}. En \num{10000} se
+        reportará el tiempo absoluto de forgethreads.
+  \item \textbf{Nueva tarea T2.1.2c\N.} No estaba planificada; surgió de la prueba con
+        matrices densas (Sección~\ref{sec:pruebas}).
+  \item \textbf{Script de medición reemplazado.} \texttt{tests/test.py} se sustituyó por
+        \texttt{comparativa/time.py} al detectar que construía matrices distintas para cada
+        librería.
+  \item \textbf{Barrido de threshold (T1.1.1) a la Etapa 4.} Se priorizó la optimización, que
+        es el camino crítico para las \num{2640} corridas. Del perfil de forgeffects (T1.1.5)
+        ya están medidos el límite de dimensión y el pico de memoria; falta el perfil Nsight.
   \item \textbf{Prueba de ausencia de copias (T2.4.2) a la Etapa 4.} Hoy la salida de caminos
         pasa necesariamente por el host; la prueba sólo tiene sentido una vez integrada la
         reconstrucción en GPU.
@@ -600,7 +683,10 @@ etapa se encuentra en las ramas \texttt{gpu\_paths} (kernels v2--v4 y orquestado
 \texttt{csr-paths-construction} (reconstrucción en GPU). Commits relevantes:
 \texttt{cf44ae8} (kernel v2), \texttt{17f70a4} (kernels v3 y v4), \texttt{fa645cf}
 (optimización de los kernels max--min), \texttt{322cef9} (corrección de caminos fallidos) y
-\texttt{96c2da7} (registro CSR por orden y reconstrucción de caminos de $m$ a $n$).
+\texttt{96c2da7} (registro CSR por orden y reconstrucción de caminos de $m$ a $n$),
+\texttt{0aad706} (benchmark de límites y tiempo) y \texttt{a0b0dd8} (benchmark de tiempo).
+Los datos crudos de las Tablas~\ref{tab:versiones}, \ref{tab:prelim} y \ref{tab:limites}
+están en \texttt{comparativa/} (\texttt{time\_results*.csv} y \texttt{logs.*}).
 
 Desde esta etapa los commits siguen Conventional Commits~\cite{cc}:
 \begin{lstlisting}
@@ -628,8 +714,8 @@ Refs: T2.2.2
      \fill[#2] (#3,-#1-0.35) rectangle (#4,-#1+0.35);}
   \gbar{1}{blue!60}{0}{1.5}{T2.1.3 perfil Nsight de v2--v4}
   \gbar{2}{blue!60}{0}{2}{T2.1.2c caminos en GPU (integración)}
-  \gbar{3}{blue!60}{0}{1}{T3.2.2 protocolo de medición corregido}
-  \gbar{4}{blue!60}{1}{2}{T2.2.1 / T3.2.3 benchmark y speedup}
+  \gbar{3}{blue!60}{0}{1}{v2 frente a v4 en $n=\num{10000}$}
+  \gbar{4}{blue!60}{0}{1}{Sincronización de forgeffects y re-medición}
   \gbar{5}{blue!60}{1}{2}{T1.1.1 / T1.1.5 barrido y perfil FE}
   \gbar{6}{orange!80}{1}{3.5}{T3.1.2 \num{2640} corridas (Slurm)}
   \gbar{7}{orange!80}{2}{3}{T2.4.2, T2.3.2, T2.6.1 pip y README}
@@ -642,7 +728,8 @@ Refs: T2.2.2
 \end{figure}
 
 La Etapa 4 empieza por cerrar lo que la Etapa 3 dejó abierto: perfilar v2--v4, integrar la
-reconstrucción de caminos en GPU y medir el speedup con el protocolo corregido. Con eso se
+reconstrucción de caminos en GPU y confirmar que la elección de v4 se mantiene en
+$n=\num{10000}$. Con eso se
 lanzan las \num{2640} corridas en Slurm, en paralelo con el empaquetado. El análisis
 estadístico y el informe final cierran el trabajo antes del 4 de diciembre.
 
