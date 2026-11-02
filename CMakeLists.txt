@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_CXX_COMPILER /usr/bin/g++)
-set(CMAKE_CUDA_COMPILER nvcc)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda-12.4/bin/nvcc)
 
 project(FeCUDA LANGUAGES CXX CUDA)
 
