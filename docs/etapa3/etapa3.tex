@@ -351,10 +351,40 @@ estándar)}\label{tab:versiones}
   \item \textbf{v4 es 18,4 veces más rápido que v1 en \num{1200}}, y la ventaja crece con la
         dimensión, como predice la Tabla~\ref{tab:reuso}.
   \item \textbf{v2 gana en dimensiones pequeñas} (hasta 700): con 64 hilos por bloque, v4 lanza
-        pocos bloques y deja SM ociosos cuando la matriz es chica. Desde 900 v4 es más rápido
-        (un 9\% en \num{1200}). Como el objetivo son matrices de hasta \num{10000} nodos, se elige
-        v4 como kernel por defecto (ADR-7). \pend{confirmar v2 frente a v4 en $n=\num{10000}$.}
+        pocos bloques y deja SM ociosos cuando la matriz es chica. Desde 900 v4 es más rápido.
 \end{itemize}
+
+\paragraph{v2 frente a v4 en dimensiones grandes (medida).}
+Para decidir qué variante usar en el rango de los experimentos se midieron v2 y v4 hasta
+$n=\num{10000}$ con el mismo generador ($c=1$), 10 semillas por dimensión, $\theta=0{,}5$ y
+hasta 100 órdenes. Como $\eta_0$ cambia con la semilla, la comparación se hace por tiempo por
+orden (tiempo total dividido por $\eta_0$). Ambas variantes recorren exactamente los mismos
+órdenes con cada semilla.
+
+\begin{table}[h]
+\centering
+\caption{v2 frente a v4 en dimensiones grandes (10 repeticiones por dimensión)}\label{tab:v2v4}
+\begin{tabular}{rrrrrr}
+\toprule
+ & & \multicolumn{2}{c}{\textbf{Tiempo por orden [ms]}} & & \\
+\cmidrule(lr){3-4}
+\textbf{Dimensión} & $\overline{\eta_0}$ & \textbf{v2} & \textbf{v4} & \textbf{v2 / v4} &
+\textbf{Tiempo total v4 [s]}\\
+\midrule
+\num{1200}  & 27,6 & 0,95   & 0,73   & 1,31$\times$ & $0{,}020 \pm 0{,}004$\\
+\num{2500}  & 30,8 & 7,39   & 4,77   & 1,55$\times$ & $0{,}145 \pm 0{,}041$\\
+\num{5000}  & 39,0 & 55,60  & 31,21  & 1,78$\times$ & $1{,}21 \pm 0{,}29$\\
+\num{10000} & 60,1 & 475,60 & 232,03 & \textbf{2,05$\times$} & $13{,}91 \pm 4{,}02$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La ventaja de v4 crece con la dimensión y llega a \textbf{2,05$\times$ en $n=\num{10000}$}, lo
+que confirma la elección de v4 como kernel por defecto (ADR-7). Entre \num{5000} y \num{10000}
+el tiempo por orden de v4 se multiplica por 7,4, cerca del factor 8 de $O(n^3)$: en este rango
+la GPU está llena y el tiempo lo determina el cómputo, a diferencia de lo observado bajo
+\num{1200}. La variabilidad del tiempo total proviene de $\eta_0$: en $n=\num{10000}$ el tiempo por orden
+de v4 varía menos de un 3\% entre semillas (229,6 a 235,8\,ms).
 
 \paragraph{Perfil de las variantes.}
 La comparación de esta etapa se hace por tiempo medido con las mismas entradas
@@ -559,8 +589,8 @@ Correctitud frente a CPU &
 Conteo idéntico (\num{472326}) para v1 y v4. & Cumple\\
 \addlinespace
 Tiempo en $n=\num{10000}$ &
-\num{26532}\,ms de extremo a extremo para 4 órdenes con $\theta=0{,}3$, incluida la
-reconstrucción de caminos (una corrida). & Preliminar\\
+$13{,}9 \pm 4{,}0$\,s hasta la convergencia ($\overline{\eta_0}=60$), 232\,ms por orden con v4,
+10 repeticiones (Tabla~\ref{tab:v2v4}). & Cumple\\
 \addlinespace
 Speedup medio $\geq 10\times$ (OBJ2) &
 21,8$\times$ en promedio con v4, mínimo 15,0$\times$, mismas entradas, 6 dimensiones y 10
@@ -576,11 +606,13 @@ Ocupancia 99,55\% y memoria 90,71\% en v1b; perfil de v4 en la Etapa 4. & Parcia
 \end{table}
 
 \paragraph{Estimación del costo de la Etapa 4.}
-Con el tiempo medido en $n=\num{10000}$ incluyendo caminos (unos 6,6\,s por orden), las
-corridas con profundidad alta (por ejemplo $\eta_0 = 37$ con $c = 2$) tardarían varios minutos
-cada una. Sin reconstrucción de caminos, el costo por orden queda determinado por el kernel.
-\pend{medir el tiempo del kernel v4 por orden en $n=\num{10000}$ y recalcular la duración
-estimada de las \num{2640} corridas.}
+Con el tiempo por orden medido para v4 (Tabla~\ref{tab:v2v4}), extrapolado con $O(n^3)$ a los
+tamaños no medidos, y el $\eta_0$ medio observado (39,4), las \num{2640} corridas tomarían
+\textbf{unas 1,5 horas} de GPU. En el peor caso, con todas las corridas llegando a la cota de
+100 órdenes, tomarían \textbf{unas 3,9 horas}. Ambas cifras caben en un único trabajo Slurm en
+\texttt{cuda3}, por lo que el costo de cómputo no es un riesgo para la planificación de la
+Etapa 4. La estimación usa sólo $c=1$; como $\eta_0$ depende de $c$, la duración real puede
+variar, pero queda acotada por el peor caso.
 
 % ===========================================================================
 \section{Documentación del proyecto}
@@ -669,7 +701,7 @@ Refs: T2.2.2
      \fill[#2] (#3,-#1-0.35) rectangle (#4,-#1+0.35);}
   \gbar{1}{blue!60}{0}{1.5}{T2.1.3 perfil Nsight de v4 (OBJ2)}
   \gbar{2}{blue!60}{0}{2}{T2.1.2c caminos en GPU (integración)}
-  \gbar{3}{blue!60}{0}{1}{v2 frente a v4 en $n=\num{10000}$}
+  \gbar{3}{blue!60}{0}{1}{Modo sin caminos (ADR-11)}
   \gbar{4}{blue!60}{0}{1}{Sincronización de forgeffects y re-medición}
   \gbar{5}{blue!60}{1}{2}{T1.1.1 / T1.1.5 barrido y perfil FE}
   \gbar{6}{orange!80}{1}{3.5}{T3.1.2 \num{2640} corridas (Slurm)}
@@ -683,8 +715,7 @@ Refs: T2.2.2
 \end{figure}
 
 La Etapa 4 empieza por cerrar lo que la Etapa 3 dejó abierto: perfilar v4 con Nsight, integrar la
-reconstrucción de caminos en GPU y confirmar que la elección de v4 se mantiene en
-$n=\num{10000}$. Con eso se
+reconstrucción de caminos en GPU y agregar el modo sin caminos. Con eso se
 lanzan las \num{2640} corridas en Slurm, en paralelo con el empaquetado. El análisis
 estadístico y el informe final cierran el trabajo antes del 4 de diciembre.
 
