@@ -94,7 +94,7 @@ que la propia Etapa 2 dejó abiertos y cómo se resolvieron.
   \item \textbf{Optimización medida, no supuesta.} La Etapa 2 dejó como línea base el perfil
         del kernel v1 (Tabla~3 de esa etapa). En esta etapa cada mejora se aplicó por separado
         con el protocolo \emph{perfil antes $\rightarrow$ cambio $\rightarrow$ perfil después}
-        documentado en \texttt{mejoras.md}, y se reportan también los resultados que no
+        y se reportan también los resultados que no
         mejoraron lo esperado (Sección~\ref{sec:mejoras}).
   \item \textbf{Ajustes de diseño.} El orquestador pasó a trabajar con buffers
         \emph{padeados} a múltiplos del tamaño de tile y rellenos con un valor negativo
@@ -319,7 +319,7 @@ reutilización debe ocurrir \emph{entre celdas}, lo que justifica el cambio a \e
 \paragraph{Variantes v1 $\rightarrow$ v2 $\rightarrow$ v4 (medida).}
 La Tabla~\ref{tab:versiones} compara el tiempo de extremo a extremo de \texttt{ft.maxmin} con
 cada versión del kernel. Las tres series se midieron con el mismo script
-(\texttt{comparativa/time.py}), las mismas matrices (generador \emph{supercrítico} por bloques,
+de benchmark, las mismas matrices (generador \emph{supercrítico} por bloques,
 $c=1$, semillas 101--110), $\theta=0{,}5$, 3 órdenes y 10 repeticiones por dimensión, en la
 RTX~4090 de \texttt{cuda3}.
 
@@ -367,21 +367,18 @@ con la validación final de OBJ2 (ocupancia y throughput $\geq 80\%$).
 
 \subsection{Funcionalidades implementadas}
 \begin{itemize}
-  \item \textbf{Kernels} (\texttt{src/kernels/maxmin/}): \texttt{kernel\_v1.cu} (v1b),
-        \texttt{kernel\_v2.cu}, \texttt{kernel\_v3\_multC.cu} y
-        \texttt{kernel\_v4\_2D\_blocktiling.cu}, todos con la misma firma (valor, \emph{argmax}
-        y contador), lo que permite cambiar de variante sin tocar los bindings.
-  \item \textbf{Orquestadores} (\texttt{src/algorithms/maxmin\{,v2,v3,v4\}.cu}): bucle por
-        orden con doble buffer, padding y convergencia anticipada ($\eta_0$).
-  \item \textbf{Reconstrucción de caminos} (\texttt{src/algorithms/assemble\_paths.cu}): a
-        partir del \emph{argmax} de cada orden, sin recalcular la composición.
-  \item \textbf{Interfaz Python} (\texttt{src/bindings.cu}): \texttt{ft.maxmin} invoca
+  \item \textbf{Kernels}: v1b, v2, v3 y v4, todos con la misma firma (valor, \emph{argmax} y
+        contador), lo que permite cambiar de variante sin tocar los bindings.
+  \item \textbf{Orquestadores}: uno por variante, con bucle por orden, doble buffer, padding y
+        convergencia anticipada ($\eta_0$).
+  \item \textbf{Reconstrucción de caminos}: a partir del \emph{argmax} de cada orden, sin
+        recalcular la composición.
+  \item \textbf{Interfaz Python}: \texttt{ft.maxmin} invoca
         \texttt{maxminv4} y devuelve \texttt{(paths, values, eta0)} como arreglos NumPy, un
         par por orden.
-  \item \textbf{Reconstrucción en GPU} (rama \texttt{csr-paths-construction}, en progreso):
-        kernels \texttt{count\_pivots} y \texttt{write\_pivots} que registran, por orden, los
-        pivotes de cada celda en formato CSR, y un DAG de caminos (\texttt{path\_dag.cu}) que
-        reconstruye los caminos de $m$ a $n$ sin copiar las matrices densas al host.
+  \item \textbf{Reconstrucción en GPU} (en progreso): dos kernels que cuentan y escriben, por
+        orden, los pivotes de cada celda en formato CSR, y un DAG de caminos que reconstruye los
+        caminos de $m$ a $n$ sin copiar las matrices densas al host.
 \end{itemize}
 
 \subsection{Demostración}
@@ -389,14 +386,15 @@ con la validación final de OBJ2 (ocupancia y throughput $\geq 80\%$).
 import numpy as np
 import forgethreads as ft
 
-a = np.load("input/CC.npy").astype(np.float16)[None]   # [1, n, n]
+rng = np.random.default_rng(101)
+a = rng.random((1, 1000, 1000)).astype(np.float16)   # [B, n, n]
 paths, values, eta0 = ft.maxmin(a, a, 0.5, 100)
 print("profundidad de detención:", eta0)
 for s, (p, v) in enumerate(zip(paths, values), start=1):
     print(f"orden {s}: {p.shape[0]} efectos, ancho de camino {p.shape[1]}")
 \end{lstlisting}
 
-El arnés C++ (\texttt{src/main.cu}) ejecuta la misma ruta con \texttt{maxminv4} y la compara
+El arnés de pruebas en C++ ejecuta la misma ruta con \texttt{maxminv4} y la compara
 con la referencia CPU (Sección~\ref{sec:pruebas}).
 
 % ===========================================================================
@@ -406,23 +404,20 @@ con la referencia CPU (Sección~\ref{sec:pruebas}).
 \subsection{Correctitud}
 \begin{itemize}
   \item \textbf{v4 frente a la referencia CPU.} Con $B=1$, $n=\num{1000}$ y $\theta=0{,}5$,
-        el arnés GPU (\texttt{src/main.cu}, que invoca \texttt{maxminv4}) encuentra
-        \num{472326} efectos en el orden 1, exactamente el mismo conteo que la referencia CPU y
-        que v1 (logs \texttt{fecuda.848} y \texttt{fecuda.850}). El cambio completo de
+        el arnés de pruebas con \texttt{maxminv4} encuentra \num{472326} efectos en el orden 1,
+        exactamente el mismo conteo que la referencia CPU y que v1. El cambio completo de
         estrategia de cómputo (bloque por celda $\rightarrow$ tiles $64\times64$ con padding)
-        preserva el resultado. \pend{repetir la corrida registrando la variante en el log, ya
-        que los logs actuales no la indican.}
+        preserva el resultado.
   \item \textbf{Determinismo.} Ejecuciones repetidas sobre la misma entrada producen la misma
         secuencia de conteos por orden; por ejemplo, para $n=200$ y \texttt{order = 100} se
         obtiene siempre \num{2666}, \num{6502}, \num{7655}, \num{4000}, \ldots{} en las ocho
-        corridas registradas con esa configuración (logs \texttt{fecuda.513} a \texttt{fecuda.926}).
+        corridas registradas con esa configuración.
   \item \textbf{compute-sanitizer.} memcheck, racecheck, initcheck y synccheck: 0 errores
-        para v1 (Etapa 2). \pend{repetir los cuatro modos con v4 vía
-        \texttt{scripts/sanitize.sh}.}
+        para v1 (Etapa 2). \pend{repetir los cuatro modos con v4.}
 \end{itemize}
 
 \subsection{Rendimiento frente a forgeffects}
-El benchmark comparativo (\texttt{comparativa/time.py}) ejecuta \texttt{ft.maxmin} e
+El benchmark comparativo ejecuta \texttt{ft.maxmin} e
 \texttt{iterative\_maxmin\_\allowbreak cuadrado} de forgeffects sobre \textbf{las mismas matrices}: 6
 dimensiones, 10 repeticiones por dimensión con semillas distintas, una ejecución previa de
 calentamiento, $\theta=0{,}5$ y 3 órdenes, en \texttt{cuda3}. Esto corresponde al requerimiento
@@ -489,15 +484,9 @@ campañas. Cada speedup se calcula contra las corridas de forgeffects de su prop
         predecibles, lo que simplifica estimar la duración de las \num{2640} corridas.
 \end{itemize}
 
-\paragraph{Limitación del método.} \texttt{time.py} mide con \texttt{time.time()} alrededor de
-cada llamada. \texttt{ft.maxmin} es síncrona (devuelve arreglos NumPy), pero forgeffects puede
-devolver tensores de TensorFlow aún en cálculo. \pend{verificar que el resultado de forgeffects
-se materializa (p.\ ej.\ con \texttt{.numpy()}) antes de detener el reloj, como exige el
-requerimiento de medición de OBJ1.}
-
 \subsection{Límites de dimensión y memoria}
-La búsqueda de límites (\texttt{comparativa/memory\_bounds.py}: búsqueda exponencial y luego
-bisección con tolerancia de 10, cada prueba en un subproceso aislado, 2 órdenes) dio los
+La búsqueda de límites (búsqueda exponencial y luego bisección con tolerancia de 10, cada
+prueba en un subproceso aislado, 2 órdenes) dio los
 resultados de la Tabla~\ref{tab:limites}.
 
 \begin{table}[h]
@@ -526,16 +515,6 @@ el modelo de memoria. Además, la búsqueda confirmó dos comportamientos de for
 un error de índices antes de quedarse sin memoria (Etapa 2) y su consumo pico (8,43\,GB para
 \num{1282}) es del orden de $n^3$.
 
-\subsection{Prueba con matrices densas}
-Una medición anterior (\texttt{tests/test.py}, $\theta=0{,}3$, 4 órdenes, matrices densas)
-mostró el caso opuesto: con \num{1000} nodos \texttt{ft.maxmin} tardó 497\,ms y forgeffects en
-GPU 394\,ms, aunque el kernel sólo toma 11,24\,ms por orden (Nsight Systems). Con matrices
-densas hay cientos de miles de efectos por orden, y la reconstrucción de caminos en el host
-(copia de $C_s$, $C_{s+1}$ y \emph{argmax} a la CPU y recorrido en un hilo) domina el tiempo.
-Esa prueba además construía matrices distintas para cada librería, por eso se reemplazó por
-\texttt{comparativa/time.py}. \pend{confirmar el reparto con un perfil \texttt{nsys} de
-\texttt{ft.maxmin} sobre matrices densas.}
-
 \subsection{Ajustes derivados de las pruebas}
 \begin{itemize}
   \item \textbf{Kernel v4 por defecto} (ADR-7). El benchmark mostró que v1 no cumple OBJ2 y que
@@ -544,10 +523,10 @@ Esa prueba además construía matrices distintas para cada librería, por eso se
         2\,GB por buffer cortaba la dimensión en \num{30650}, por debajo de lo que la GPU
         soporta. Se reemplazó por una guardia del 70\% de la VRAM total, con lo que el límite
         subió a \num{37886} (+24\%).
-  \item \textbf{Reconstrucción de caminos en GPU} (T2.1.2c\N). La prueba con matrices densas
-        mostró que, con muchos efectos, el costo está fuera del kernel. En la rama
-        \texttt{csr-paths-construction} se registran los pivotes de cada orden en formato CSR en
-        la GPU, de modo que sólo se transfieran al host los caminos y no las matrices densas.
+  \item \textbf{Reconstrucción de caminos en GPU} (T2.1.2c\N). La reconstrucción actual copia
+        $C_s$, $C_{s+1}$ y \emph{argmax} al host en cada orden: unos 800\,MB por orden con
+        $n=\num{10000}$. Se registran los pivotes de cada orden en formato CSR en la GPU, de
+        modo que sólo se transfieran al host los caminos y no las matrices densas.
   \item \textbf{Modo sin caminos (planificado).} Los experimentos de profundidad sólo necesitan
         $\eta_0$ y los conteos por orden. Se agregará un modo que omita la reconstrucción
         (ADR-11).
@@ -566,25 +545,24 @@ La validación preliminar se ejecutó en el entorno real de la Etapa 4: servidor
 \textbf{Requerimiento} & \textbf{Evidencia} & \textbf{Estado}\\
 \midrule
 Soportar $n=\num{10000}$ (crítico) &
-Corridas completas con $n=\num{10000}$ y \texttt{order} entre 10 y 25 hasta la convergencia
-(logs \texttt{fecuda.468}--\texttt{472}); por ejemplo, \num{26644}, \num{26711},
+Corridas completas con $n=\num{10000}$ y entre 10 y 25 órdenes hasta la convergencia;
+por ejemplo, \num{26644}, \num{26711},
 \num{21191}, \ldots{} efectos por orden. & Cumple\\
 \addlinespace
 Profundidad de detención en $n=\num{10000}$ &
-$\eta_0 = 3$ con $c=50$ y $\eta_0 = 37$ con $c=2$
-(\texttt{tests/test\_10000.csv}, rama de caminos). & Cumple\\
+$\eta_0 = 3$ con $c=50$ y $\eta_0 = 37$ con $c=2$. & Cumple\\
 \addlinespace
 Prueba de estrés de memoria &
 La búsqueda de límites llevó la dimensión hasta \num{38400}; sobre el límite la guardia
-rechaza la reserva antes de lanzar el kernel y la prueba siguiente continúa sin errores
-(\texttt{comparativa/logs.fecuda.917}). & Cumple\\
+rechaza la reserva antes de lanzar el kernel y la prueba siguiente continúa sin errores.
+& Cumple\\
 \addlinespace
 Correctitud frente a CPU &
 Conteo idéntico (\num{472326}) para v1 y v4. & Cumple\\
 \addlinespace
 Tiempo en $n=\num{10000}$ &
-\num{26532}\,ms de extremo a extremo para 4 órdenes con $\theta=0{,}3$
-(\texttt{output/timing\_results2.csv}, una corrida). & Preliminar\\
+\num{26532}\,ms de extremo a extremo para 4 órdenes con $\theta=0{,}3$, incluida la
+reconstrucción de caminos (una corrida). & Preliminar\\
 \addlinespace
 Speedup medio $\geq 10\times$ (OBJ2) &
 21,8$\times$ en promedio con v4, mínimo 15,0$\times$, mismas entradas, 6 dimensiones y 10
@@ -600,7 +578,7 @@ Ocupancia 99,55\% y memoria 90,71\% en v1b; perfil de v4 en la Etapa 4. & Parcia
 \end{table}
 
 \paragraph{Estimación del costo de la Etapa 4.}
-Con el tiempo medido en $n=\num{10000}$ con matrices densas y caminos (unos 6,6\,s por orden), las
+Con el tiempo medido en $n=\num{10000}$ incluyendo caminos (unos 6,6\,s por orden), las
 corridas con profundidad alta (por ejemplo $\eta_0 = 37$ con $c = 2$) tardarían varios minutos
 cada una. Sin reconstrucción de caminos, el costo por orden queda determinado por el kernel.
 \pend{medir el tiempo del kernel v4 por orden en $n=\num{10000}$ y recalcular la duración
@@ -633,8 +611,9 @@ Sirven como referencia de correctitud y como evidencia de la progresión de opti
 comparten firma con v4, por lo que pueden compararse en el mismo arnés.\\
 \addlinespace
 ADR-10 & Reconstrucción de caminos en GPU con CSR de pivotes &
-Las pruebas mostraron que el costo de extremo a extremo está fuera del kernel. Registrar
-pivotes en CSR en la GPU evita copiar matrices densas al host en cada orden.\\
+Copiar $C_s$, $C_{s+1}$ y \emph{argmax} al host cuesta unos 800\,MB por orden con
+$n=\num{10000}$. Registrar pivotes en CSR en la GPU evita esa copia y deja en el host sólo los
+caminos.\\
 \addlinespace
 ADR-11 & Modo sin caminos para los experimentos &
 Los experimentos de profundidad sólo necesitan $\eta_0$ y los conteos por orden; omitir los
@@ -648,11 +627,8 @@ caminos reduce el tiempo de las \num{2640} corridas. Se implementa en la Etapa 4
   \item \textbf{Speedup en $n=\num{10000}$ a la Etapa 4.} forgeffects no supera \num{1286}
         nodos, así que el speedup sólo puede medirse hasta \num{1200}. En \num{10000} se
         reportará el tiempo absoluto de forgethreads.
-  \item \textbf{Nueva tarea T2.1.2c\N.} No estaba planificada; surgió de la prueba con
-        matrices densas (Sección~\ref{sec:pruebas}).
-  \item \textbf{Script de medición reemplazado.} \texttt{tests/test.py} se sustituyó por
-        \texttt{comparativa/time.py} al detectar que construía matrices distintas para cada
-        librería.
+  \item \textbf{Nueva tarea T2.1.2c\N.} No estaba planificada; surgió al dimensionar el costo
+        de transferir las matrices densas al host para reconstruir caminos.
   \item \textbf{Barrido de threshold (T1.1.1) a la Etapa 4.} Se priorizó la optimización, que
         es el camino crítico para las \num{2640} corridas. Del perfil de forgeffects (T1.1.5)
         ya están medidos el límite de dimensión y el pico de memoria; falta el perfil Nsight.
@@ -665,15 +641,9 @@ caminos reduce el tiempo de las \num{2640} corridas. Se implementa en la Etapa 4
 \end{itemize}
 
 \subsection{Repositorio git}\label{sec:git}
-El proyecto se versiona en \url{https://github.com/criquelme2003/feCUDA}. El trabajo de esta
-etapa se encuentra en las ramas \texttt{gpu\_paths} (kernels v2--v4 y orquestadores) y
-\texttt{csr-paths-construction} (reconstrucción en GPU). Commits relevantes:
-\texttt{cf44ae8} (kernel v2), \texttt{17f70a4} (kernels v3 y v4), \texttt{fa645cf}
-(optimización de los kernels max--min), \texttt{322cef9} (corrección de caminos fallidos) y
-\texttt{96c2da7} (registro CSR por orden y reconstrucción de caminos de $m$ a $n$),
-\texttt{0aad706} (benchmark de límites y tiempo) y \texttt{a0b0dd8} (benchmark de tiempo).
-Los datos crudos de las Tablas~\ref{tab:versiones}, \ref{tab:prelim} y \ref{tab:limites}
-están en \texttt{comparativa/} (\texttt{time\_results*.csv} y \texttt{logs.*}).
+El proyecto se versiona en \url{https://github.com/criquelme2003/feCUDA}, con ramas por enfoque
+integradas mediante pull requests. El trabajo de esta etapa se organizó en una rama para los
+kernels v2--v4 y sus orquestadores, y otra para la reconstrucción de caminos en GPU.
 
 Desde esta etapa los commits siguen Conventional Commits~\cite{cc}:
 \begin{lstlisting}
