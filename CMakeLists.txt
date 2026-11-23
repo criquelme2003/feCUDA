@@ -1,24 +1,55 @@
 cmake_minimum_required(VERSION 3.22)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_COMPILER /usr/bin/g++)
+set(CMAKE_CUDA_COMPILER /usr/local/cuda-12.4/bin/nvcc)
+
 project(FeCUDA LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CUDA_STANDARD 17)
-set(CMAKE_CUDA_ARCHITECTURES 75)
+set(CMAKE_CUDA_ARCHITECTURES native)
 set(CMAKE_CUDA_SEPARABLE_COMPILATION ON)
 
-set(CMAKE_BUILD_TYPE Debug)
-
-set(CMAKE_CXX_COMPILER g++)
-set(CMAKE_CUDA_COMPILER /usr/local/cuda-12.5/bin/nvcc)
 
 find_package(CUDAToolkit REQUIRED)
-find_package(pybind11 CONFIG REQUIRED)
 
-set(Python_EXECUTABLE /usr/bin/python3)
+#set(Python_EXECUTABLE /home/criquelme/.conda/envs/fecuda/bin/python)
+#set(PYBIND11_FINDPYTHON ON)
 
 find_package(Python REQUIRED COMPONENTS Interpreter Development)
+
+include(FetchContent)
+
+FetchContent_Declare(
+  pybind11
+  GIT_REPOSITORY https://github.com/pybind/pybind11.git
+  GIT_TAG v2.13.6  # fija una versión estable
+)
+FetchContent_MakeAvailable(pybind11)
+
+# ===== cuCollections ======
+set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(BUILD_BENCHMARKS OFF CACHE BOOL "" FORCE)
+set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+  cuco
+  GIT_REPOSITORY https://github.com/NVIDIA/cuCollections.git
+  GIT_TAG dev
+)
+FetchContent_MakeAvailable(cuco)
+
+# ======== DLpack ==========
+FetchContent_Declare(
+  dlpack
+  GIT_REPOSITORY https://github.com/dmlc/dlpack.git
+  GIT_TAG v1.3  # fija una versión estable
+)
+FetchContent_MakeAvailable(dlpack)
+
+
+
 
 file(GLOB ALGORITHM_SOURCES "src/algorithms/*.cu")
 file(GLOB UTILS_SOURCES "src/utils/*.cu")
@@ -34,20 +65,24 @@ add_executable(fecuda_main
 
 target_include_directories(fecuda_main
   PRIVATE include
-  /workspace/extern/dlpack/include
+  /home/criquelme/feCUDA/include
 )
 
 target_link_libraries(fecuda_main
+  PRIVATE
   CUDA::curand
+  pybind11::headers
   Python::Python
-
+  dlpack
+  cuco
 )
+
 set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 target_compile_options(fecuda_main
   PRIVATE
   $<$<COMPILE_LANGUAGE:CUDA>:
-  -G
+  -lineinfo
   >
 )
 
@@ -75,13 +110,30 @@ set_target_properties(forgethreads PROPERTIES
 
 target_include_directories(forgethreads
   PRIVATE include
-  /workspace/extern/dlpack/include
-
 )
 target_link_libraries(forgethreads
   PRIVATE
   CUDA::curand
-  Python::Python
+  dlpack
+  cuco
+)
+
+set_source_files_properties(src/bindings.cu PROPERTIES
+  COMPILE_OPTIONS "-Xcompiler=-O1"
+)
+
+target_compile_options(forgethreads
+  PRIVATE
+  $<$<COMPILE_LANGUAGE:CUDA>:
+  --expt-extended-lambda
+  >
+)
+
+target_compile_options(fecuda_main
+  PRIVATE
+  $<$<COMPILE_LANGUAGE:CUDA>:
+  --expt-extended-lambda
+  >
 )
 
 #install(

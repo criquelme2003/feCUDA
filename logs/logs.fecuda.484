@@ -1,0 +1,50 @@
+[MAXMIN C++] M: 200B: 1
+[MAXMIN C++] ORDER-25
+[MAXMIN C++] Efectos encontrados en orden 1 : 551
+[MAXMIN C++] Efectos encontrados en orden 2 : 496
+[MAXMIN C++] Efectos encontrados en orden 3 : 324
+[MAXMIN C++] Efectos encontrados en orden 4 : 168
+[MAXMIN C++] Efectos encontrados en orden 5 : 104
+[MAXMIN C++] Efectos encontrados en orden 6 : 44
+[MAXMIN C++] Efectos encontrados en orden 7 : 15
+[MAXMIN C++] Efectos encontrados en orden 8 : 5
+[MAXMIN C++] Convergencia en step 9
+[MAXMIN C++] M: 10B: 1
+[MAXMIN C++] ORDER-25
+[MAXMIN C++] Efectos encontrados en orden 1 : 1
+[MAXMIN C++] Convergencia en step 2
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-25
+[MAXMIN C++] Efectos encontrados en orden 1 : 92
+[MAXMIN C++] Efectos encontrados en orden 2 : 45
+[MAXMIN C++] Efectos encontrados en orden 3 : 13
+[MAXMIN C++] Efectos encontrados en orden 4 : 5
+[MAXMIN C++] Convergencia en step 5
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-25
+[MAXMIN C++] Efectos encontrados en orden 1 : 1427
+[MAXMIN C++] Efectos encontrados en orden 2 : 1077
+[MAXMIN C++] Efectos encontrados en orden 3 : 642
+[MAXMIN C++] Efectos encontrados en orden 4 : 284
+[MAXMIN C++] Efectos encontrados en orden 5 : 99
+[MAXMIN C++] Efectos encontrados en orden 6 : 25
+[MAXMIN C++] Efectos encontrados en orden 7 : 3
+[MAXMIN C++] Convergencia en step 8
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-25
+[MAXMIN C++] Efectos encontrados en orden 1 : 14528
+[MAXMIN C++] Efectos encontrados en orden 2 : 10499
+[MAXMIN C++] Efectos encontrados en orden 3 : 5986
+[MAXMIN C++] Efectos encontrados en orden 4 : 2962
+[MAXMIN C++] Efectos encontrados en orden 5 : 1208
+[MAXMIN C++] Efectos encontrados en orden 6 : 423
+[MAXMIN C++] Efectos encontrados en orden 7 : 115
+[MAXMIN C++] Efectos encontrados en orden 8 : 28
+[MAXMIN C++] Efectos encontrados en orden 9 : 8
+[MAXMIN C++] Efectos encontrados en orden 10 : 2
+[MAXMIN C++] Convergencia en step 11
+c=3  n=10  mean=1.00  min=1  max=1
+c=3  n=100  mean=4.00  min=4  max=4
+c=3  n=1000  mean=7.00  min=7  max=7
+c=3  n=10000  mean=10.00  min=10  max=10
+Guardado: sweep_n_order_c3.png

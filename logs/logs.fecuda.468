@@ -1,0 +1,27 @@
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-10
+[MAXMIN C++] Efectos encontrados en orden 1 : 24573190
+[MAXMIN C++] Convergencia en step 2
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-10
+[MAXMIN C++] Efectos encontrados en orden 1 : 19687433
+[MAXMIN C++] Convergencia en step 2
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-10
+[MAXMIN C++] Efectos encontrados en orden 1 : 14781944
+[MAXMIN C++] Convergencia en step 2
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-10
+[MAXMIN C++] Efectos encontrados en orden 1 : 9862436
+[MAXMIN C++] Convergencia en step 2
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-10
+[MAXMIN C++] Efectos encontrados en orden 1 : 4930997
+[MAXMIN C++] Convergencia en step 2
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-10
+[MAXMIN C++] Efectos encontrados en orden 1 : 52
+[MAXMIN C++] Convergencia en step 2
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-10
+slurmstepd-cuda2: error: *** JOB 468 ON cuda2 CANCELLED AT 2026-06-16T11:57:12 ***

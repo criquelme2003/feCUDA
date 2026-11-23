@@ -1,0 +1,16 @@
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-10
+[MAXMIN C++] Efectos encontrados en orden 1 : 6375
+[MAXMIN C++] Efectos encontrados en orden 2 : 3085
+[MAXMIN C++] Efectos encontrados en orden 3 : 1222
+[MAXMIN C++] Efectos encontrados en orden 4 : 413
+[MAXMIN C++] Efectos encontrados en orden 5 : 106
+[MAXMIN C++] Efectos encontrados en orden 6 : 23
+[MAXMIN C++] Efectos encontrados en orden 7 : 5
+[MAXMIN C++] Convergencia en step 8
+Traceback (most recent call last):
+  File "/home/criquelme/feCUDA/test2.py", line 179, in <module>
+    sweep_d()
+  File "/home/criquelme/feCUDA/test2.py", line 163, in sweep_d
+    print(f"c={d:.2f}  effective_order={eff_order}")
+NameError: name 'd' is not defined. Did you mean: 'ds'?

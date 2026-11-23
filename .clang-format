@@ -2,7 +2,7 @@ BasedOnStyle: LLVM
 Language: Cpp
 
 # Llaves estilo Allman (lo que ya querías)
-BreakBeforeBraces: Allman
+BreakBeforeBraces: Attach
 
 # Indentación clara
 IndentWidth: 4

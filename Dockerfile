@@ -1,6 +1,7 @@
 FROM nvidia/cuda:12.5.1-cudnn-devel-ubuntu22.04
 
 RUN apt-get update && apt-get install -y \
+    curl \
     git \
     python3 \
     python3-pip \
@@ -9,7 +10,9 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     python3-pybind11 \
     pybind11-dev \
-    && rm -rf /var/lib/apt/lists/* 
+    nodejs \
+    npm \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /workspace
 
@@ -21,3 +24,5 @@ RUN python3 -m pip install --upgrade pip && \
 COPY . .
 
 RUN mkdir extern && cd extern && git clone --depth 1 https://github.com/dmlc/dlpack.git
+
+

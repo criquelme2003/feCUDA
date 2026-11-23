@@ -1,4 +1,4 @@
-
+CLAUDE.md
 # Ignorar carpeta de build
 /build/
 /forgeffects/
@@ -7,12 +7,14 @@ CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
 Makefile
+.devcontainer
 
 # Resultados y datasets pesados
 
 /datasets_txt/
 /validation/results/
 /validation/data/
+__pycache__
 *.ncu-rep
 
 # Configuración local de VS Code
@@ -36,5 +38,9 @@ forgeffects
 !bench/results/index.json
 *.log
 .cache*
+csr_*
+webapp
 
-
+docs/etapa3/*.aux
+docs/etapa3/*.log
+docs/etapa3/*.out

@@ -1,0 +1,2478 @@
+[MAXMIN C++] M: 200B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 2666
+[MAXMIN C++] Efectos encontrados en orden 2 : 6502
+[MAXMIN C++] Efectos encontrados en orden 3 : 7655
+[MAXMIN C++] Efectos encontrados en orden 4 : 4000
+[MAXMIN C++] Efectos encontrados en orden 5 : 1596
+[MAXMIN C++] Efectos encontrados en orden 6 : 798
+[MAXMIN C++] Efectos encontrados en orden 7 : 437
+[MAXMIN C++] Efectos encontrados en orden 8 : 235
+[MAXMIN C++] Efectos encontrados en orden 9 : 120
+[MAXMIN C++] Efectos encontrados en orden 10 : 40
+[MAXMIN C++] Efectos encontrados en orden 11 : 8
+[MAXMIN C++] Convergencia en step 12
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Convergencia en step 1
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 2
+[MAXMIN C++] Convergencia en step 2
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 5
+[MAXMIN C++] Convergencia en step 2
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 13
+[MAXMIN C++] Efectos encontrados en orden 2 : 2
+[MAXMIN C++] Convergencia en step 3
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 27
+[MAXMIN C++] Efectos encontrados en orden 2 : 1
+[MAXMIN C++] Convergencia en step 3
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 70
+[MAXMIN C++] Efectos encontrados en orden 2 : 6
+[MAXMIN C++] Convergencia en step 3
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 170
+[MAXMIN C++] Efectos encontrados en orden 2 : 22
+[MAXMIN C++] Efectos encontrados en orden 3 : 2
+[MAXMIN C++] Convergencia en step 4
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 2
+[MAXMIN C++] Convergencia en step 2
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 17
+[MAXMIN C++] Efectos encontrados en orden 2 : 6
+[MAXMIN C++] Efectos encontrados en orden 3 : 1
+[MAXMIN C++] Convergencia en step 4
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 29
+[MAXMIN C++] Efectos encontrados en orden 2 : 8
+[MAXMIN C++] Efectos encontrados en orden 3 : 3
+[MAXMIN C++] Efectos encontrados en orden 4 : 2
+[MAXMIN C++] Efectos encontrados en orden 5 : 1
+[MAXMIN C++] Convergencia en step 6
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 52
+[MAXMIN C++] Efectos encontrados en orden 2 : 8
+[MAXMIN C++] Convergencia en step 3
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 146
+[MAXMIN C++] Efectos encontrados en orden 2 : 36
+[MAXMIN C++] Efectos encontrados en orden 3 : 8
+[MAXMIN C++] Efectos encontrados en orden 4 : 3
+[MAXMIN C++] Efectos encontrados en orden 5 : 2
+[MAXMIN C++] Convergencia en step 6
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 302
+[MAXMIN C++] Efectos encontrados en orden 2 : 64
+[MAXMIN C++] Efectos encontrados en orden 3 : 14
+[MAXMIN C++] Efectos encontrados en orden 4 : 3
+[MAXMIN C++] Convergencia en step 5
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 610
+[MAXMIN C++] Efectos encontrados en orden 2 : 154
+[MAXMIN C++] Efectos encontrados en orden 3 : 46
+[MAXMIN C++] Efectos encontrados en orden 4 : 14
+[MAXMIN C++] Efectos encontrados en orden 5 : 4
+[MAXMIN C++] Efectos encontrados en orden 6 : 1
+[MAXMIN C++] Convergencia en step 7
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 5
+[MAXMIN C++] Efectos encontrados en orden 2 : 1
+[MAXMIN C++] Convergencia en step 3
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 61
+[MAXMIN C++] Efectos encontrados en orden 2 : 27
+[MAXMIN C++] Efectos encontrados en orden 3 : 11
+[MAXMIN C++] Efectos encontrados en orden 4 : 2
+[MAXMIN C++] Convergencia en step 5
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 110
+[MAXMIN C++] Efectos encontrados en orden 2 : 50
+[MAXMIN C++] Efectos encontrados en orden 3 : 16
+[MAXMIN C++] Efectos encontrados en orden 4 : 5
+[MAXMIN C++] Efectos encontrados en orden 5 : 1
+[MAXMIN C++] Convergencia en step 6
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 256
+[MAXMIN C++] Efectos encontrados en orden 2 : 136
+[MAXMIN C++] Efectos encontrados en orden 3 : 75
+[MAXMIN C++] Efectos encontrados en orden 4 : 37
+[MAXMIN C++] Efectos encontrados en orden 5 : 12
+[MAXMIN C++] Efectos encontrados en orden 6 : 2
+[MAXMIN C++] Convergencia en step 7
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 559
+[MAXMIN C++] Efectos encontrados en orden 2 : 266
+[MAXMIN C++] Efectos encontrados en orden 3 : 147
+[MAXMIN C++] Efectos encontrados en orden 4 : 80
+[MAXMIN C++] Efectos encontrados en orden 5 : 40
+[MAXMIN C++] Efectos encontrados en orden 6 : 20
+[MAXMIN C++] Efectos encontrados en orden 7 : 12
+[MAXMIN C++] Efectos encontrados en orden 8 : 4
+[MAXMIN C++] Efectos encontrados en orden 9 : 1
+[MAXMIN C++] Convergencia en step 10
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 1317
+[MAXMIN C++] Efectos encontrados en orden 2 : 688
+[MAXMIN C++] Efectos encontrados en orden 3 : 360
+[MAXMIN C++] Efectos encontrados en orden 4 : 227
+[MAXMIN C++] Efectos encontrados en orden 5 : 127
+[MAXMIN C++] Efectos encontrados en orden 6 : 66
+[MAXMIN C++] Efectos encontrados en orden 7 : 29
+[MAXMIN C++] Efectos encontrados en orden 8 : 9
+[MAXMIN C++] Efectos encontrados en orden 9 : 1
+[MAXMIN C++] Convergencia en step 10
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 2478
+[MAXMIN C++] Efectos encontrados en orden 2 : 1156
+[MAXMIN C++] Efectos encontrados en orden 3 : 573
+[MAXMIN C++] Efectos encontrados en orden 4 : 279
+[MAXMIN C++] Efectos encontrados en orden 5 : 153
+[MAXMIN C++] Efectos encontrados en orden 6 : 80
+[MAXMIN C++] Efectos encontrados en orden 7 : 29
+[MAXMIN C++] Efectos encontrados en orden 8 : 12
+[MAXMIN C++] Efectos encontrados en orden 9 : 3
+[MAXMIN C++] Convergencia en step 10
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 57
+[MAXMIN C++] Efectos encontrados en orden 2 : 44
+[MAXMIN C++] Efectos encontrados en orden 3 : 38
+[MAXMIN C++] Efectos encontrados en orden 4 : 23
+[MAXMIN C++] Efectos encontrados en orden 5 : 11
+[MAXMIN C++] Efectos encontrados en orden 6 : 9
+[MAXMIN C++] Efectos encontrados en orden 7 : 2
+[MAXMIN C++] Convergencia en step 8
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 257
+[MAXMIN C++] Efectos encontrados en orden 2 : 246
+[MAXMIN C++] Efectos encontrados en orden 3 : 209
+[MAXMIN C++] Efectos encontrados en orden 4 : 156
+[MAXMIN C++] Efectos encontrados en orden 5 : 109
+[MAXMIN C++] Efectos encontrados en orden 6 : 86
+[MAXMIN C++] Efectos encontrados en orden 7 : 68
+[MAXMIN C++] Efectos encontrados en orden 8 : 62
+[MAXMIN C++] Efectos encontrados en orden 9 : 56
+[MAXMIN C++] Efectos encontrados en orden 10 : 42
+[MAXMIN C++] Efectos encontrados en orden 11 : 28
+[MAXMIN C++] Efectos encontrados en orden 12 : 15
+[MAXMIN C++] Efectos encontrados en orden 13 : 5
+[MAXMIN C++] Efectos encontrados en orden 14 : 1
+[MAXMIN C++] Convergencia en step 15
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 452
+[MAXMIN C++] Efectos encontrados en orden 2 : 430
+[MAXMIN C++] Efectos encontrados en orden 3 : 394
+[MAXMIN C++] Efectos encontrados en orden 4 : 342
+[MAXMIN C++] Efectos encontrados en orden 5 : 330
+[MAXMIN C++] Efectos encontrados en orden 6 : 286
+[MAXMIN C++] Efectos encontrados en orden 7 : 215
+[MAXMIN C++] Efectos encontrados en orden 8 : 152
+[MAXMIN C++] Efectos encontrados en orden 9 : 99
+[MAXMIN C++] Efectos encontrados en orden 10 : 77
+[MAXMIN C++] Efectos encontrados en orden 11 : 61
+[MAXMIN C++] Efectos encontrados en orden 12 : 42
+[MAXMIN C++] Efectos encontrados en orden 13 : 17
+[MAXMIN C++] Efectos encontrados en orden 14 : 3
+[MAXMIN C++] Convergencia en step 15
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 1018
+[MAXMIN C++] Efectos encontrados en orden 2 : 1011
+[MAXMIN C++] Efectos encontrados en orden 3 : 1058
+[MAXMIN C++] Efectos encontrados en orden 4 : 1072
+[MAXMIN C++] Efectos encontrados en orden 5 : 1125
+[MAXMIN C++] Efectos encontrados en orden 6 : 1153
+[MAXMIN C++] Efectos encontrados en orden 7 : 1227
+[MAXMIN C++] Efectos encontrados en orden 8 : 1261
+[MAXMIN C++] Efectos encontrados en orden 9 : 1245
+[MAXMIN C++] Efectos encontrados en orden 10 : 1220
+[MAXMIN C++] Efectos encontrados en orden 11 : 1165
+[MAXMIN C++] Efectos encontrados en orden 12 : 1070
+[MAXMIN C++] Efectos encontrados en orden 13 : 875
+[MAXMIN C++] Efectos encontrados en orden 14 : 684
+[MAXMIN C++] Efectos encontrados en orden 15 : 549
+[MAXMIN C++] Efectos encontrados en orden 16 : 414
+[MAXMIN C++] Efectos encontrados en orden 17 : 274
+[MAXMIN C++] Efectos encontrados en orden 18 : 206
+[MAXMIN C++] Efectos encontrados en orden 19 : 151
+[MAXMIN C++] Efectos encontrados en orden 20 : 85
+[MAXMIN C++] Efectos encontrados en orden 21 : 50
+[MAXMIN C++] Efectos encontrados en orden 22 : 24
+[MAXMIN C++] Efectos encontrados en orden 23 : 10
+[MAXMIN C++] Efectos encontrados en orden 24 : 5
+[MAXMIN C++] Convergencia en step 25
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 2499
+[MAXMIN C++] Efectos encontrados en orden 2 : 2504
+[MAXMIN C++] Efectos encontrados en orden 3 : 2535
+[MAXMIN C++] Efectos encontrados en orden 4 : 2532
+[MAXMIN C++] Efectos encontrados en orden 5 : 2492
+[MAXMIN C++] Efectos encontrados en orden 6 : 2444
+[MAXMIN C++] Efectos encontrados en orden 7 : 2386
+[MAXMIN C++] Efectos encontrados en orden 8 : 2357
+[MAXMIN C++] Efectos encontrados en orden 9 : 2315
+[MAXMIN C++] Efectos encontrados en orden 10 : 2262
+[MAXMIN C++] Efectos encontrados en orden 11 : 2151
+[MAXMIN C++] Efectos encontrados en orden 12 : 2000
+[MAXMIN C++] Efectos encontrados en orden 13 : 1907
+[MAXMIN C++] Efectos encontrados en orden 14 : 1826
+[MAXMIN C++] Efectos encontrados en orden 15 : 1691
+[MAXMIN C++] Efectos encontrados en orden 16 : 1593
+[MAXMIN C++] Efectos encontrados en orden 17 : 1511
+[MAXMIN C++] Efectos encontrados en orden 18 : 1383
+[MAXMIN C++] Efectos encontrados en orden 19 : 1277
+[MAXMIN C++] Efectos encontrados en orden 20 : 1206
+[MAXMIN C++] Efectos encontrados en orden 21 : 1081
+[MAXMIN C++] Efectos encontrados en orden 22 : 947
+[MAXMIN C++] Efectos encontrados en orden 23 : 821
+[MAXMIN C++] Efectos encontrados en orden 24 : 717
+[MAXMIN C++] Efectos encontrados en orden 25 : 585
+[MAXMIN C++] Efectos encontrados en orden 26 : 467
+[MAXMIN C++] Efectos encontrados en orden 27 : 355
+[MAXMIN C++] Efectos encontrados en orden 28 : 273
+[MAXMIN C++] Efectos encontrados en orden 29 : 226
+[MAXMIN C++] Efectos encontrados en orden 30 : 174
+[MAXMIN C++] Efectos encontrados en orden 31 : 120
+[MAXMIN C++] Efectos encontrados en orden 32 : 75
+[MAXMIN C++] Efectos encontrados en orden 33 : 41
+[MAXMIN C++] Efectos encontrados en orden 34 : 22
+[MAXMIN C++] Efectos encontrados en orden 35 : 12
+[MAXMIN C++] Efectos encontrados en orden 36 : 4
+[MAXMIN C++] Efectos encontrados en orden 37 : 2
+[MAXMIN C++] Convergencia en step 38
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 5256
+[MAXMIN C++] Efectos encontrados en orden 2 : 5388
+[MAXMIN C++] Efectos encontrados en orden 3 : 5526
+[MAXMIN C++] Efectos encontrados en orden 4 : 5647
+[MAXMIN C++] Efectos encontrados en orden 5 : 5871
+[MAXMIN C++] Efectos encontrados en orden 6 : 6147
+[MAXMIN C++] Efectos encontrados en orden 7 : 6473
+[MAXMIN C++] Efectos encontrados en orden 8 : 6803
+[MAXMIN C++] Efectos encontrados en orden 9 : 7126
+[MAXMIN C++] Efectos encontrados en orden 10 : 7520
+[MAXMIN C++] Efectos encontrados en orden 11 : 8005
+[MAXMIN C++] Efectos encontrados en orden 12 : 8437
+[MAXMIN C++] Efectos encontrados en orden 13 : 8935
+[MAXMIN C++] Efectos encontrados en orden 14 : 9387
+[MAXMIN C++] Efectos encontrados en orden 15 : 9750
+[MAXMIN C++] Efectos encontrados en orden 16 : 10060
+[MAXMIN C++] Efectos encontrados en orden 17 : 10251
+[MAXMIN C++] Efectos encontrados en orden 18 : 10454
+[MAXMIN C++] Efectos encontrados en orden 19 : 10838
+[MAXMIN C++] Efectos encontrados en orden 20 : 11085
+[MAXMIN C++] Efectos encontrados en orden 21 : 11183
+[MAXMIN C++] Efectos encontrados en orden 22 : 11012
+[MAXMIN C++] Efectos encontrados en orden 23 : 10862
+[MAXMIN C++] Efectos encontrados en orden 24 : 10830
+[MAXMIN C++] Efectos encontrados en orden 25 : 10697
+[MAXMIN C++] Efectos encontrados en orden 26 : 10540
+[MAXMIN C++] Efectos encontrados en orden 27 : 10042
+[MAXMIN C++] Efectos encontrados en orden 28 : 9757
+[MAXMIN C++] Efectos encontrados en orden 29 : 9593
+[MAXMIN C++] Efectos encontrados en orden 30 : 9205
+[MAXMIN C++] Efectos encontrados en orden 31 : 8797
+[MAXMIN C++] Efectos encontrados en orden 32 : 8445
+[MAXMIN C++] Efectos encontrados en orden 33 : 8088
+[MAXMIN C++] Efectos encontrados en orden 34 : 7538
+[MAXMIN C++] Efectos encontrados en orden 35 : 7072
+[MAXMIN C++] Efectos encontrados en orden 36 : 6565
+[MAXMIN C++] Efectos encontrados en orden 37 : 6053
+[MAXMIN C++] Efectos encontrados en orden 38 : 5623
+[MAXMIN C++] Efectos encontrados en orden 39 : 5198
+[MAXMIN C++] Efectos encontrados en orden 40 : 4619
+[MAXMIN C++] Efectos encontrados en orden 41 : 4179
+[MAXMIN C++] Efectos encontrados en orden 42 : 3781
+[MAXMIN C++] Efectos encontrados en orden 43 : 3442
+[MAXMIN C++] Efectos encontrados en orden 44 : 3217
+[MAXMIN C++] Efectos encontrados en orden 45 : 2999
+[MAXMIN C++] Efectos encontrados en orden 46 : 2768
+[MAXMIN C++] Efectos encontrados en orden 47 : 2600
+[MAXMIN C++] Efectos encontrados en orden 48 : 2486
+[MAXMIN C++] Efectos encontrados en orden 49 : 2365
+[MAXMIN C++] Efectos encontrados en orden 50 : 2214
+[MAXMIN C++] Efectos encontrados en orden 51 : 2029
+[MAXMIN C++] Efectos encontrados en orden 52 : 1826
+[MAXMIN C++] Efectos encontrados en orden 53 : 1666
+[MAXMIN C++] Efectos encontrados en orden 54 : 1500
+[MAXMIN C++] Efectos encontrados en orden 55 : 1304
+[MAXMIN C++] Efectos encontrados en orden 56 : 1159
+[MAXMIN C++] Efectos encontrados en orden 57 : 1037
+[MAXMIN C++] Efectos encontrados en orden 58 : 915
+[MAXMIN C++] Efectos encontrados en orden 59 : 812
+[MAXMIN C++] Efectos encontrados en orden 60 : 687
+[MAXMIN C++] Efectos encontrados en orden 61 : 568
+[MAXMIN C++] Efectos encontrados en orden 62 : 506
+[MAXMIN C++] Efectos encontrados en orden 63 : 471
+[MAXMIN C++] Efectos encontrados en orden 64 : 383
+[MAXMIN C++] Efectos encontrados en orden 65 : 301
+[MAXMIN C++] Efectos encontrados en orden 66 : 281
+[MAXMIN C++] Efectos encontrados en orden 67 : 217
+[MAXMIN C++] Efectos encontrados en orden 68 : 153
+[MAXMIN C++] Efectos encontrados en orden 69 : 116
+[MAXMIN C++] Efectos encontrados en orden 70 : 88
+[MAXMIN C++] Efectos encontrados en orden 71 : 52
+[MAXMIN C++] Efectos encontrados en orden 72 : 32
+[MAXMIN C++] Efectos encontrados en orden 73 : 18
+[MAXMIN C++] Efectos encontrados en orden 74 : 9
+[MAXMIN C++] Efectos encontrados en orden 75 : 5
+[MAXMIN C++] Efectos encontrados en orden 76 : 2
+[MAXMIN C++] Convergencia en step 77
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 9995
+[MAXMIN C++] Efectos encontrados en orden 2 : 9954
+[MAXMIN C++] Efectos encontrados en orden 3 : 10015
+[MAXMIN C++] Efectos encontrados en orden 4 : 10006
+[MAXMIN C++] Efectos encontrados en orden 5 : 10014
+[MAXMIN C++] Efectos encontrados en orden 6 : 9905
+[MAXMIN C++] Efectos encontrados en orden 7 : 9501
+[MAXMIN C++] Efectos encontrados en orden 8 : 9173
+[MAXMIN C++] Efectos encontrados en orden 9 : 8922
+[MAXMIN C++] Efectos encontrados en orden 10 : 8578
+[MAXMIN C++] Efectos encontrados en orden 11 : 8329
+[MAXMIN C++] Efectos encontrados en orden 12 : 8205
+[MAXMIN C++] Efectos encontrados en orden 13 : 8084
+[MAXMIN C++] Efectos encontrados en orden 14 : 7903
+[MAXMIN C++] Efectos encontrados en orden 15 : 7770
+[MAXMIN C++] Efectos encontrados en orden 16 : 7635
+[MAXMIN C++] Efectos encontrados en orden 17 : 7418
+[MAXMIN C++] Efectos encontrados en orden 18 : 7094
+[MAXMIN C++] Efectos encontrados en orden 19 : 6745
+[MAXMIN C++] Efectos encontrados en orden 20 : 6292
+[MAXMIN C++] Efectos encontrados en orden 21 : 5716
+[MAXMIN C++] Efectos encontrados en orden 22 : 5143
+[MAXMIN C++] Efectos encontrados en orden 23 : 4649
+[MAXMIN C++] Efectos encontrados en orden 24 : 4124
+[MAXMIN C++] Efectos encontrados en orden 25 : 3536
+[MAXMIN C++] Efectos encontrados en orden 26 : 2979
+[MAXMIN C++] Efectos encontrados en orden 27 : 2487
+[MAXMIN C++] Efectos encontrados en orden 28 : 2027
+[MAXMIN C++] Efectos encontrados en orden 29 : 1639
+[MAXMIN C++] Efectos encontrados en orden 30 : 1363
+[MAXMIN C++] Efectos encontrados en orden 31 : 1108
+[MAXMIN C++] Efectos encontrados en orden 32 : 841
+[MAXMIN C++] Efectos encontrados en orden 33 : 591
+[MAXMIN C++] Efectos encontrados en orden 34 : 392
+[MAXMIN C++] Efectos encontrados en orden 35 : 259
+[MAXMIN C++] Efectos encontrados en orden 36 : 180
+[MAXMIN C++] Efectos encontrados en orden 37 : 120
+[MAXMIN C++] Efectos encontrados en orden 38 : 83
+[MAXMIN C++] Efectos encontrados en orden 39 : 51
+[MAXMIN C++] Efectos encontrados en orden 40 : 29
+[MAXMIN C++] Efectos encontrados en orden 41 : 15
+[MAXMIN C++] Efectos encontrados en orden 42 : 4
+[MAXMIN C++] Convergencia en step 43
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 93
+[MAXMIN C++] Efectos encontrados en orden 2 : 92
+[MAXMIN C++] Efectos encontrados en orden 3 : 98
+[MAXMIN C++] Efectos encontrados en orden 4 : 94
+[MAXMIN C++] Efectos encontrados en orden 5 : 77
+[MAXMIN C++] Efectos encontrados en orden 6 : 53
+[MAXMIN C++] Efectos encontrados en orden 7 : 42
+[MAXMIN C++] Efectos encontrados en orden 8 : 24
+[MAXMIN C++] Efectos encontrados en orden 9 : 12
+[MAXMIN C++] Efectos encontrados en orden 10 : 5
+[MAXMIN C++] Efectos encontrados en orden 11 : 3
+[MAXMIN C++] Efectos encontrados en orden 12 : 1
+[MAXMIN C++] Convergencia en step 13
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 332
+[MAXMIN C++] Efectos encontrados en orden 2 : 349
+[MAXMIN C++] Efectos encontrados en orden 3 : 325
+[MAXMIN C++] Efectos encontrados en orden 4 : 266
+[MAXMIN C++] Efectos encontrados en orden 5 : 212
+[MAXMIN C++] Efectos encontrados en orden 6 : 171
+[MAXMIN C++] Efectos encontrados en orden 7 : 135
+[MAXMIN C++] Efectos encontrados en orden 8 : 106
+[MAXMIN C++] Efectos encontrados en orden 9 : 77
+[MAXMIN C++] Efectos encontrados en orden 10 : 42
+[MAXMIN C++] Efectos encontrados en orden 11 : 23
+[MAXMIN C++] Efectos encontrados en orden 12 : 10
+[MAXMIN C++] Efectos encontrados en orden 13 : 2
+[MAXMIN C++] Convergencia en step 14
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 586
+[MAXMIN C++] Efectos encontrados en orden 2 : 643
+[MAXMIN C++] Efectos encontrados en orden 3 : 681
+[MAXMIN C++] Efectos encontrados en orden 4 : 679
+[MAXMIN C++] Efectos encontrados en orden 5 : 714
+[MAXMIN C++] Efectos encontrados en orden 6 : 743
+[MAXMIN C++] Efectos encontrados en orden 7 : 690
+[MAXMIN C++] Efectos encontrados en orden 8 : 627
+[MAXMIN C++] Efectos encontrados en orden 9 : 572
+[MAXMIN C++] Efectos encontrados en orden 10 : 522
+[MAXMIN C++] Efectos encontrados en orden 11 : 451
+[MAXMIN C++] Efectos encontrados en orden 12 : 326
+[MAXMIN C++] Efectos encontrados en orden 13 : 223
+[MAXMIN C++] Efectos encontrados en orden 14 : 161
+[MAXMIN C++] Efectos encontrados en orden 15 : 104
+[MAXMIN C++] Efectos encontrados en orden 16 : 66
+[MAXMIN C++] Efectos encontrados en orden 17 : 43
+[MAXMIN C++] Efectos encontrados en orden 18 : 24
+[MAXMIN C++] Efectos encontrados en orden 19 : 12
+[MAXMIN C++] Efectos encontrados en orden 20 : 1
+[MAXMIN C++] Convergencia en step 21
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 1302
+[MAXMIN C++] Efectos encontrados en orden 2 : 1464
+[MAXMIN C++] Efectos encontrados en orden 3 : 1740
+[MAXMIN C++] Efectos encontrados en orden 4 : 2038
+[MAXMIN C++] Efectos encontrados en orden 5 : 2415
+[MAXMIN C++] Efectos encontrados en orden 6 : 2705
+[MAXMIN C++] Efectos encontrados en orden 7 : 2947
+[MAXMIN C++] Efectos encontrados en orden 8 : 3197
+[MAXMIN C++] Efectos encontrados en orden 9 : 3384
+[MAXMIN C++] Efectos encontrados en orden 10 : 3507
+[MAXMIN C++] Efectos encontrados en orden 11 : 3453
+[MAXMIN C++] Efectos encontrados en orden 12 : 3342
+[MAXMIN C++] Efectos encontrados en orden 13 : 3085
+[MAXMIN C++] Efectos encontrados en orden 14 : 2706
+[MAXMIN C++] Efectos encontrados en orden 15 : 2200
+[MAXMIN C++] Efectos encontrados en orden 16 : 1653
+[MAXMIN C++] Efectos encontrados en orden 17 : 1235
+[MAXMIN C++] Efectos encontrados en orden 18 : 900
+[MAXMIN C++] Efectos encontrados en orden 19 : 584
+[MAXMIN C++] Efectos encontrados en orden 20 : 386
+[MAXMIN C++] Efectos encontrados en orden 21 : 278
+[MAXMIN C++] Efectos encontrados en orden 22 : 180
+[MAXMIN C++] Efectos encontrados en orden 23 : 97
+[MAXMIN C++] Efectos encontrados en orden 24 : 51
+[MAXMIN C++] Efectos encontrados en orden 25 : 20
+[MAXMIN C++] Efectos encontrados en orden 26 : 4
+[MAXMIN C++] Convergencia en step 27
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 3118
+[MAXMIN C++] Efectos encontrados en orden 2 : 3454
+[MAXMIN C++] Efectos encontrados en orden 3 : 3812
+[MAXMIN C++] Efectos encontrados en orden 4 : 4177
+[MAXMIN C++] Efectos encontrados en orden 5 : 4613
+[MAXMIN C++] Efectos encontrados en orden 6 : 5015
+[MAXMIN C++] Efectos encontrados en orden 7 : 5392
+[MAXMIN C++] Efectos encontrados en orden 8 : 5901
+[MAXMIN C++] Efectos encontrados en orden 9 : 6366
+[MAXMIN C++] Efectos encontrados en orden 10 : 6817
+[MAXMIN C++] Efectos encontrados en orden 11 : 7209
+[MAXMIN C++] Efectos encontrados en orden 12 : 7526
+[MAXMIN C++] Efectos encontrados en orden 13 : 7775
+[MAXMIN C++] Efectos encontrados en orden 14 : 8024
+[MAXMIN C++] Efectos encontrados en orden 15 : 8095
+[MAXMIN C++] Efectos encontrados en orden 16 : 8123
+[MAXMIN C++] Efectos encontrados en orden 17 : 8075
+[MAXMIN C++] Efectos encontrados en orden 18 : 7885
+[MAXMIN C++] Efectos encontrados en orden 19 : 7624
+[MAXMIN C++] Efectos encontrados en orden 20 : 7328
+[MAXMIN C++] Efectos encontrados en orden 21 : 6973
+[MAXMIN C++] Efectos encontrados en orden 22 : 6576
+[MAXMIN C++] Efectos encontrados en orden 23 : 6103
+[MAXMIN C++] Efectos encontrados en orden 24 : 5707
+[MAXMIN C++] Efectos encontrados en orden 25 : 5296
+[MAXMIN C++] Efectos encontrados en orden 26 : 4798
+[MAXMIN C++] Efectos encontrados en orden 27 : 4433
+[MAXMIN C++] Efectos encontrados en orden 28 : 4196
+[MAXMIN C++] Efectos encontrados en orden 29 : 3967
+[MAXMIN C++] Efectos encontrados en orden 30 : 3612
+[MAXMIN C++] Efectos encontrados en orden 31 : 3307
+[MAXMIN C++] Efectos encontrados en orden 32 : 3109
+[MAXMIN C++] Efectos encontrados en orden 33 : 2885
+[MAXMIN C++] Efectos encontrados en orden 34 : 2700
+[MAXMIN C++] Efectos encontrados en orden 35 : 2471
+[MAXMIN C++] Efectos encontrados en orden 36 : 2235
+[MAXMIN C++] Efectos encontrados en orden 37 : 2012
+[MAXMIN C++] Efectos encontrados en orden 38 : 1733
+[MAXMIN C++] Efectos encontrados en orden 39 : 1458
+[MAXMIN C++] Efectos encontrados en orden 40 : 1155
+[MAXMIN C++] Efectos encontrados en orden 41 : 894
+[MAXMIN C++] Efectos encontrados en orden 42 : 695
+[MAXMIN C++] Efectos encontrados en orden 43 : 497
+[MAXMIN C++] Efectos encontrados en orden 44 : 347
+[MAXMIN C++] Efectos encontrados en orden 45 : 274
+[MAXMIN C++] Efectos encontrados en orden 46 : 170
+[MAXMIN C++] Efectos encontrados en orden 47 : 67
+[MAXMIN C++] Efectos encontrados en orden 48 : 40
+[MAXMIN C++] Efectos encontrados en orden 49 : 21
+[MAXMIN C++] Efectos encontrados en orden 50 : 4
+[MAXMIN C++] Convergencia en step 51
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 6549
+[MAXMIN C++] Efectos encontrados en orden 2 : 7481
+[MAXMIN C++] Efectos encontrados en orden 3 : 8496
+[MAXMIN C++] Efectos encontrados en orden 4 : 9590
+[MAXMIN C++] Efectos encontrados en orden 5 : 10945
+[MAXMIN C++] Efectos encontrados en orden 6 : 12646
+[MAXMIN C++] Efectos encontrados en orden 7 : 14564
+[MAXMIN C++] Efectos encontrados en orden 8 : 16713
+[MAXMIN C++] Efectos encontrados en orden 9 : 19138
+[MAXMIN C++] Efectos encontrados en orden 10 : 21954
+[MAXMIN C++] Efectos encontrados en orden 11 : 24876
+[MAXMIN C++] Efectos encontrados en orden 12 : 27525
+[MAXMIN C++] Efectos encontrados en orden 13 : 30064
+[MAXMIN C++] Efectos encontrados en orden 14 : 32609
+[MAXMIN C++] Efectos encontrados en orden 15 : 34566
+[MAXMIN C++] Efectos encontrados en orden 16 : 36304
+[MAXMIN C++] Efectos encontrados en orden 17 : 37163
+[MAXMIN C++] Efectos encontrados en orden 18 : 37836
+[MAXMIN C++] Efectos encontrados en orden 19 : 38700
+[MAXMIN C++] Efectos encontrados en orden 20 : 39212
+[MAXMIN C++] Efectos encontrados en orden 21 : 38979
+[MAXMIN C++] Efectos encontrados en orden 22 : 38541
+[MAXMIN C++] Efectos encontrados en orden 23 : 38324
+[MAXMIN C++] Efectos encontrados en orden 24 : 37943
+[MAXMIN C++] Efectos encontrados en orden 25 : 37444
+[MAXMIN C++] Efectos encontrados en orden 26 : 36815
+[MAXMIN C++] Efectos encontrados en orden 27 : 35871
+[MAXMIN C++] Efectos encontrados en orden 28 : 34592
+[MAXMIN C++] Efectos encontrados en orden 29 : 32988
+[MAXMIN C++] Efectos encontrados en orden 30 : 31068
+[MAXMIN C++] Efectos encontrados en orden 31 : 29058
+[MAXMIN C++] Efectos encontrados en orden 32 : 26953
+[MAXMIN C++] Efectos encontrados en orden 33 : 24810
+[MAXMIN C++] Efectos encontrados en orden 34 : 22876
+[MAXMIN C++] Efectos encontrados en orden 35 : 21134
+[MAXMIN C++] Efectos encontrados en orden 36 : 19400
+[MAXMIN C++] Efectos encontrados en orden 37 : 17822
+[MAXMIN C++] Efectos encontrados en orden 38 : 16496
+[MAXMIN C++] Efectos encontrados en orden 39 : 15295
+[MAXMIN C++] Efectos encontrados en orden 40 : 14326
+[MAXMIN C++] Efectos encontrados en orden 41 : 13478
+[MAXMIN C++] Efectos encontrados en orden 42 : 12328
+[MAXMIN C++] Efectos encontrados en orden 43 : 11310
+[MAXMIN C++] Efectos encontrados en orden 44 : 10401
+[MAXMIN C++] Efectos encontrados en orden 45 : 9664
+[MAXMIN C++] Efectos encontrados en orden 46 : 8995
+[MAXMIN C++] Efectos encontrados en orden 47 : 8268
+[MAXMIN C++] Efectos encontrados en orden 48 : 7608
+[MAXMIN C++] Efectos encontrados en orden 49 : 7002
+[MAXMIN C++] Efectos encontrados en orden 50 : 6461
+[MAXMIN C++] Efectos encontrados en orden 51 : 5924
+[MAXMIN C++] Efectos encontrados en orden 52 : 5423
+[MAXMIN C++] Efectos encontrados en orden 53 : 4922
+[MAXMIN C++] Efectos encontrados en orden 54 : 4442
+[MAXMIN C++] Efectos encontrados en orden 55 : 3889
+[MAXMIN C++] Efectos encontrados en orden 56 : 3467
+[MAXMIN C++] Efectos encontrados en orden 57 : 3170
+[MAXMIN C++] Efectos encontrados en orden 58 : 2895
+[MAXMIN C++] Efectos encontrados en orden 59 : 2622
+[MAXMIN C++] Efectos encontrados en orden 60 : 2329
+[MAXMIN C++] Efectos encontrados en orden 61 : 1982
+[MAXMIN C++] Efectos encontrados en orden 62 : 1727
+[MAXMIN C++] Efectos encontrados en orden 63 : 1574
+[MAXMIN C++] Efectos encontrados en orden 64 : 1359
+[MAXMIN C++] Efectos encontrados en orden 65 : 1158
+[MAXMIN C++] Efectos encontrados en orden 66 : 976
+[MAXMIN C++] Efectos encontrados en orden 67 : 793
+[MAXMIN C++] Efectos encontrados en orden 68 : 629
+[MAXMIN C++] Efectos encontrados en orden 69 : 517
+[MAXMIN C++] Efectos encontrados en orden 70 : 405
+[MAXMIN C++] Efectos encontrados en orden 71 : 313
+[MAXMIN C++] Efectos encontrados en orden 72 : 234
+[MAXMIN C++] Efectos encontrados en orden 73 : 168
+[MAXMIN C++] Efectos encontrados en orden 74 : 136
+[MAXMIN C++] Efectos encontrados en orden 75 : 103
+[MAXMIN C++] Efectos encontrados en orden 76 : 71
+[MAXMIN C++] Efectos encontrados en orden 77 : 52
+[MAXMIN C++] Efectos encontrados en orden 78 : 39
+[MAXMIN C++] Efectos encontrados en orden 79 : 21
+[MAXMIN C++] Efectos encontrados en orden 80 : 14
+[MAXMIN C++] Efectos encontrados en orden 81 : 9
+[MAXMIN C++] Efectos encontrados en orden 82 : 6
+[MAXMIN C++] Efectos encontrados en orden 83 : 4
+[MAXMIN C++] Efectos encontrados en orden 84 : 2
+[MAXMIN C++] Convergencia en step 85
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 12569
+[MAXMIN C++] Efectos encontrados en orden 2 : 13903
+[MAXMIN C++] Efectos encontrados en orden 3 : 15397
+[MAXMIN C++] Efectos encontrados en orden 4 : 16913
+[MAXMIN C++] Efectos encontrados en orden 5 : 18771
+[MAXMIN C++] Efectos encontrados en orden 6 : 20619
+[MAXMIN C++] Efectos encontrados en orden 7 : 22372
+[MAXMIN C++] Efectos encontrados en orden 8 : 24153
+[MAXMIN C++] Efectos encontrados en orden 9 : 25935
+[MAXMIN C++] Efectos encontrados en orden 10 : 27539
+[MAXMIN C++] Efectos encontrados en orden 11 : 29119
+[MAXMIN C++] Efectos encontrados en orden 12 : 30448
+[MAXMIN C++] Efectos encontrados en orden 13 : 31558
+[MAXMIN C++] Efectos encontrados en orden 14 : 32420
+[MAXMIN C++] Efectos encontrados en orden 15 : 33230
+[MAXMIN C++] Efectos encontrados en orden 16 : 33913
+[MAXMIN C++] Efectos encontrados en orden 17 : 34407
+[MAXMIN C++] Efectos encontrados en orden 18 : 34268
+[MAXMIN C++] Efectos encontrados en orden 19 : 34128
+[MAXMIN C++] Efectos encontrados en orden 20 : 33709
+[MAXMIN C++] Efectos encontrados en orden 21 : 33191
+[MAXMIN C++] Efectos encontrados en orden 22 : 32583
+[MAXMIN C++] Efectos encontrados en orden 23 : 31845
+[MAXMIN C++] Efectos encontrados en orden 24 : 31107
+[MAXMIN C++] Efectos encontrados en orden 25 : 30092
+[MAXMIN C++] Efectos encontrados en orden 26 : 29183
+[MAXMIN C++] Efectos encontrados en orden 27 : 28342
+[MAXMIN C++] Efectos encontrados en orden 28 : 27307
+[MAXMIN C++] Efectos encontrados en orden 29 : 26259
+[MAXMIN C++] Efectos encontrados en orden 30 : 25460
+[MAXMIN C++] Efectos encontrados en orden 31 : 24571
+[MAXMIN C++] Efectos encontrados en orden 32 : 23631
+[MAXMIN C++] Efectos encontrados en orden 33 : 22646
+[MAXMIN C++] Efectos encontrados en orden 34 : 21317
+[MAXMIN C++] Efectos encontrados en orden 35 : 19797
+[MAXMIN C++] Efectos encontrados en orden 36 : 18186
+[MAXMIN C++] Efectos encontrados en orden 37 : 16505
+[MAXMIN C++] Efectos encontrados en orden 38 : 14895
+[MAXMIN C++] Efectos encontrados en orden 39 : 13101
+[MAXMIN C++] Efectos encontrados en orden 40 : 11449
+[MAXMIN C++] Efectos encontrados en orden 41 : 9936
+[MAXMIN C++] Efectos encontrados en orden 42 : 8514
+[MAXMIN C++] Efectos encontrados en orden 43 : 7084
+[MAXMIN C++] Efectos encontrados en orden 44 : 5680
+[MAXMIN C++] Efectos encontrados en orden 45 : 4541
+[MAXMIN C++] Efectos encontrados en orden 46 : 3664
+[MAXMIN C++] Efectos encontrados en orden 47 : 2885
+[MAXMIN C++] Efectos encontrados en orden 48 : 2132
+[MAXMIN C++] Efectos encontrados en orden 49 : 1559
+[MAXMIN C++] Efectos encontrados en orden 50 : 1129
+[MAXMIN C++] Efectos encontrados en orden 51 : 805
+[MAXMIN C++] Efectos encontrados en orden 52 : 523
+[MAXMIN C++] Efectos encontrados en orden 53 : 325
+[MAXMIN C++] Efectos encontrados en orden 54 : 196
+[MAXMIN C++] Efectos encontrados en orden 55 : 145
+[MAXMIN C++] Efectos encontrados en orden 56 : 90
+[MAXMIN C++] Efectos encontrados en orden 57 : 51
+[MAXMIN C++] Efectos encontrados en orden 58 : 27
+[MAXMIN C++] Efectos encontrados en orden 59 : 17
+[MAXMIN C++] Efectos encontrados en orden 60 : 11
+[MAXMIN C++] Efectos encontrados en orden 61 : 6
+[MAXMIN C++] Efectos encontrados en orden 62 : 1
+[MAXMIN C++] Convergencia en step 63
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 107
+[MAXMIN C++] Efectos encontrados en orden 2 : 101
+[MAXMIN C++] Efectos encontrados en orden 3 : 102
+[MAXMIN C++] Efectos encontrados en orden 4 : 94
+[MAXMIN C++] Efectos encontrados en orden 5 : 77
+[MAXMIN C++] Efectos encontrados en orden 6 : 52
+[MAXMIN C++] Efectos encontrados en orden 7 : 41
+[MAXMIN C++] Efectos encontrados en orden 8 : 23
+[MAXMIN C++] Efectos encontrados en orden 9 : 11
+[MAXMIN C++] Efectos encontrados en orden 10 : 5
+[MAXMIN C++] Efectos encontrados en orden 11 : 3
+[MAXMIN C++] Efectos encontrados en orden 12 : 1
+[MAXMIN C++] Convergencia en step 13
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 395
+[MAXMIN C++] Efectos encontrados en orden 2 : 450
+[MAXMIN C++] Efectos encontrados en orden 3 : 440
+[MAXMIN C++] Efectos encontrados en orden 4 : 382
+[MAXMIN C++] Efectos encontrados en orden 5 : 311
+[MAXMIN C++] Efectos encontrados en orden 6 : 247
+[MAXMIN C++] Efectos encontrados en orden 7 : 188
+[MAXMIN C++] Efectos encontrados en orden 8 : 146
+[MAXMIN C++] Efectos encontrados en orden 9 : 111
+[MAXMIN C++] Efectos encontrados en orden 10 : 67
+[MAXMIN C++] Efectos encontrados en orden 11 : 38
+[MAXMIN C++] Efectos encontrados en orden 12 : 18
+[MAXMIN C++] Efectos encontrados en orden 13 : 6
+[MAXMIN C++] Efectos encontrados en orden 14 : 1
+[MAXMIN C++] Convergencia en step 15
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 722
+[MAXMIN C++] Efectos encontrados en orden 2 : 880
+[MAXMIN C++] Efectos encontrados en orden 3 : 1020
+[MAXMIN C++] Efectos encontrados en orden 4 : 1112
+[MAXMIN C++] Efectos encontrados en orden 5 : 1239
+[MAXMIN C++] Efectos encontrados en orden 6 : 1328
+[MAXMIN C++] Efectos encontrados en orden 7 : 1322
+[MAXMIN C++] Efectos encontrados en orden 8 : 1265
+[MAXMIN C++] Efectos encontrados en orden 9 : 1199
+[MAXMIN C++] Efectos encontrados en orden 10 : 1092
+[MAXMIN C++] Efectos encontrados en orden 11 : 895
+[MAXMIN C++] Efectos encontrados en orden 12 : 677
+[MAXMIN C++] Efectos encontrados en orden 13 : 514
+[MAXMIN C++] Efectos encontrados en orden 14 : 426
+[MAXMIN C++] Efectos encontrados en orden 15 : 347
+[MAXMIN C++] Efectos encontrados en orden 16 : 279
+[MAXMIN C++] Efectos encontrados en orden 17 : 230
+[MAXMIN C++] Efectos encontrados en orden 18 : 186
+[MAXMIN C++] Efectos encontrados en orden 19 : 161
+[MAXMIN C++] Efectos encontrados en orden 20 : 135
+[MAXMIN C++] Efectos encontrados en orden 21 : 118
+[MAXMIN C++] Efectos encontrados en orden 22 : 109
+[MAXMIN C++] Efectos encontrados en orden 23 : 97
+[MAXMIN C++] Efectos encontrados en orden 24 : 83
+[MAXMIN C++] Efectos encontrados en orden 25 : 68
+[MAXMIN C++] Efectos encontrados en orden 26 : 58
+[MAXMIN C++] Efectos encontrados en orden 27 : 48
+[MAXMIN C++] Efectos encontrados en orden 28 : 39
+[MAXMIN C++] Efectos encontrados en orden 29 : 23
+[MAXMIN C++] Efectos encontrados en orden 30 : 15
+[MAXMIN C++] Efectos encontrados en orden 31 : 7
+[MAXMIN C++] Efectos encontrados en orden 32 : 1
+[MAXMIN C++] Convergencia en step 33
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 1605
+[MAXMIN C++] Efectos encontrados en orden 2 : 2005
+[MAXMIN C++] Efectos encontrados en orden 3 : 2570
+[MAXMIN C++] Efectos encontrados en orden 4 : 3267
+[MAXMIN C++] Efectos encontrados en orden 5 : 4099
+[MAXMIN C++] Efectos encontrados en orden 6 : 4715
+[MAXMIN C++] Efectos encontrados en orden 7 : 5140
+[MAXMIN C++] Efectos encontrados en orden 8 : 5511
+[MAXMIN C++] Efectos encontrados en orden 9 : 5701
+[MAXMIN C++] Efectos encontrados en orden 10 : 5853
+[MAXMIN C++] Efectos encontrados en orden 11 : 5907
+[MAXMIN C++] Efectos encontrados en orden 12 : 5739
+[MAXMIN C++] Efectos encontrados en orden 13 : 5337
+[MAXMIN C++] Efectos encontrados en orden 14 : 4627
+[MAXMIN C++] Efectos encontrados en orden 15 : 3774
+[MAXMIN C++] Efectos encontrados en orden 16 : 3002
+[MAXMIN C++] Efectos encontrados en orden 17 : 2456
+[MAXMIN C++] Efectos encontrados en orden 18 : 2089
+[MAXMIN C++] Efectos encontrados en orden 19 : 1739
+[MAXMIN C++] Efectos encontrados en orden 20 : 1443
+[MAXMIN C++] Efectos encontrados en orden 21 : 1139
+[MAXMIN C++] Efectos encontrados en orden 22 : 886
+[MAXMIN C++] Efectos encontrados en orden 23 : 716
+[MAXMIN C++] Efectos encontrados en orden 24 : 625
+[MAXMIN C++] Efectos encontrados en orden 25 : 551
+[MAXMIN C++] Efectos encontrados en orden 26 : 440
+[MAXMIN C++] Efectos encontrados en orden 27 : 322
+[MAXMIN C++] Efectos encontrados en orden 28 : 231
+[MAXMIN C++] Efectos encontrados en orden 29 : 178
+[MAXMIN C++] Efectos encontrados en orden 30 : 134
+[MAXMIN C++] Efectos encontrados en orden 31 : 90
+[MAXMIN C++] Efectos encontrados en orden 32 : 59
+[MAXMIN C++] Efectos encontrados en orden 33 : 32
+[MAXMIN C++] Efectos encontrados en orden 34 : 11
+[MAXMIN C++] Efectos encontrados en orden 35 : 5
+[MAXMIN C++] Efectos encontrados en orden 36 : 2
+[MAXMIN C++] Convergencia en step 37
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 3711
+[MAXMIN C++] Efectos encontrados en orden 2 : 4465
+[MAXMIN C++] Efectos encontrados en orden 3 : 5401
+[MAXMIN C++] Efectos encontrados en orden 4 : 6419
+[MAXMIN C++] Efectos encontrados en orden 5 : 7675
+[MAXMIN C++] Efectos encontrados en orden 6 : 9059
+[MAXMIN C++] Efectos encontrados en orden 7 : 10440
+[MAXMIN C++] Efectos encontrados en orden 8 : 11886
+[MAXMIN C++] Efectos encontrados en orden 9 : 13311
+[MAXMIN C++] Efectos encontrados en orden 10 : 14738
+[MAXMIN C++] Efectos encontrados en orden 11 : 15980
+[MAXMIN C++] Efectos encontrados en orden 12 : 17042
+[MAXMIN C++] Efectos encontrados en orden 13 : 17780
+[MAXMIN C++] Efectos encontrados en orden 14 : 18407
+[MAXMIN C++] Efectos encontrados en orden 15 : 18895
+[MAXMIN C++] Efectos encontrados en orden 16 : 19329
+[MAXMIN C++] Efectos encontrados en orden 17 : 19451
+[MAXMIN C++] Efectos encontrados en orden 18 : 19099
+[MAXMIN C++] Efectos encontrados en orden 19 : 18670
+[MAXMIN C++] Efectos encontrados en orden 20 : 17708
+[MAXMIN C++] Efectos encontrados en orden 21 : 16466
+[MAXMIN C++] Efectos encontrados en orden 22 : 14995
+[MAXMIN C++] Efectos encontrados en orden 23 : 13557
+[MAXMIN C++] Efectos encontrados en orden 24 : 11979
+[MAXMIN C++] Efectos encontrados en orden 25 : 10079
+[MAXMIN C++] Efectos encontrados en orden 26 : 8490
+[MAXMIN C++] Efectos encontrados en orden 27 : 7136
+[MAXMIN C++] Efectos encontrados en orden 28 : 5919
+[MAXMIN C++] Efectos encontrados en orden 29 : 4759
+[MAXMIN C++] Efectos encontrados en orden 30 : 3798
+[MAXMIN C++] Efectos encontrados en orden 31 : 3019
+[MAXMIN C++] Efectos encontrados en orden 32 : 2331
+[MAXMIN C++] Efectos encontrados en orden 33 : 1814
+[MAXMIN C++] Efectos encontrados en orden 34 : 1432
+[MAXMIN C++] Efectos encontrados en orden 35 : 1094
+[MAXMIN C++] Efectos encontrados en orden 36 : 811
+[MAXMIN C++] Efectos encontrados en orden 37 : 595
+[MAXMIN C++] Efectos encontrados en orden 38 : 453
+[MAXMIN C++] Efectos encontrados en orden 39 : 327
+[MAXMIN C++] Efectos encontrados en orden 40 : 209
+[MAXMIN C++] Efectos encontrados en orden 41 : 128
+[MAXMIN C++] Efectos encontrados en orden 42 : 66
+[MAXMIN C++] Efectos encontrados en orden 43 : 28
+[MAXMIN C++] Efectos encontrados en orden 44 : 4
+[MAXMIN C++] Convergencia en step 45
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 8108
+[MAXMIN C++] Efectos encontrados en orden 2 : 10325
+[MAXMIN C++] Efectos encontrados en orden 3 : 13035
+[MAXMIN C++] Efectos encontrados en orden 4 : 16408
+[MAXMIN C++] Efectos encontrados en orden 5 : 20863
+[MAXMIN C++] Efectos encontrados en orden 6 : 26632
+[MAXMIN C++] Efectos encontrados en orden 7 : 33664
+[MAXMIN C++] Efectos encontrados en orden 8 : 42278
+[MAXMIN C++] Efectos encontrados en orden 9 : 52324
+[MAXMIN C++] Efectos encontrados en orden 10 : 63893
+[MAXMIN C++] Efectos encontrados en orden 11 : 76637
+[MAXMIN C++] Efectos encontrados en orden 12 : 90049
+[MAXMIN C++] Efectos encontrados en orden 13 : 103271
+[MAXMIN C++] Efectos encontrados en orden 14 : 115401
+[MAXMIN C++] Efectos encontrados en orden 15 : 125027
+[MAXMIN C++] Efectos encontrados en orden 16 : 131943
+[MAXMIN C++] Efectos encontrados en orden 17 : 134646
+[MAXMIN C++] Efectos encontrados en orden 18 : 134217
+[MAXMIN C++] Efectos encontrados en orden 19 : 130140
+[MAXMIN C++] Efectos encontrados en orden 20 : 123413
+[MAXMIN C++] Efectos encontrados en orden 21 : 114626
+[MAXMIN C++] Efectos encontrados en orden 22 : 104230
+[MAXMIN C++] Efectos encontrados en orden 23 : 93555
+[MAXMIN C++] Efectos encontrados en orden 24 : 82688
+[MAXMIN C++] Efectos encontrados en orden 25 : 71677
+[MAXMIN C++] Efectos encontrados en orden 26 : 60934
+[MAXMIN C++] Efectos encontrados en orden 27 : 50847
+[MAXMIN C++] Efectos encontrados en orden 28 : 41899
+[MAXMIN C++] Efectos encontrados en orden 29 : 33948
+[MAXMIN C++] Efectos encontrados en orden 30 : 27150
+[MAXMIN C++] Efectos encontrados en orden 31 : 21450
+[MAXMIN C++] Efectos encontrados en orden 32 : 16533
+[MAXMIN C++] Efectos encontrados en orden 33 : 12310
+[MAXMIN C++] Efectos encontrados en orden 34 : 8892
+[MAXMIN C++] Efectos encontrados en orden 35 : 6285
+[MAXMIN C++] Efectos encontrados en orden 36 : 4405
+[MAXMIN C++] Efectos encontrados en orden 37 : 2953
+[MAXMIN C++] Efectos encontrados en orden 38 : 1972
+[MAXMIN C++] Efectos encontrados en orden 39 : 1234
+[MAXMIN C++] Efectos encontrados en orden 40 : 741
+[MAXMIN C++] Efectos encontrados en orden 41 : 453
+[MAXMIN C++] Efectos encontrados en orden 42 : 218
+[MAXMIN C++] Efectos encontrados en orden 43 : 79
+[MAXMIN C++] Efectos encontrados en orden 44 : 34
+[MAXMIN C++] Efectos encontrados en orden 45 : 15
+[MAXMIN C++] Efectos encontrados en orden 46 : 4
+[MAXMIN C++] Convergencia en step 47
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 15316
+[MAXMIN C++] Efectos encontrados en orden 2 : 18745
+[MAXMIN C++] Efectos encontrados en orden 3 : 22805
+[MAXMIN C++] Efectos encontrados en orden 4 : 27658
+[MAXMIN C++] Efectos encontrados en orden 5 : 33621
+[MAXMIN C++] Efectos encontrados en orden 6 : 40477
+[MAXMIN C++] Efectos encontrados en orden 7 : 48518
+[MAXMIN C++] Efectos encontrados en orden 8 : 57824
+[MAXMIN C++] Efectos encontrados en orden 9 : 68740
+[MAXMIN C++] Efectos encontrados en orden 10 : 80845
+[MAXMIN C++] Efectos encontrados en orden 11 : 94398
+[MAXMIN C++] Efectos encontrados en orden 12 : 108795
+[MAXMIN C++] Efectos encontrados en orden 13 : 123913
+[MAXMIN C++] Efectos encontrados en orden 14 : 139966
+[MAXMIN C++] Efectos encontrados en orden 15 : 155610
+[MAXMIN C++] Efectos encontrados en orden 16 : 171447
+[MAXMIN C++] Efectos encontrados en orden 17 : 187050
+[MAXMIN C++] Efectos encontrados en orden 18 : 200719
+[MAXMIN C++] Efectos encontrados en orden 19 : 212881
+[MAXMIN C++] Efectos encontrados en orden 20 : 222663
+[MAXMIN C++] Efectos encontrados en orden 21 : 231059
+[MAXMIN C++] Efectos encontrados en orden 22 : 237545
+[MAXMIN C++] Efectos encontrados en orden 23 : 242429
+[MAXMIN C++] Efectos encontrados en orden 24 : 244568
+[MAXMIN C++] Efectos encontrados en orden 25 : 245276
+[MAXMIN C++] Efectos encontrados en orden 26 : 242772
+[MAXMIN C++] Efectos encontrados en orden 27 : 238150
+[MAXMIN C++] Efectos encontrados en orden 28 : 231202
+[MAXMIN C++] Efectos encontrados en orden 29 : 221015
+[MAXMIN C++] Efectos encontrados en orden 30 : 208751
+[MAXMIN C++] Efectos encontrados en orden 31 : 194306
+[MAXMIN C++] Efectos encontrados en orden 32 : 178688
+[MAXMIN C++] Efectos encontrados en orden 33 : 162844
+[MAXMIN C++] Efectos encontrados en orden 34 : 147024
+[MAXMIN C++] Efectos encontrados en orden 35 : 132313
+[MAXMIN C++] Efectos encontrados en orden 36 : 119013
+[MAXMIN C++] Efectos encontrados en orden 37 : 106039
+[MAXMIN C++] Efectos encontrados en orden 38 : 94510
+[MAXMIN C++] Efectos encontrados en orden 39 : 83314
+[MAXMIN C++] Efectos encontrados en orden 40 : 72825
+[MAXMIN C++] Efectos encontrados en orden 41 : 63440
+[MAXMIN C++] Efectos encontrados en orden 42 : 54880
+[MAXMIN C++] Efectos encontrados en orden 43 : 47149
+[MAXMIN C++] Efectos encontrados en orden 44 : 39980
+[MAXMIN C++] Efectos encontrados en orden 45 : 33517
+[MAXMIN C++] Efectos encontrados en orden 46 : 27575
+[MAXMIN C++] Efectos encontrados en orden 47 : 22662
+[MAXMIN C++] Efectos encontrados en orden 48 : 18750
+[MAXMIN C++] Efectos encontrados en orden 49 : 15334
+[MAXMIN C++] Efectos encontrados en orden 50 : 12434
+[MAXMIN C++] Efectos encontrados en orden 51 : 10067
+[MAXMIN C++] Efectos encontrados en orden 52 : 8007
+[MAXMIN C++] Efectos encontrados en orden 53 : 6142
+[MAXMIN C++] Efectos encontrados en orden 54 : 4509
+[MAXMIN C++] Efectos encontrados en orden 55 : 3317
+[MAXMIN C++] Efectos encontrados en orden 56 : 2365
+[MAXMIN C++] Efectos encontrados en orden 57 : 1566
+[MAXMIN C++] Efectos encontrados en orden 58 : 960
+[MAXMIN C++] Efectos encontrados en orden 59 : 597
+[MAXMIN C++] Efectos encontrados en orden 60 : 396
+[MAXMIN C++] Efectos encontrados en orden 61 : 284
+[MAXMIN C++] Efectos encontrados en orden 62 : 199
+[MAXMIN C++] Efectos encontrados en orden 63 : 137
+[MAXMIN C++] Efectos encontrados en orden 64 : 84
+[MAXMIN C++] Efectos encontrados en orden 65 : 40
+[MAXMIN C++] Efectos encontrados en orden 66 : 18
+[MAXMIN C++] Efectos encontrados en orden 67 : 6
+[MAXMIN C++] Efectos encontrados en orden 68 : 1
+[MAXMIN C++] Convergencia en step 69
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 154
+[MAXMIN C++] Efectos encontrados en orden 2 : 183
+[MAXMIN C++] Efectos encontrados en orden 3 : 207
+[MAXMIN C++] Efectos encontrados en orden 4 : 202
+[MAXMIN C++] Efectos encontrados en orden 5 : 179
+[MAXMIN C++] Efectos encontrados en orden 6 : 133
+[MAXMIN C++] Efectos encontrados en orden 7 : 81
+[MAXMIN C++] Efectos encontrados en orden 8 : 34
+[MAXMIN C++] Efectos encontrados en orden 9 : 11
+[MAXMIN C++] Efectos encontrados en orden 10 : 2
+[MAXMIN C++] Convergencia en step 11
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 562
+[MAXMIN C++] Efectos encontrados en orden 2 : 769
+[MAXMIN C++] Efectos encontrados en orden 3 : 851
+[MAXMIN C++] Efectos encontrados en orden 4 : 859
+[MAXMIN C++] Efectos encontrados en orden 5 : 757
+[MAXMIN C++] Efectos encontrados en orden 6 : 660
+[MAXMIN C++] Efectos encontrados en orden 7 : 580
+[MAXMIN C++] Efectos encontrados en orden 8 : 496
+[MAXMIN C++] Efectos encontrados en orden 9 : 392
+[MAXMIN C++] Efectos encontrados en orden 10 : 292
+[MAXMIN C++] Efectos encontrados en orden 11 : 203
+[MAXMIN C++] Efectos encontrados en orden 12 : 157
+[MAXMIN C++] Efectos encontrados en orden 13 : 120
+[MAXMIN C++] Efectos encontrados en orden 14 : 91
+[MAXMIN C++] Efectos encontrados en orden 15 : 56
+[MAXMIN C++] Efectos encontrados en orden 16 : 32
+[MAXMIN C++] Efectos encontrados en orden 17 : 25
+[MAXMIN C++] Efectos encontrados en orden 18 : 18
+[MAXMIN C++] Efectos encontrados en orden 19 : 9
+[MAXMIN C++] Efectos encontrados en orden 20 : 2
+[MAXMIN C++] Convergencia en step 21
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 921
+[MAXMIN C++] Efectos encontrados en orden 2 : 1203
+[MAXMIN C++] Efectos encontrados en orden 3 : 1505
+[MAXMIN C++] Efectos encontrados en orden 4 : 1763
+[MAXMIN C++] Efectos encontrados en orden 5 : 2049
+[MAXMIN C++] Efectos encontrados en orden 6 : 2329
+[MAXMIN C++] Efectos encontrados en orden 7 : 2457
+[MAXMIN C++] Efectos encontrados en orden 8 : 2531
+[MAXMIN C++] Efectos encontrados en orden 9 : 2462
+[MAXMIN C++] Efectos encontrados en orden 10 : 2297
+[MAXMIN C++] Efectos encontrados en orden 11 : 2091
+[MAXMIN C++] Efectos encontrados en orden 12 : 1826
+[MAXMIN C++] Efectos encontrados en orden 13 : 1633
+[MAXMIN C++] Efectos encontrados en orden 14 : 1433
+[MAXMIN C++] Efectos encontrados en orden 15 : 1271
+[MAXMIN C++] Efectos encontrados en orden 16 : 1114
+[MAXMIN C++] Efectos encontrados en orden 17 : 974
+[MAXMIN C++] Efectos encontrados en orden 18 : 860
+[MAXMIN C++] Efectos encontrados en orden 19 : 774
+[MAXMIN C++] Efectos encontrados en orden 20 : 717
+[MAXMIN C++] Efectos encontrados en orden 21 : 608
+[MAXMIN C++] Efectos encontrados en orden 22 : 526
+[MAXMIN C++] Efectos encontrados en orden 23 : 435
+[MAXMIN C++] Efectos encontrados en orden 24 : 351
+[MAXMIN C++] Efectos encontrados en orden 25 : 283
+[MAXMIN C++] Efectos encontrados en orden 26 : 232
+[MAXMIN C++] Efectos encontrados en orden 27 : 210
+[MAXMIN C++] Efectos encontrados en orden 28 : 182
+[MAXMIN C++] Efectos encontrados en orden 29 : 179
+[MAXMIN C++] Efectos encontrados en orden 30 : 171
+[MAXMIN C++] Efectos encontrados en orden 31 : 160
+[MAXMIN C++] Efectos encontrados en orden 32 : 136
+[MAXMIN C++] Efectos encontrados en orden 33 : 110
+[MAXMIN C++] Efectos encontrados en orden 34 : 92
+[MAXMIN C++] Efectos encontrados en orden 35 : 76
+[MAXMIN C++] Efectos encontrados en orden 36 : 56
+[MAXMIN C++] Efectos encontrados en orden 37 : 44
+[MAXMIN C++] Efectos encontrados en orden 38 : 43
+[MAXMIN C++] Efectos encontrados en orden 39 : 34
+[MAXMIN C++] Efectos encontrados en orden 40 : 20
+[MAXMIN C++] Efectos encontrados en orden 41 : 19
+[MAXMIN C++] Efectos encontrados en orden 42 : 11
+[MAXMIN C++] Efectos encontrados en orden 43 : 2
+[MAXMIN C++] Convergencia en step 44
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 2369
+[MAXMIN C++] Efectos encontrados en orden 2 : 3597
+[MAXMIN C++] Efectos encontrados en orden 3 : 5420
+[MAXMIN C++] Efectos encontrados en orden 4 : 7802
+[MAXMIN C++] Efectos encontrados en orden 5 : 10799
+[MAXMIN C++] Efectos encontrados en orden 6 : 13772
+[MAXMIN C++] Efectos encontrados en orden 7 : 16350
+[MAXMIN C++] Efectos encontrados en orden 8 : 18188
+[MAXMIN C++] Efectos encontrados en orden 9 : 19129
+[MAXMIN C++] Efectos encontrados en orden 10 : 18696
+[MAXMIN C++] Efectos encontrados en orden 11 : 16953
+[MAXMIN C++] Efectos encontrados en orden 12 : 14472
+[MAXMIN C++] Efectos encontrados en orden 13 : 11843
+[MAXMIN C++] Efectos encontrados en orden 14 : 9603
+[MAXMIN C++] Efectos encontrados en orden 15 : 7688
+[MAXMIN C++] Efectos encontrados en orden 16 : 5977
+[MAXMIN C++] Efectos encontrados en orden 17 : 4495
+[MAXMIN C++] Efectos encontrados en orden 18 : 3258
+[MAXMIN C++] Efectos encontrados en orden 19 : 2285
+[MAXMIN C++] Efectos encontrados en orden 20 : 1572
+[MAXMIN C++] Efectos encontrados en orden 21 : 1024
+[MAXMIN C++] Efectos encontrados en orden 22 : 615
+[MAXMIN C++] Efectos encontrados en orden 23 : 355
+[MAXMIN C++] Efectos encontrados en orden 24 : 190
+[MAXMIN C++] Efectos encontrados en orden 25 : 99
+[MAXMIN C++] Efectos encontrados en orden 26 : 57
+[MAXMIN C++] Efectos encontrados en orden 27 : 22
+[MAXMIN C++] Efectos encontrados en orden 28 : 5
+[MAXMIN C++] Convergencia en step 29
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 5494
+[MAXMIN C++] Efectos encontrados en orden 2 : 8082
+[MAXMIN C++] Efectos encontrados en orden 3 : 11818
+[MAXMIN C++] Efectos encontrados en orden 4 : 17040
+[MAXMIN C++] Efectos encontrados en orden 5 : 24243
+[MAXMIN C++] Efectos encontrados en orden 6 : 33358
+[MAXMIN C++] Efectos encontrados en orden 7 : 44373
+[MAXMIN C++] Efectos encontrados en orden 8 : 56439
+[MAXMIN C++] Efectos encontrados en orden 9 : 68350
+[MAXMIN C++] Efectos encontrados en orden 10 : 78192
+[MAXMIN C++] Efectos encontrados en orden 11 : 84332
+[MAXMIN C++] Efectos encontrados en orden 12 : 85797
+[MAXMIN C++] Efectos encontrados en orden 13 : 83248
+[MAXMIN C++] Efectos encontrados en orden 14 : 76672
+[MAXMIN C++] Efectos encontrados en orden 15 : 67803
+[MAXMIN C++] Efectos encontrados en orden 16 : 58201
+[MAXMIN C++] Efectos encontrados en orden 17 : 48476
+[MAXMIN C++] Efectos encontrados en orden 18 : 39604
+[MAXMIN C++] Efectos encontrados en orden 19 : 31173
+[MAXMIN C++] Efectos encontrados en orden 20 : 24073
+[MAXMIN C++] Efectos encontrados en orden 21 : 18249
+[MAXMIN C++] Efectos encontrados en orden 22 : 13770
+[MAXMIN C++] Efectos encontrados en orden 23 : 10102
+[MAXMIN C++] Efectos encontrados en orden 24 : 7254
+[MAXMIN C++] Efectos encontrados en orden 25 : 5047
+[MAXMIN C++] Efectos encontrados en orden 26 : 3509
+[MAXMIN C++] Efectos encontrados en orden 27 : 2424
+[MAXMIN C++] Efectos encontrados en orden 28 : 1628
+[MAXMIN C++] Efectos encontrados en orden 29 : 1116
+[MAXMIN C++] Efectos encontrados en orden 30 : 736
+[MAXMIN C++] Efectos encontrados en orden 31 : 459
+[MAXMIN C++] Efectos encontrados en orden 32 : 272
+[MAXMIN C++] Efectos encontrados en orden 33 : 168
+[MAXMIN C++] Efectos encontrados en orden 34 : 90
+[MAXMIN C++] Efectos encontrados en orden 35 : 42
+[MAXMIN C++] Efectos encontrados en orden 36 : 21
+[MAXMIN C++] Efectos encontrados en orden 37 : 14
+[MAXMIN C++] Efectos encontrados en orden 38 : 5
+[MAXMIN C++] Efectos encontrados en orden 39 : 1
+[MAXMIN C++] Convergencia en step 40
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 11531
+[MAXMIN C++] Efectos encontrados en orden 2 : 17434
+[MAXMIN C++] Efectos encontrados en orden 3 : 26215
+[MAXMIN C++] Efectos encontrados en orden 4 : 39281
+[MAXMIN C++] Efectos encontrados en orden 5 : 58680
+[MAXMIN C++] Efectos encontrados en orden 6 : 86249
+[MAXMIN C++] Efectos encontrados en orden 7 : 123394
+[MAXMIN C++] Efectos encontrados en orden 8 : 171196
+[MAXMIN C++] Efectos encontrados en orden 9 : 228373
+[MAXMIN C++] Efectos encontrados en orden 10 : 290302
+[MAXMIN C++] Efectos encontrados en orden 11 : 348560
+[MAXMIN C++] Efectos encontrados en orden 12 : 393183
+[MAXMIN C++] Efectos encontrados en orden 13 : 415349
+[MAXMIN C++] Efectos encontrados en orden 14 : 410289
+[MAXMIN C++] Efectos encontrados en orden 15 : 381280
+[MAXMIN C++] Efectos encontrados en orden 16 : 335299
+[MAXMIN C++] Efectos encontrados en orden 17 : 280942
+[MAXMIN C++] Efectos encontrados en orden 18 : 226828
+[MAXMIN C++] Efectos encontrados en orden 19 : 177301
+[MAXMIN C++] Efectos encontrados en orden 20 : 135150
+[MAXMIN C++] Efectos encontrados en orden 21 : 100651
+[MAXMIN C++] Efectos encontrados en orden 22 : 72382
+[MAXMIN C++] Efectos encontrados en orden 23 : 50731
+[MAXMIN C++] Efectos encontrados en orden 24 : 34518
+[MAXMIN C++] Efectos encontrados en orden 25 : 22608
+[MAXMIN C++] Efectos encontrados en orden 26 : 14318
+[MAXMIN C++] Efectos encontrados en orden 27 : 8908
+[MAXMIN C++] Efectos encontrados en orden 28 : 5457
+[MAXMIN C++] Efectos encontrados en orden 29 : 3246
+[MAXMIN C++] Efectos encontrados en orden 30 : 1865
+[MAXMIN C++] Efectos encontrados en orden 31 : 1068
+[MAXMIN C++] Efectos encontrados en orden 32 : 601
+[MAXMIN C++] Efectos encontrados en orden 33 : 299
+[MAXMIN C++] Efectos encontrados en orden 34 : 125
+[MAXMIN C++] Efectos encontrados en orden 35 : 45
+[MAXMIN C++] Efectos encontrados en orden 36 : 18
+[MAXMIN C++] Efectos encontrados en orden 37 : 4
+[MAXMIN C++] Convergencia en step 38
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 22108
+[MAXMIN C++] Efectos encontrados en orden 2 : 32548
+[MAXMIN C++] Efectos encontrados en orden 3 : 48189
+[MAXMIN C++] Efectos encontrados en orden 4 : 71008
+[MAXMIN C++] Efectos encontrados en orden 5 : 103991
+[MAXMIN C++] Efectos encontrados en orden 6 : 150758
+[MAXMIN C++] Efectos encontrados en orden 7 : 216008
+[MAXMIN C++] Efectos encontrados en orden 8 : 305002
+[MAXMIN C++] Efectos encontrados en orden 9 : 422250
+[MAXMIN C++] Efectos encontrados en orden 10 : 567526
+[MAXMIN C++] Efectos encontrados en orden 11 : 737497
+[MAXMIN C++] Efectos encontrados en orden 12 : 920052
+[MAXMIN C++] Efectos encontrados en orden 13 : 1095081
+[MAXMIN C++] Efectos encontrados en orden 14 : 1241978
+[MAXMIN C++] Efectos encontrados en orden 15 : 1339115
+[MAXMIN C++] Efectos encontrados en orden 16 : 1372075
+[MAXMIN C++] Efectos encontrados en orden 17 : 1339818
+[MAXMIN C++] Efectos encontrados en orden 18 : 1245274
+[MAXMIN C++] Efectos encontrados en orden 19 : 1105851
+[MAXMIN C++] Efectos encontrados en orden 20 : 941373
+[MAXMIN C++] Efectos encontrados en orden 21 : 772451
+[MAXMIN C++] Efectos encontrados en orden 22 : 610823
+[MAXMIN C++] Efectos encontrados en orden 23 : 468136
+[MAXMIN C++] Efectos encontrados en orden 24 : 348560
+[MAXMIN C++] Efectos encontrados en orden 25 : 252762
+[MAXMIN C++] Efectos encontrados en orden 26 : 179807
+[MAXMIN C++] Efectos encontrados en orden 27 : 126805
+[MAXMIN C++] Efectos encontrados en orden 28 : 88420
+[MAXMIN C++] Efectos encontrados en orden 29 : 61173
+[MAXMIN C++] Efectos encontrados en orden 30 : 42320
+[MAXMIN C++] Efectos encontrados en orden 31 : 29254
+[MAXMIN C++] Efectos encontrados en orden 32 : 20127
+[MAXMIN C++] Efectos encontrados en orden 33 : 13792
+[MAXMIN C++] Efectos encontrados en orden 34 : 9323
+[MAXMIN C++] Efectos encontrados en orden 35 : 6325
+[MAXMIN C++] Efectos encontrados en orden 36 : 4200
+[MAXMIN C++] Efectos encontrados en orden 37 : 2627
+[MAXMIN C++] Efectos encontrados en orden 38 : 1581
+[MAXMIN C++] Efectos encontrados en orden 39 : 1000
+[MAXMIN C++] Efectos encontrados en orden 40 : 638
+[MAXMIN C++] Efectos encontrados en orden 41 : 393
+[MAXMIN C++] Efectos encontrados en orden 42 : 233
+[MAXMIN C++] Efectos encontrados en orden 43 : 128
+[MAXMIN C++] Efectos encontrados en orden 44 : 79
+[MAXMIN C++] Efectos encontrados en orden 45 : 46
+[MAXMIN C++] Efectos encontrados en orden 46 : 20
+[MAXMIN C++] Efectos encontrados en orden 47 : 11
+[MAXMIN C++] Efectos encontrados en orden 48 : 11
+[MAXMIN C++] Efectos encontrados en orden 49 : 6
+[MAXMIN C++] Convergencia en step 50
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 189
+[MAXMIN C++] Efectos encontrados en orden 2 : 227
+[MAXMIN C++] Efectos encontrados en orden 3 : 248
+[MAXMIN C++] Efectos encontrados en orden 4 : 236
+[MAXMIN C++] Efectos encontrados en orden 5 : 196
+[MAXMIN C++] Efectos encontrados en orden 6 : 126
+[MAXMIN C++] Efectos encontrados en orden 7 : 55
+[MAXMIN C++] Efectos encontrados en orden 8 : 22
+[MAXMIN C++] Efectos encontrados en orden 9 : 5
+[MAXMIN C++] Convergencia en step 10
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 792
+[MAXMIN C++] Efectos encontrados en orden 2 : 1334
+[MAXMIN C++] Efectos encontrados en orden 3 : 1900
+[MAXMIN C++] Efectos encontrados en orden 4 : 2294
+[MAXMIN C++] Efectos encontrados en orden 5 : 2273
+[MAXMIN C++] Efectos encontrados en orden 6 : 1957
+[MAXMIN C++] Efectos encontrados en orden 7 : 1526
+[MAXMIN C++] Efectos encontrados en orden 8 : 1139
+[MAXMIN C++] Efectos encontrados en orden 9 : 806
+[MAXMIN C++] Efectos encontrados en orden 10 : 533
+[MAXMIN C++] Efectos encontrados en orden 11 : 345
+[MAXMIN C++] Efectos encontrados en orden 12 : 167
+[MAXMIN C++] Efectos encontrados en orden 13 : 80
+[MAXMIN C++] Efectos encontrados en orden 14 : 29
+[MAXMIN C++] Efectos encontrados en orden 15 : 6
+[MAXMIN C++] Efectos encontrados en orden 16 : 4
+[MAXMIN C++] Convergencia en step 17
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 1204
+[MAXMIN C++] Efectos encontrados en orden 2 : 1796
+[MAXMIN C++] Efectos encontrados en orden 3 : 2543
+[MAXMIN C++] Efectos encontrados en orden 4 : 3328
+[MAXMIN C++] Efectos encontrados en orden 5 : 4145
+[MAXMIN C++] Efectos encontrados en orden 6 : 4781
+[MAXMIN C++] Efectos encontrados en orden 7 : 5039
+[MAXMIN C++] Efectos encontrados en orden 8 : 5092
+[MAXMIN C++] Efectos encontrados en orden 9 : 4762
+[MAXMIN C++] Efectos encontrados en orden 10 : 4283
+[MAXMIN C++] Efectos encontrados en orden 11 : 3595
+[MAXMIN C++] Efectos encontrados en orden 12 : 2813
+[MAXMIN C++] Efectos encontrados en orden 13 : 2219
+[MAXMIN C++] Efectos encontrados en orden 14 : 1694
+[MAXMIN C++] Efectos encontrados en orden 15 : 1245
+[MAXMIN C++] Efectos encontrados en orden 16 : 867
+[MAXMIN C++] Efectos encontrados en orden 17 : 568
+[MAXMIN C++] Efectos encontrados en orden 18 : 379
+[MAXMIN C++] Efectos encontrados en orden 19 : 286
+[MAXMIN C++] Efectos encontrados en orden 20 : 221
+[MAXMIN C++] Efectos encontrados en orden 21 : 179
+[MAXMIN C++] Efectos encontrados en orden 22 : 151
+[MAXMIN C++] Efectos encontrados en orden 23 : 120
+[MAXMIN C++] Efectos encontrados en orden 24 : 71
+[MAXMIN C++] Efectos encontrados en orden 25 : 36
+[MAXMIN C++] Efectos encontrados en orden 26 : 10
+[MAXMIN C++] Efectos encontrados en orden 27 : 3
+[MAXMIN C++] Convergencia en step 28
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 3154
+[MAXMIN C++] Efectos encontrados en orden 2 : 5405
+[MAXMIN C++] Efectos encontrados en orden 3 : 8942
+[MAXMIN C++] Efectos encontrados en orden 4 : 13834
+[MAXMIN C++] Efectos encontrados en orden 5 : 20167
+[MAXMIN C++] Efectos encontrados en orden 6 : 26641
+[MAXMIN C++] Efectos encontrados en orden 7 : 31524
+[MAXMIN C++] Efectos encontrados en orden 8 : 33510
+[MAXMIN C++] Efectos encontrados en orden 9 : 31679
+[MAXMIN C++] Efectos encontrados en orden 10 : 26950
+[MAXMIN C++] Efectos encontrados en orden 11 : 21282
+[MAXMIN C++] Efectos encontrados en orden 12 : 16126
+[MAXMIN C++] Efectos encontrados en orden 13 : 11595
+[MAXMIN C++] Efectos encontrados en orden 14 : 7978
+[MAXMIN C++] Efectos encontrados en orden 15 : 5309
+[MAXMIN C++] Efectos encontrados en orden 16 : 3295
+[MAXMIN C++] Efectos encontrados en orden 17 : 1879
+[MAXMIN C++] Efectos encontrados en orden 18 : 1031
+[MAXMIN C++] Efectos encontrados en orden 19 : 538
+[MAXMIN C++] Efectos encontrados en orden 20 : 282
+[MAXMIN C++] Efectos encontrados en orden 21 : 141
+[MAXMIN C++] Efectos encontrados en orden 22 : 63
+[MAXMIN C++] Efectos encontrados en orden 23 : 22
+[MAXMIN C++] Efectos encontrados en orden 24 : 4
+[MAXMIN C++] Convergencia en step 25
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 7498
+[MAXMIN C++] Efectos encontrados en orden 2 : 12799
+[MAXMIN C++] Efectos encontrados en orden 3 : 21785
+[MAXMIN C++] Efectos encontrados en orden 4 : 36003
+[MAXMIN C++] Efectos encontrados en orden 5 : 57994
+[MAXMIN C++] Efectos encontrados en orden 6 : 88701
+[MAXMIN C++] Efectos encontrados en orden 7 : 126260
+[MAXMIN C++] Efectos encontrados en orden 8 : 163074
+[MAXMIN C++] Efectos encontrados en orden 9 : 188411
+[MAXMIN C++] Efectos encontrados en orden 10 : 193481
+[MAXMIN C++] Efectos encontrados en orden 11 : 178137
+[MAXMIN C++] Efectos encontrados en orden 12 : 149265
+[MAXMIN C++] Efectos encontrados en orden 13 : 116079
+[MAXMIN C++] Efectos encontrados en orden 14 : 84712
+[MAXMIN C++] Efectos encontrados en orden 15 : 58829
+[MAXMIN C++] Efectos encontrados en orden 16 : 39053
+[MAXMIN C++] Efectos encontrados en orden 17 : 25062
+[MAXMIN C++] Efectos encontrados en orden 18 : 15414
+[MAXMIN C++] Efectos encontrados en orden 19 : 8945
+[MAXMIN C++] Efectos encontrados en orden 20 : 4943
+[MAXMIN C++] Efectos encontrados en orden 21 : 2565
+[MAXMIN C++] Efectos encontrados en orden 22 : 1256
+[MAXMIN C++] Efectos encontrados en orden 23 : 566
+[MAXMIN C++] Efectos encontrados en orden 24 : 252
+[MAXMIN C++] Efectos encontrados en orden 25 : 93
+[MAXMIN C++] Efectos encontrados en orden 26 : 28
+[MAXMIN C++] Efectos encontrados en orden 27 : 8
+[MAXMIN C++] Efectos encontrados en orden 28 : 2
+[MAXMIN C++] Convergencia en step 29
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 15574
+[MAXMIN C++] Efectos encontrados en orden 2 : 27236
+[MAXMIN C++] Efectos encontrados en orden 3 : 47100
+[MAXMIN C++] Efectos encontrados en orden 4 : 80064
+[MAXMIN C++] Efectos encontrados en orden 5 : 133061
+[MAXMIN C++] Efectos encontrados en orden 6 : 213917
+[MAXMIN C++] Efectos encontrados en orden 7 : 328559
+[MAXMIN C++] Efectos encontrados en orden 8 : 472741
+[MAXMIN C++] Efectos encontrados en orden 9 : 624628
+[MAXMIN C++] Efectos encontrados en orden 10 : 744891
+[MAXMIN C++] Efectos encontrados en orden 11 : 794355
+[MAXMIN C++] Efectos encontrados en orden 12 : 759979
+[MAXMIN C++] Efectos encontrados en orden 13 : 656247
+[MAXMIN C++] Efectos encontrados en orden 14 : 519725
+[MAXMIN C++] Efectos encontrados en orden 15 : 381294
+[MAXMIN C++] Efectos encontrados en orden 16 : 261569
+[MAXMIN C++] Efectos encontrados en orden 17 : 169247
+[MAXMIN C++] Efectos encontrados en orden 18 : 104107
+[MAXMIN C++] Efectos encontrados en orden 19 : 62529
+[MAXMIN C++] Efectos encontrados en orden 20 : 36952
+[MAXMIN C++] Efectos encontrados en orden 21 : 21640
+[MAXMIN C++] Efectos encontrados en orden 22 : 12806
+[MAXMIN C++] Efectos encontrados en orden 23 : 7569
+[MAXMIN C++] Efectos encontrados en orden 24 : 4348
+[MAXMIN C++] Efectos encontrados en orden 25 : 2373
+[MAXMIN C++] Efectos encontrados en orden 26 : 1296
+[MAXMIN C++] Efectos encontrados en orden 27 : 647
+[MAXMIN C++] Efectos encontrados en orden 28 : 310
+[MAXMIN C++] Efectos encontrados en orden 29 : 118
+[MAXMIN C++] Efectos encontrados en orden 30 : 30
+[MAXMIN C++] Efectos encontrados en orden 31 : 13
+[MAXMIN C++] Efectos encontrados en orden 32 : 6
+[MAXMIN C++] Efectos encontrados en orden 33 : 1
+[MAXMIN C++] Convergencia en step 34
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 30166
+[MAXMIN C++] Efectos encontrados en orden 2 : 52053
+[MAXMIN C++] Efectos encontrados en orden 3 : 90202
+[MAXMIN C++] Efectos encontrados en orden 4 : 155772
+[MAXMIN C++] Efectos encontrados en orden 5 : 267171
+[MAXMIN C++] Efectos encontrados en orden 6 : 450174
+[MAXMIN C++] Efectos encontrados en orden 7 : 739943
+[MAXMIN C++] Efectos encontrados en orden 8 : 1167543
+[MAXMIN C++] Efectos encontrados en orden 9 : 1730829
+[MAXMIN C++] Efectos encontrados en orden 10 : 2357959
+[MAXMIN C++] Efectos encontrados en orden 11 : 2893066
+[MAXMIN C++] Efectos encontrados en orden 12 : 3155247
+[MAXMIN C++] Efectos encontrados en orden 13 : 3051805
+[MAXMIN C++] Efectos encontrados en orden 14 : 2643135
+[MAXMIN C++] Efectos encontrados en orden 15 : 2078887
+[MAXMIN C++] Efectos encontrados en orden 16 : 1506716
+[MAXMIN C++] Efectos encontrados en orden 17 : 1026251
+[MAXMIN C++] Efectos encontrados en orden 18 : 666641
+[MAXMIN C++] Efectos encontrados en orden 19 : 420301
+[MAXMIN C++] Efectos encontrados en orden 20 : 258397
+[MAXMIN C++] Efectos encontrados en orden 21 : 156636
+[MAXMIN C++] Efectos encontrados en orden 22 : 93959
+[MAXMIN C++] Efectos encontrados en orden 23 : 56145
+[MAXMIN C++] Efectos encontrados en orden 24 : 33587
+[MAXMIN C++] Efectos encontrados en orden 25 : 19857
+[MAXMIN C++] Efectos encontrados en orden 26 : 11694
+[MAXMIN C++] Efectos encontrados en orden 27 : 6573
+[MAXMIN C++] Efectos encontrados en orden 28 : 3595
+[MAXMIN C++] Efectos encontrados en orden 29 : 1826
+[MAXMIN C++] Efectos encontrados en orden 30 : 908
+[MAXMIN C++] Efectos encontrados en orden 31 : 404
+[MAXMIN C++] Efectos encontrados en orden 32 : 162
+[MAXMIN C++] Efectos encontrados en orden 33 : 49
+[MAXMIN C++] Efectos encontrados en orden 34 : 10
+[MAXMIN C++] Efectos encontrados en orden 35 : 2
+[MAXMIN C++] Convergencia en step 36
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 255
+[MAXMIN C++] Efectos encontrados en orden 2 : 367
+[MAXMIN C++] Efectos encontrados en orden 3 : 471
+[MAXMIN C++] Efectos encontrados en orden 4 : 453
+[MAXMIN C++] Efectos encontrados en orden 5 : 387
+[MAXMIN C++] Efectos encontrados en orden 6 : 260
+[MAXMIN C++] Efectos encontrados en orden 7 : 158
+[MAXMIN C++] Efectos encontrados en orden 8 : 94
+[MAXMIN C++] Efectos encontrados en orden 9 : 63
+[MAXMIN C++] Efectos encontrados en orden 10 : 54
+[MAXMIN C++] Efectos encontrados en orden 11 : 37
+[MAXMIN C++] Efectos encontrados en orden 12 : 20
+[MAXMIN C++] Efectos encontrados en orden 13 : 6
+[MAXMIN C++] Convergencia en step 14
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 1005
+[MAXMIN C++] Efectos encontrados en orden 2 : 1845
+[MAXMIN C++] Efectos encontrados en orden 3 : 2832
+[MAXMIN C++] Efectos encontrados en orden 4 : 3617
+[MAXMIN C++] Efectos encontrados en orden 5 : 3587
+[MAXMIN C++] Efectos encontrados en orden 6 : 2869
+[MAXMIN C++] Efectos encontrados en orden 7 : 1930
+[MAXMIN C++] Efectos encontrados en orden 8 : 1214
+[MAXMIN C++] Efectos encontrados en orden 9 : 725
+[MAXMIN C++] Efectos encontrados en orden 10 : 435
+[MAXMIN C++] Efectos encontrados en orden 11 : 277
+[MAXMIN C++] Efectos encontrados en orden 12 : 178
+[MAXMIN C++] Efectos encontrados en orden 13 : 111
+[MAXMIN C++] Efectos encontrados en orden 14 : 60
+[MAXMIN C++] Efectos encontrados en orden 15 : 36
+[MAXMIN C++] Efectos encontrados en orden 16 : 20
+[MAXMIN C++] Efectos encontrados en orden 17 : 9
+[MAXMIN C++] Efectos encontrados en orden 18 : 5
+[MAXMIN C++] Efectos encontrados en orden 19 : 3
+[MAXMIN C++] Efectos encontrados en orden 20 : 1
+[MAXMIN C++] Convergencia en step 21
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 1548
+[MAXMIN C++] Efectos encontrados en orden 2 : 2585
+[MAXMIN C++] Efectos encontrados en orden 3 : 3981
+[MAXMIN C++] Efectos encontrados en orden 4 : 5559
+[MAXMIN C++] Efectos encontrados en orden 5 : 7014
+[MAXMIN C++] Efectos encontrados en orden 6 : 7933
+[MAXMIN C++] Efectos encontrados en orden 7 : 7845
+[MAXMIN C++] Efectos encontrados en orden 8 : 7006
+[MAXMIN C++] Efectos encontrados en orden 9 : 5762
+[MAXMIN C++] Efectos encontrados en orden 10 : 4460
+[MAXMIN C++] Efectos encontrados en orden 11 : 3296
+[MAXMIN C++] Efectos encontrados en orden 12 : 2193
+[MAXMIN C++] Efectos encontrados en orden 13 : 1399
+[MAXMIN C++] Efectos encontrados en orden 14 : 911
+[MAXMIN C++] Efectos encontrados en orden 15 : 532
+[MAXMIN C++] Efectos encontrados en orden 16 : 294
+[MAXMIN C++] Efectos encontrados en orden 17 : 180
+[MAXMIN C++] Efectos encontrados en orden 18 : 119
+[MAXMIN C++] Efectos encontrados en orden 19 : 71
+[MAXMIN C++] Efectos encontrados en orden 20 : 47
+[MAXMIN C++] Efectos encontrados en orden 21 : 33
+[MAXMIN C++] Efectos encontrados en orden 22 : 24
+[MAXMIN C++] Efectos encontrados en orden 23 : 13
+[MAXMIN C++] Efectos encontrados en orden 24 : 1
+[MAXMIN C++] Convergencia en step 25
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 4081
+[MAXMIN C++] Efectos encontrados en orden 2 : 7876
+[MAXMIN C++] Efectos encontrados en orden 3 : 14488
+[MAXMIN C++] Efectos encontrados en orden 4 : 24585
+[MAXMIN C++] Efectos encontrados en orden 5 : 37040
+[MAXMIN C++] Efectos encontrados en orden 6 : 47333
+[MAXMIN C++] Efectos encontrados en orden 7 : 50647
+[MAXMIN C++] Efectos encontrados en orden 8 : 45799
+[MAXMIN C++] Efectos encontrados en orden 9 : 35349
+[MAXMIN C++] Efectos encontrados en orden 10 : 24220
+[MAXMIN C++] Efectos encontrados en orden 11 : 15562
+[MAXMIN C++] Efectos encontrados en orden 12 : 9515
+[MAXMIN C++] Efectos encontrados en orden 13 : 5459
+[MAXMIN C++] Efectos encontrados en orden 14 : 2922
+[MAXMIN C++] Efectos encontrados en orden 15 : 1476
+[MAXMIN C++] Efectos encontrados en orden 16 : 682
+[MAXMIN C++] Efectos encontrados en orden 17 : 268
+[MAXMIN C++] Efectos encontrados en orden 18 : 106
+[MAXMIN C++] Efectos encontrados en orden 19 : 27
+[MAXMIN C++] Efectos encontrados en orden 20 : 5
+[MAXMIN C++] Convergencia en step 21
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 9654
+[MAXMIN C++] Efectos encontrados en orden 2 : 18612
+[MAXMIN C++] Efectos encontrados en orden 3 : 35743
+[MAXMIN C++] Efectos encontrados en orden 4 : 66407
+[MAXMIN C++] Efectos encontrados en orden 5 : 116808
+[MAXMIN C++] Efectos encontrados en orden 6 : 186077
+[MAXMIN C++] Efectos encontrados en orden 7 : 257917
+[MAXMIN C++] Efectos encontrados en orden 8 : 300466
+[MAXMIN C++] Efectos encontrados en orden 9 : 291163
+[MAXMIN C++] Efectos encontrados en orden 10 : 238717
+[MAXMIN C++] Efectos encontrados en orden 11 : 171319
+[MAXMIN C++] Efectos encontrados en orden 12 : 112238
+[MAXMIN C++] Efectos encontrados en orden 13 : 70150
+[MAXMIN C++] Efectos encontrados en orden 14 : 42907
+[MAXMIN C++] Efectos encontrados en orden 15 : 25524
+[MAXMIN C++] Efectos encontrados en orden 16 : 14752
+[MAXMIN C++] Efectos encontrados en orden 17 : 8042
+[MAXMIN C++] Efectos encontrados en orden 18 : 4140
+[MAXMIN C++] Efectos encontrados en orden 19 : 2170
+[MAXMIN C++] Efectos encontrados en orden 20 : 1265
+[MAXMIN C++] Efectos encontrados en orden 21 : 867
+[MAXMIN C++] Efectos encontrados en orden 22 : 650
+[MAXMIN C++] Efectos encontrados en orden 23 : 508
+[MAXMIN C++] Efectos encontrados en orden 24 : 390
+[MAXMIN C++] Efectos encontrados en orden 25 : 325
+[MAXMIN C++] Efectos encontrados en orden 26 : 235
+[MAXMIN C++] Efectos encontrados en orden 27 : 156
+[MAXMIN C++] Efectos encontrados en orden 28 : 98
+[MAXMIN C++] Efectos encontrados en orden 29 : 66
+[MAXMIN C++] Efectos encontrados en orden 30 : 39
+[MAXMIN C++] Efectos encontrados en orden 31 : 24
+[MAXMIN C++] Efectos encontrados en orden 32 : 18
+[MAXMIN C++] Efectos encontrados en orden 33 : 13
+[MAXMIN C++] Efectos encontrados en orden 34 : 8
+[MAXMIN C++] Efectos encontrados en orden 35 : 4
+[MAXMIN C++] Efectos encontrados en orden 36 : 2
+[MAXMIN C++] Efectos encontrados en orden 37 : 1
+[MAXMIN C++] Convergencia en step 38
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 20508
+[MAXMIN C++] Efectos encontrados en orden 2 : 41149
+[MAXMIN C++] Efectos encontrados en orden 3 : 81645
+[MAXMIN C++] Efectos encontrados en orden 4 : 159027
+[MAXMIN C++] Efectos encontrados en orden 5 : 298189
+[MAXMIN C++] Efectos encontrados en orden 6 : 525719
+[MAXMIN C++] Efectos encontrados en orden 7 : 839918
+[MAXMIN C++] Efectos encontrados en orden 8 : 1163160
+[MAXMIN C++] Efectos encontrados en orden 9 : 1342296
+[MAXMIN C++] Efectos encontrados en orden 10 : 1270876
+[MAXMIN C++] Efectos encontrados en orden 11 : 1003901
+[MAXMIN C++] Efectos encontrados en orden 12 : 682951
+[MAXMIN C++] Efectos encontrados en orden 13 : 416390
+[MAXMIN C++] Efectos encontrados en orden 14 : 235057
+[MAXMIN C++] Efectos encontrados en orden 15 : 124183
+[MAXMIN C++] Efectos encontrados en orden 16 : 60948
+[MAXMIN C++] Efectos encontrados en orden 17 : 28396
+[MAXMIN C++] Efectos encontrados en orden 18 : 13170
+[MAXMIN C++] Efectos encontrados en orden 19 : 6275
+[MAXMIN C++] Efectos encontrados en orden 20 : 3379
+[MAXMIN C++] Efectos encontrados en orden 21 : 2047
+[MAXMIN C++] Efectos encontrados en orden 22 : 1436
+[MAXMIN C++] Efectos encontrados en orden 23 : 1157
+[MAXMIN C++] Efectos encontrados en orden 24 : 1046
+[MAXMIN C++] Efectos encontrados en orden 25 : 927
+[MAXMIN C++] Efectos encontrados en orden 26 : 830
+[MAXMIN C++] Efectos encontrados en orden 27 : 770
+[MAXMIN C++] Efectos encontrados en orden 28 : 719
+[MAXMIN C++] Efectos encontrados en orden 29 : 620
+[MAXMIN C++] Efectos encontrados en orden 30 : 550
+[MAXMIN C++] Efectos encontrados en orden 31 : 493
+[MAXMIN C++] Efectos encontrados en orden 32 : 431
+[MAXMIN C++] Efectos encontrados en orden 33 : 365
+[MAXMIN C++] Efectos encontrados en orden 34 : 329
+[MAXMIN C++] Efectos encontrados en orden 35 : 290
+[MAXMIN C++] Efectos encontrados en orden 36 : 227
+[MAXMIN C++] Efectos encontrados en orden 37 : 167
+[MAXMIN C++] Efectos encontrados en orden 38 : 122
+[MAXMIN C++] Efectos encontrados en orden 39 : 106
+[MAXMIN C++] Efectos encontrados en orden 40 : 99
+[MAXMIN C++] Efectos encontrados en orden 41 : 90
+[MAXMIN C++] Efectos encontrados en orden 42 : 72
+[MAXMIN C++] Efectos encontrados en orden 43 : 55
+[MAXMIN C++] Efectos encontrados en orden 44 : 46
+[MAXMIN C++] Efectos encontrados en orden 45 : 30
+[MAXMIN C++] Efectos encontrados en orden 46 : 12
+[MAXMIN C++] Efectos encontrados en orden 47 : 2
+[MAXMIN C++] Convergencia en step 48
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 39367
+[MAXMIN C++] Efectos encontrados en orden 2 : 77369
+[MAXMIN C++] Efectos encontrados en orden 3 : 152692
+[MAXMIN C++] Efectos encontrados en orden 4 : 299350
+[MAXMIN C++] Efectos encontrados en orden 5 : 577309
+[MAXMIN C++] Efectos encontrados en orden 6 : 1075626
+[MAXMIN C++] Efectos encontrados en orden 7 : 1889717
+[MAXMIN C++] Efectos encontrados en orden 8 : 3017953
+[MAXMIN C++] Efectos encontrados en orden 9 : 4196423
+[MAXMIN C++] Efectos encontrados en orden 10 : 4908173
+[MAXMIN C++] Efectos encontrados en orden 11 : 4773284
+[MAXMIN C++] Efectos encontrados en orden 12 : 3906059
+[MAXMIN C++] Efectos encontrados en orden 13 : 2762421
+[MAXMIN C++] Efectos encontrados en orden 14 : 1740375
+[MAXMIN C++] Efectos encontrados en orden 15 : 1001023
+[MAXMIN C++] Efectos encontrados en orden 16 : 537391
+[MAXMIN C++] Efectos encontrados en orden 17 : 273352
+[MAXMIN C++] Efectos encontrados en orden 18 : 133475
+[MAXMIN C++] Efectos encontrados en orden 19 : 63208
+[MAXMIN C++] Efectos encontrados en orden 20 : 29217
+[MAXMIN C++] Efectos encontrados en orden 21 : 13152
+[MAXMIN C++] Efectos encontrados en orden 22 : 5991
+[MAXMIN C++] Efectos encontrados en orden 23 : 2813
+[MAXMIN C++] Efectos encontrados en orden 24 : 1539
+[MAXMIN C++] Efectos encontrados en orden 25 : 932
+[MAXMIN C++] Efectos encontrados en orden 26 : 593
+[MAXMIN C++] Efectos encontrados en orden 27 : 399
+[MAXMIN C++] Efectos encontrados en orden 28 : 265
+[MAXMIN C++] Efectos encontrados en orden 29 : 182
+[MAXMIN C++] Efectos encontrados en orden 30 : 137
+[MAXMIN C++] Efectos encontrados en orden 31 : 107
+[MAXMIN C++] Efectos encontrados en orden 32 : 69
+[MAXMIN C++] Efectos encontrados en orden 33 : 44
+[MAXMIN C++] Efectos encontrados en orden 34 : 35
+[MAXMIN C++] Efectos encontrados en orden 35 : 21
+[MAXMIN C++] Efectos encontrados en orden 36 : 8
+[MAXMIN C++] Efectos encontrados en orden 37 : 1
+[MAXMIN C++] Convergencia en step 38
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 583
+[MAXMIN C++] Efectos encontrados en orden 2 : 1062
+[MAXMIN C++] Efectos encontrados en orden 3 : 1254
+[MAXMIN C++] Efectos encontrados en orden 4 : 905
+[MAXMIN C++] Efectos encontrados en orden 5 : 488
+[MAXMIN C++] Efectos encontrados en orden 6 : 205
+[MAXMIN C++] Efectos encontrados en orden 7 : 64
+[MAXMIN C++] Efectos encontrados en orden 8 : 34
+[MAXMIN C++] Efectos encontrados en orden 9 : 19
+[MAXMIN C++] Efectos encontrados en orden 10 : 7
+[MAXMIN C++] Efectos encontrados en orden 11 : 1
+[MAXMIN C++] Convergencia en step 12
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 2208
+[MAXMIN C++] Efectos encontrados en orden 2 : 5374
+[MAXMIN C++] Efectos encontrados en orden 3 : 8624
+[MAXMIN C++] Efectos encontrados en orden 4 : 7644
+[MAXMIN C++] Efectos encontrados en orden 5 : 3907
+[MAXMIN C++] Efectos encontrados en orden 6 : 1448
+[MAXMIN C++] Efectos encontrados en orden 7 : 521
+[MAXMIN C++] Efectos encontrados en orden 8 : 281
+[MAXMIN C++] Efectos encontrados en orden 9 : 199
+[MAXMIN C++] Efectos encontrados en orden 10 : 158
+[MAXMIN C++] Efectos encontrados en orden 11 : 141
+[MAXMIN C++] Efectos encontrados en orden 12 : 136
+[MAXMIN C++] Efectos encontrados en orden 13 : 141
+[MAXMIN C++] Efectos encontrados en orden 14 : 131
+[MAXMIN C++] Efectos encontrados en orden 15 : 94
+[MAXMIN C++] Efectos encontrados en orden 16 : 62
+[MAXMIN C++] Efectos encontrados en orden 17 : 37
+[MAXMIN C++] Efectos encontrados en orden 18 : 17
+[MAXMIN C++] Efectos encontrados en orden 19 : 2
+[MAXMIN C++] Convergencia en step 20
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 3454
+[MAXMIN C++] Efectos encontrados en orden 2 : 8108
+[MAXMIN C++] Efectos encontrados en orden 3 : 16088
+[MAXMIN C++] Efectos encontrados en orden 4 : 23850
+[MAXMIN C++] Efectos encontrados en orden 5 : 24605
+[MAXMIN C++] Efectos encontrados en orden 6 : 17973
+[MAXMIN C++] Efectos encontrados en orden 7 : 10151
+[MAXMIN C++] Efectos encontrados en orden 8 : 4818
+[MAXMIN C++] Efectos encontrados en orden 9 : 2381
+[MAXMIN C++] Efectos encontrados en orden 10 : 1486
+[MAXMIN C++] Efectos encontrados en orden 11 : 1102
+[MAXMIN C++] Efectos encontrados en orden 12 : 879
+[MAXMIN C++] Efectos encontrados en orden 13 : 728
+[MAXMIN C++] Efectos encontrados en orden 14 : 571
+[MAXMIN C++] Efectos encontrados en orden 15 : 414
+[MAXMIN C++] Efectos encontrados en orden 16 : 254
+[MAXMIN C++] Efectos encontrados en orden 17 : 166
+[MAXMIN C++] Efectos encontrados en orden 18 : 104
+[MAXMIN C++] Efectos encontrados en orden 19 : 62
+[MAXMIN C++] Efectos encontrados en orden 20 : 36
+[MAXMIN C++] Efectos encontrados en orden 21 : 16
+[MAXMIN C++] Efectos encontrados en orden 22 : 6
+[MAXMIN C++] Efectos encontrados en orden 23 : 2
+[MAXMIN C++] Convergencia en step 24
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 9066
+[MAXMIN C++] Efectos encontrados en orden 2 : 25632
+[MAXMIN C++] Efectos encontrados en orden 3 : 62928
+[MAXMIN C++] Efectos encontrados en orden 4 : 113763
+[MAXMIN C++] Efectos encontrados en orden 5 : 125632
+[MAXMIN C++] Efectos encontrados en orden 6 : 80806
+[MAXMIN C++] Efectos encontrados en orden 7 : 35594
+[MAXMIN C++] Efectos encontrados en orden 8 : 16083
+[MAXMIN C++] Efectos encontrados en orden 9 : 10770
+[MAXMIN C++] Efectos encontrados en orden 10 : 8945
+[MAXMIN C++] Efectos encontrados en orden 11 : 7626
+[MAXMIN C++] Efectos encontrados en orden 12 : 6421
+[MAXMIN C++] Efectos encontrados en orden 13 : 5220
+[MAXMIN C++] Efectos encontrados en orden 14 : 4136
+[MAXMIN C++] Efectos encontrados en orden 15 : 3235
+[MAXMIN C++] Efectos encontrados en orden 16 : 2519
+[MAXMIN C++] Efectos encontrados en orden 17 : 1941
+[MAXMIN C++] Efectos encontrados en orden 18 : 1453
+[MAXMIN C++] Efectos encontrados en orden 19 : 1052
+[MAXMIN C++] Efectos encontrados en orden 20 : 743
+[MAXMIN C++] Efectos encontrados en orden 21 : 480
+[MAXMIN C++] Efectos encontrados en orden 22 : 266
+[MAXMIN C++] Efectos encontrados en orden 23 : 148
+[MAXMIN C++] Efectos encontrados en orden 24 : 65
+[MAXMIN C++] Efectos encontrados en orden 25 : 32
+[MAXMIN C++] Efectos encontrados en orden 26 : 17
+[MAXMIN C++] Efectos encontrados en orden 27 : 10
+[MAXMIN C++] Efectos encontrados en orden 28 : 4
+[MAXMIN C++] Efectos encontrados en orden 29 : 2
+[MAXMIN C++] Convergencia en step 30
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 22028
+[MAXMIN C++] Efectos encontrados en orden 2 : 63737
+[MAXMIN C++] Efectos encontrados en orden 3 : 175001
+[MAXMIN C++] Efectos encontrados en orden 4 : 415550
+[MAXMIN C++] Efectos encontrados en orden 5 : 720852
+[MAXMIN C++] Efectos encontrados en orden 6 : 762493
+[MAXMIN C++] Efectos encontrados en orden 7 : 473522
+[MAXMIN C++] Efectos encontrados en orden 8 : 207548
+[MAXMIN C++] Efectos encontrados en orden 9 : 92044
+[MAXMIN C++] Efectos encontrados en orden 10 : 58209
+[MAXMIN C++] Efectos encontrados en orden 11 : 51247
+[MAXMIN C++] Efectos encontrados en orden 12 : 49921
+[MAXMIN C++] Efectos encontrados en orden 13 : 48019
+[MAXMIN C++] Efectos encontrados en orden 14 : 44552
+[MAXMIN C++] Efectos encontrados en orden 15 : 39301
+[MAXMIN C++] Efectos encontrados en orden 16 : 33028
+[MAXMIN C++] Efectos encontrados en orden 17 : 26556
+[MAXMIN C++] Efectos encontrados en orden 18 : 20353
+[MAXMIN C++] Efectos encontrados en orden 19 : 14976
+[MAXMIN C++] Efectos encontrados en orden 20 : 10522
+[MAXMIN C++] Efectos encontrados en orden 21 : 7039
+[MAXMIN C++] Efectos encontrados en orden 22 : 4514
+[MAXMIN C++] Efectos encontrados en orden 23 : 2811
+[MAXMIN C++] Efectos encontrados en orden 24 : 1664
+[MAXMIN C++] Efectos encontrados en orden 25 : 978
+[MAXMIN C++] Efectos encontrados en orden 26 : 558
+[MAXMIN C++] Efectos encontrados en orden 27 : 304
+[MAXMIN C++] Efectos encontrados en orden 28 : 148
+[MAXMIN C++] Efectos encontrados en orden 29 : 64
+[MAXMIN C++] Efectos encontrados en orden 30 : 28
+[MAXMIN C++] Efectos encontrados en orden 31 : 8
+[MAXMIN C++] Efectos encontrados en orden 32 : 2
+[MAXMIN C++] Efectos encontrados en orden 33 : 1
+[MAXMIN C++] Convergencia en step 34
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 45900
+[MAXMIN C++] Efectos encontrados en orden 2 : 136823
+[MAXMIN C++] Efectos encontrados en orden 3 : 395914
+[MAXMIN C++] Efectos encontrados en orden 4 : 1051707
+[MAXMIN C++] Efectos encontrados en orden 5 : 2248957
+[MAXMIN C++] Efectos encontrados en orden 6 : 3173897
+[MAXMIN C++] Efectos encontrados en orden 7 : 2557555
+[MAXMIN C++] Efectos encontrados en orden 8 : 1233562
+[MAXMIN C++] Efectos encontrados en orden 9 : 463869
+[MAXMIN C++] Efectos encontrados en orden 10 : 231572
+[MAXMIN C++] Efectos encontrados en orden 11 : 199417
+[MAXMIN C++] Efectos encontrados en orden 12 : 211109
+[MAXMIN C++] Efectos encontrados en orden 13 : 224249
+[MAXMIN C++] Efectos encontrados en orden 14 : 226106
+[MAXMIN C++] Efectos encontrados en orden 15 : 214000
+[MAXMIN C++] Efectos encontrados en orden 16 : 191311
+[MAXMIN C++] Efectos encontrados en orden 17 : 162513
+[MAXMIN C++] Efectos encontrados en orden 18 : 130925
+[MAXMIN C++] Efectos encontrados en orden 19 : 101760
+[MAXMIN C++] Efectos encontrados en orden 20 : 76645
+[MAXMIN C++] Efectos encontrados en orden 21 : 56558
+[MAXMIN C++] Efectos encontrados en orden 22 : 41278
+[MAXMIN C++] Efectos encontrados en orden 23 : 29933
+[MAXMIN C++] Efectos encontrados en orden 24 : 21779
+[MAXMIN C++] Efectos encontrados en orden 25 : 15909
+[MAXMIN C++] Efectos encontrados en orden 26 : 11366
+[MAXMIN C++] Efectos encontrados en orden 27 : 7855
+[MAXMIN C++] Efectos encontrados en orden 28 : 5274
+[MAXMIN C++] Efectos encontrados en orden 29 : 3435
+[MAXMIN C++] Efectos encontrados en orden 30 : 2186
+[MAXMIN C++] Efectos encontrados en orden 31 : 1399
+[MAXMIN C++] Efectos encontrados en orden 32 : 857
+[MAXMIN C++] Efectos encontrados en orden 33 : 499
+[MAXMIN C++] Efectos encontrados en orden 34 : 310
+[MAXMIN C++] Efectos encontrados en orden 35 : 177
+[MAXMIN C++] Efectos encontrados en orden 36 : 103
+[MAXMIN C++] Efectos encontrados en orden 37 : 59
+[MAXMIN C++] Efectos encontrados en orden 38 : 21
+[MAXMIN C++] Efectos encontrados en orden 39 : 5
+[MAXMIN C++] Efectos encontrados en orden 40 : 1
+[MAXMIN C++] Convergencia en step 41
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 88209
+[MAXMIN C++] Efectos encontrados en orden 2 : 260626
+[MAXMIN C++] Efectos encontrados en orden 3 : 759741
+[MAXMIN C++] Efectos encontrados en orden 4 : 2124003
+[MAXMIN C++] Efectos encontrados en orden 5 : 5296541
+[MAXMIN C++] Efectos encontrados en orden 6 : 10133061
+[MAXMIN C++] Efectos encontrados en orden 7 : 12285483
+[MAXMIN C++] Efectos encontrados en orden 8 : 8622572
+[MAXMIN C++] Efectos encontrados en orden 9 : 3867829
+[MAXMIN C++] Efectos encontrados en orden 10 : 1421837
+[MAXMIN C++] Efectos encontrados en orden 11 : 653440
+[MAXMIN C++] Efectos encontrados en orden 12 : 513965
+[MAXMIN C++] Efectos encontrados en orden 13 : 541552
+[MAXMIN C++] Efectos encontrados en orden 14 : 595496
+[MAXMIN C++] Efectos encontrados en orden 15 : 634697
+[MAXMIN C++] Efectos encontrados en orden 16 : 647214
+[MAXMIN C++] Efectos encontrados en orden 17 : 630435
+[MAXMIN C++] Efectos encontrados en orden 18 : 589263
+[MAXMIN C++] Efectos encontrados en orden 19 : 531588
+[MAXMIN C++] Efectos encontrados en orden 20 : 464054
+[MAXMIN C++] Efectos encontrados en orden 21 : 394481
+[MAXMIN C++] Efectos encontrados en orden 22 : 327994
+[MAXMIN C++] Efectos encontrados en orden 23 : 266736
+[MAXMIN C++] Efectos encontrados en orden 24 : 213588
+[MAXMIN C++] Efectos encontrados en orden 25 : 169105
+[MAXMIN C++] Efectos encontrados en orden 26 : 133411
+[MAXMIN C++] Efectos encontrados en orden 27 : 105209
+[MAXMIN C++] Efectos encontrados en orden 28 : 83241
+[MAXMIN C++] Efectos encontrados en orden 29 : 66123
+[MAXMIN C++] Efectos encontrados en orden 30 : 52634
+[MAXMIN C++] Efectos encontrados en orden 31 : 41446
+[MAXMIN C++] Efectos encontrados en orden 32 : 32139
+[MAXMIN C++] Efectos encontrados en orden 33 : 24508
+[MAXMIN C++] Efectos encontrados en orden 34 : 18071
+[MAXMIN C++] Efectos encontrados en orden 35 : 13004
+[MAXMIN C++] Efectos encontrados en orden 36 : 9206
+[MAXMIN C++] Efectos encontrados en orden 37 : 6463
+[MAXMIN C++] Efectos encontrados en orden 38 : 4351
+[MAXMIN C++] Efectos encontrados en orden 39 : 2863
+[MAXMIN C++] Efectos encontrados en orden 40 : 1852
+[MAXMIN C++] Efectos encontrados en orden 41 : 1212
+[MAXMIN C++] Efectos encontrados en orden 42 : 797
+[MAXMIN C++] Efectos encontrados en orden 43 : 476
+[MAXMIN C++] Efectos encontrados en orden 44 : 291
+[MAXMIN C++] Efectos encontrados en orden 45 : 162
+[MAXMIN C++] Efectos encontrados en orden 46 : 70
+[MAXMIN C++] Efectos encontrados en orden 47 : 23
+[MAXMIN C++] Efectos encontrados en orden 48 : 8
+[MAXMIN C++] Efectos encontrados en orden 49 : 1
+[MAXMIN C++] Convergencia en step 50
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 1111
+[MAXMIN C++] Efectos encontrados en orden 2 : 2045
+[MAXMIN C++] Efectos encontrados en orden 3 : 1423
+[MAXMIN C++] Efectos encontrados en orden 4 : 520
+[MAXMIN C++] Efectos encontrados en orden 5 : 243
+[MAXMIN C++] Efectos encontrados en orden 6 : 165
+[MAXMIN C++] Efectos encontrados en orden 7 : 125
+[MAXMIN C++] Efectos encontrados en orden 8 : 89
+[MAXMIN C++] Efectos encontrados en orden 9 : 66
+[MAXMIN C++] Efectos encontrados en orden 10 : 35
+[MAXMIN C++] Efectos encontrados en orden 11 : 20
+[MAXMIN C++] Efectos encontrados en orden 12 : 14
+[MAXMIN C++] Efectos encontrados en orden 13 : 8
+[MAXMIN C++] Efectos encontrados en orden 14 : 4
+[MAXMIN C++] Efectos encontrados en orden 15 : 1
+[MAXMIN C++] Convergencia en step 16
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 3809
+[MAXMIN C++] Efectos encontrados en orden 2 : 10200
+[MAXMIN C++] Efectos encontrados en orden 3 : 11992
+[MAXMIN C++] Efectos encontrados en orden 4 : 5544
+[MAXMIN C++] Efectos encontrados en orden 5 : 2164
+[MAXMIN C++] Efectos encontrados en orden 6 : 1295
+[MAXMIN C++] Efectos encontrados en orden 7 : 868
+[MAXMIN C++] Efectos encontrados en orden 8 : 553
+[MAXMIN C++] Efectos encontrados en orden 9 : 339
+[MAXMIN C++] Efectos encontrados en orden 10 : 199
+[MAXMIN C++] Efectos encontrados en orden 11 : 107
+[MAXMIN C++] Efectos encontrados en orden 12 : 59
+[MAXMIN C++] Efectos encontrados en orden 13 : 26
+[MAXMIN C++] Efectos encontrados en orden 14 : 5
+[MAXMIN C++] Convergencia en step 15
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 6337
+[MAXMIN C++] Efectos encontrados en orden 2 : 18868
+[MAXMIN C++] Efectos encontrados en orden 3 : 38897
+[MAXMIN C++] Efectos encontrados en orden 4 : 41472
+[MAXMIN C++] Efectos encontrados en orden 5 : 22889
+[MAXMIN C++] Efectos encontrados en orden 6 : 10560
+[MAXMIN C++] Efectos encontrados en orden 7 : 6713
+[MAXMIN C++] Efectos encontrados en orden 8 : 5189
+[MAXMIN C++] Efectos encontrados en orden 9 : 3807
+[MAXMIN C++] Efectos encontrados en orden 10 : 2439
+[MAXMIN C++] Efectos encontrados en orden 11 : 1392
+[MAXMIN C++] Efectos encontrados en orden 12 : 720
+[MAXMIN C++] Efectos encontrados en orden 13 : 389
+[MAXMIN C++] Efectos encontrados en orden 14 : 191
+[MAXMIN C++] Efectos encontrados en orden 15 : 76
+[MAXMIN C++] Efectos encontrados en orden 16 : 23
+[MAXMIN C++] Efectos encontrados en orden 17 : 6
+[MAXMIN C++] Convergencia en step 18
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 15793
+[MAXMIN C++] Efectos encontrados en orden 2 : 56345
+[MAXMIN C++] Efectos encontrados en orden 3 : 146440
+[MAXMIN C++] Efectos encontrados en orden 4 : 184462
+[MAXMIN C++] Efectos encontrados en orden 5 : 93289
+[MAXMIN C++] Efectos encontrados en orden 6 : 37842
+[MAXMIN C++] Efectos encontrados en orden 7 : 27695
+[MAXMIN C++] Efectos encontrados en orden 8 : 23633
+[MAXMIN C++] Efectos encontrados en orden 9 : 18023
+[MAXMIN C++] Efectos encontrados en orden 10 : 12237
+[MAXMIN C++] Efectos encontrados en orden 11 : 7796
+[MAXMIN C++] Efectos encontrados en orden 12 : 4664
+[MAXMIN C++] Efectos encontrados en orden 13 : 2611
+[MAXMIN C++] Efectos encontrados en orden 14 : 1398
+[MAXMIN C++] Efectos encontrados en orden 15 : 677
+[MAXMIN C++] Efectos encontrados en orden 16 : 309
+[MAXMIN C++] Efectos encontrados en orden 17 : 138
+[MAXMIN C++] Efectos encontrados en orden 18 : 48
+[MAXMIN C++] Efectos encontrados en orden 19 : 18
+[MAXMIN C++] Efectos encontrados en orden 20 : 4
+[MAXMIN C++] Convergencia en step 21
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 39763
+[MAXMIN C++] Efectos encontrados en orden 2 : 152327
+[MAXMIN C++] Efectos encontrados en orden 3 : 505416
+[MAXMIN C++] Efectos encontrados en orden 4 : 1081688
+[MAXMIN C++] Efectos encontrados en orden 5 : 994868
+[MAXMIN C++] Efectos encontrados en orden 6 : 410099
+[MAXMIN C++] Efectos encontrados en orden 7 : 195628
+[MAXMIN C++] Efectos encontrados en orden 8 : 172919
+[MAXMIN C++] Efectos encontrados en orden 9 : 160093
+[MAXMIN C++] Efectos encontrados en orden 10 : 127034
+[MAXMIN C++] Efectos encontrados en orden 11 : 85163
+[MAXMIN C++] Efectos encontrados en orden 12 : 50125
+[MAXMIN C++] Efectos encontrados en orden 13 : 26922
+[MAXMIN C++] Efectos encontrados en orden 14 : 13749
+[MAXMIN C++] Efectos encontrados en orden 15 : 6722
+[MAXMIN C++] Efectos encontrados en orden 16 : 3050
+[MAXMIN C++] Efectos encontrados en orden 17 : 1236
+[MAXMIN C++] Efectos encontrados en orden 18 : 467
+[MAXMIN C++] Efectos encontrados en orden 19 : 137
+[MAXMIN C++] Efectos encontrados en orden 20 : 26
+[MAXMIN C++] Efectos encontrados en orden 21 : 5
+[MAXMIN C++] Efectos encontrados en orden 22 : 2
+[MAXMIN C++] Convergencia en step 23
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 81337
+[MAXMIN C++] Efectos encontrados en orden 2 : 321048
+[MAXMIN C++] Efectos encontrados en orden 3 : 1174190
+[MAXMIN C++] Efectos encontrados en orden 4 : 3275173
+[MAXMIN C++] Efectos encontrados en orden 5 : 4660536
+[MAXMIN C++] Efectos encontrados en orden 6 : 2536207
+[MAXMIN C++] Efectos encontrados en orden 7 : 869918
+[MAXMIN C++] Efectos encontrados en orden 8 : 630630
+[MAXMIN C++] Efectos encontrados en orden 9 : 669147
+[MAXMIN C++] Efectos encontrados en orden 10 : 629355
+[MAXMIN C++] Efectos encontrados en orden 11 : 497283
+[MAXMIN C++] Efectos encontrados en orden 12 : 337460
+[MAXMIN C++] Efectos encontrados en orden 13 : 203280
+[MAXMIN C++] Efectos encontrados en orden 14 : 111621
+[MAXMIN C++] Efectos encontrados en orden 15 : 57148
+[MAXMIN C++] Efectos encontrados en orden 16 : 27552
+[MAXMIN C++] Efectos encontrados en orden 17 : 12259
+[MAXMIN C++] Efectos encontrados en orden 18 : 5059
+[MAXMIN C++] Efectos encontrados en orden 19 : 1845
+[MAXMIN C++] Efectos encontrados en orden 20 : 543
+[MAXMIN C++] Efectos encontrados en orden 21 : 136
+[MAXMIN C++] Efectos encontrados en orden 22 : 15
+[MAXMIN C++] Efectos encontrados en orden 23 : 2
+[MAXMIN C++] Convergencia en step 24
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 155641
+[MAXMIN C++] Efectos encontrados en orden 2 : 607513
+[MAXMIN C++] Efectos encontrados en orden 3 : 2281222
+[MAXMIN C++] Efectos encontrados en orden 4 : 7459925
+[MAXMIN C++] Efectos encontrados en orden 5 : 16169867
+[MAXMIN C++] Efectos encontrados en orden 6 : 15640084
+[MAXMIN C++] Efectos encontrados en orden 7 : 6415326
+[MAXMIN C++] Efectos encontrados en orden 8 : 2520595
+[MAXMIN C++] Efectos encontrados en orden 9 : 2223078
+[MAXMIN C++] Efectos encontrados en orden 10 : 2462286
+[MAXMIN C++] Efectos encontrados en orden 11 : 2405884
+[MAXMIN C++] Efectos encontrados en orden 12 : 2000919
+[MAXMIN C++] Efectos encontrados en orden 13 : 1439311
+[MAXMIN C++] Efectos encontrados en orden 14 : 920007
+[MAXMIN C++] Efectos encontrados en orden 15 : 536706
+[MAXMIN C++] Efectos encontrados en orden 16 : 293696
+[MAXMIN C++] Efectos encontrados en orden 17 : 155024
+[MAXMIN C++] Efectos encontrados en orden 18 : 79305
+[MAXMIN C++] Efectos encontrados en orden 19 : 39223
+[MAXMIN C++] Efectos encontrados en orden 20 : 18629
+[MAXMIN C++] Efectos encontrados en orden 21 : 8498
+[MAXMIN C++] Efectos encontrados en orden 22 : 3602
+[MAXMIN C++] Efectos encontrados en orden 23 : 1498
+[MAXMIN C++] Efectos encontrados en orden 24 : 590
+[MAXMIN C++] Efectos encontrados en orden 25 : 233
+[MAXMIN C++] Efectos encontrados en orden 26 : 93
+[MAXMIN C++] Efectos encontrados en orden 27 : 30
+[MAXMIN C++] Efectos encontrados en orden 28 : 10
+[MAXMIN C++] Efectos encontrados en orden 29 : 2
+[MAXMIN C++] Convergencia en step 30
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 2197
+[MAXMIN C++] Efectos encontrados en orden 2 : 2661
+[MAXMIN C++] Efectos encontrados en orden 3 : 976
+[MAXMIN C++] Efectos encontrados en orden 4 : 420
+[MAXMIN C++] Efectos encontrados en orden 5 : 189
+[MAXMIN C++] Efectos encontrados en orden 6 : 51
+[MAXMIN C++] Efectos encontrados en orden 7 : 8
+[MAXMIN C++] Efectos encontrados en orden 8 : 1
+[MAXMIN C++] Convergencia en step 9
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 7981
+[MAXMIN C++] Efectos encontrados en orden 2 : 18820
+[MAXMIN C++] Efectos encontrados en orden 3 : 9244
+[MAXMIN C++] Efectos encontrados en orden 4 : 3362
+[MAXMIN C++] Efectos encontrados en orden 5 : 1910
+[MAXMIN C++] Efectos encontrados en orden 6 : 834
+[MAXMIN C++] Efectos encontrados en orden 7 : 317
+[MAXMIN C++] Efectos encontrados en orden 8 : 100
+[MAXMIN C++] Efectos encontrados en orden 9 : 24
+[MAXMIN C++] Efectos encontrados en orden 10 : 3
+[MAXMIN C++] Efectos encontrados en orden 11 : 1
+[MAXMIN C++] Convergencia en step 12
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 14769
+[MAXMIN C++] Efectos encontrados en orden 2 : 52450
+[MAXMIN C++] Efectos encontrados en orden 3 : 62714
+[MAXMIN C++] Efectos encontrados en orden 4 : 23672
+[MAXMIN C++] Efectos encontrados en orden 5 : 11899
+[MAXMIN C++] Efectos encontrados en orden 6 : 6263
+[MAXMIN C++] Efectos encontrados en orden 7 : 2689
+[MAXMIN C++] Efectos encontrados en orden 8 : 999
+[MAXMIN C++] Efectos encontrados en orden 9 : 329
+[MAXMIN C++] Efectos encontrados en orden 10 : 109
+[MAXMIN C++] Efectos encontrados en orden 11 : 21
+[MAXMIN C++] Efectos encontrados en orden 12 : 4
+[MAXMIN C++] Convergencia en step 13
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 34632
+[MAXMIN C++] Efectos encontrados en orden 2 : 155971
+[MAXMIN C++] Efectos encontrados en orden 3 : 276795
+[MAXMIN C++] Efectos encontrados en orden 4 : 115299
+[MAXMIN C++] Efectos encontrados en orden 5 : 59555
+[MAXMIN C++] Efectos encontrados en orden 6 : 39771
+[MAXMIN C++] Efectos encontrados en orden 7 : 18558
+[MAXMIN C++] Efectos encontrados en orden 8 : 6693
+[MAXMIN C++] Efectos encontrados en orden 9 : 2233
+[MAXMIN C++] Efectos encontrados en orden 10 : 754
+[MAXMIN C++] Efectos encontrados en orden 11 : 240
+[MAXMIN C++] Efectos encontrados en orden 12 : 58
+[MAXMIN C++] Efectos encontrados en orden 13 : 10
+[MAXMIN C++] Efectos encontrados en orden 14 : 1
+[MAXMIN C++] Convergencia en step 15
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 89609
+[MAXMIN C++] Efectos encontrados en orden 2 : 480448
+[MAXMIN C++] Efectos encontrados en orden 3 : 1524534
+[MAXMIN C++] Efectos encontrados en orden 4 : 1235659
+[MAXMIN C++] Efectos encontrados en orden 5 : 446302
+[MAXMIN C++] Efectos encontrados en orden 6 : 360285
+[MAXMIN C++] Efectos encontrados en orden 7 : 213357
+[MAXMIN C++] Efectos encontrados en orden 8 : 82486
+[MAXMIN C++] Efectos encontrados en orden 9 : 24477
+[MAXMIN C++] Efectos encontrados en orden 10 : 5698
+[MAXMIN C++] Efectos encontrados en orden 11 : 1063
+[MAXMIN C++] Efectos encontrados en orden 12 : 140
+[MAXMIN C++] Efectos encontrados en orden 13 : 9
+[MAXMIN C++] Convergencia en step 14
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 178800
+[MAXMIN C++] Efectos encontrados en orden 2 : 1008593
+[MAXMIN C++] Efectos encontrados en orden 3 : 4252088
+[MAXMIN C++] Efectos encontrados en orden 4 : 6411085
+[MAXMIN C++] Efectos encontrados en orden 5 : 2329722
+[MAXMIN C++] Efectos encontrados en orden 6 : 1588413
+[MAXMIN C++] Efectos encontrados en orden 7 : 1272077
+[MAXMIN C++] Efectos encontrados en orden 8 : 613752
+[MAXMIN C++] Efectos encontrados en orden 9 : 201430
+[MAXMIN C++] Efectos encontrados en orden 10 : 53110
+[MAXMIN C++] Efectos encontrados en orden 11 : 13411
+[MAXMIN C++] Efectos encontrados en orden 12 : 4320
+[MAXMIN C++] Efectos encontrados en orden 13 : 1856
+[MAXMIN C++] Efectos encontrados en orden 14 : 559
+[MAXMIN C++] Efectos encontrados en orden 15 : 129
+[MAXMIN C++] Efectos encontrados en orden 16 : 20
+[MAXMIN C++] Convergencia en step 17
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 349505
+[MAXMIN C++] Efectos encontrados en orden 2 : 2003385
+[MAXMIN C++] Efectos encontrados en orden 3 : 9883320
+[MAXMIN C++] Efectos encontrados en orden 4 : 25316993
+[MAXMIN C++] Efectos encontrados en orden 5 : 15251073
+[MAXMIN C++] Efectos encontrados en orden 6 : 5979079
+[MAXMIN C++] Efectos encontrados en orden 7 : 5991909
+[MAXMIN C++] Efectos encontrados en orden 8 : 4188930
+[MAXMIN C++] Efectos encontrados en orden 9 : 1853294
+[MAXMIN C++] Efectos encontrados en orden 10 : 599267
+[MAXMIN C++] Efectos encontrados en orden 11 : 161200
+[MAXMIN C++] Efectos encontrados en orden 12 : 39420
+[MAXMIN C++] Efectos encontrados en orden 13 : 8504
+[MAXMIN C++] Efectos encontrados en orden 14 : 1553
+[MAXMIN C++] Efectos encontrados en orden 15 : 228
+[MAXMIN C++] Efectos encontrados en orden 16 : 35
+[MAXMIN C++] Efectos encontrados en orden 17 : 2
+[MAXMIN C++] Convergencia en step 18
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 3285
+[MAXMIN C++] Efectos encontrados en orden 2 : 2473
+[MAXMIN C++] Efectos encontrados en orden 3 : 658
+[MAXMIN C++] Efectos encontrados en orden 4 : 157
+[MAXMIN C++] Efectos encontrados en orden 5 : 17
+[MAXMIN C++] Convergencia en step 6
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 12773
+[MAXMIN C++] Efectos encontrados en orden 2 : 21450
+[MAXMIN C++] Efectos encontrados en orden 3 : 6230
+[MAXMIN C++] Efectos encontrados en orden 4 : 2492
+[MAXMIN C++] Efectos encontrados en orden 5 : 583
+[MAXMIN C++] Efectos encontrados en orden 6 : 77
+[MAXMIN C++] Efectos encontrados en orden 7 : 4
+[MAXMIN C++] Convergencia en step 8
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 25900
+[MAXMIN C++] Efectos encontrados en orden 2 : 83171
+[MAXMIN C++] Efectos encontrados en orden 3 : 47926
+[MAXMIN C++] Efectos encontrados en orden 4 : 16979
+[MAXMIN C++] Efectos encontrados en orden 5 : 5613
+[MAXMIN C++] Efectos encontrados en orden 6 : 1162
+[MAXMIN C++] Efectos encontrados en orden 7 : 164
+[MAXMIN C++] Efectos encontrados en orden 8 : 17
+[MAXMIN C++] Convergencia en step 9
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 60550
+[MAXMIN C++] Efectos encontrados en orden 2 : 280222
+[MAXMIN C++] Efectos encontrados en orden 3 : 248330
+[MAXMIN C++] Efectos encontrados en orden 4 : 89496
+[MAXMIN C++] Efectos encontrados en orden 5 : 41865
+[MAXMIN C++] Efectos encontrados en orden 6 : 9294
+[MAXMIN C++] Efectos encontrados en orden 7 : 1207
+[MAXMIN C++] Efectos encontrados en orden 8 : 112
+[MAXMIN C++] Efectos encontrados en orden 9 : 6
+[MAXMIN C++] Efectos encontrados en orden 10 : 1
+[MAXMIN C++] Convergencia en step 11
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 157303
+[MAXMIN C++] Efectos encontrados en orden 2 : 989655
+[MAXMIN C++] Efectos encontrados en orden 3 : 2032172
+[MAXMIN C++] Efectos encontrados en orden 4 : 743046
+[MAXMIN C++] Efectos encontrados en orden 5 : 474249
+[MAXMIN C++] Efectos encontrados en orden 6 : 173249
+[MAXMIN C++] Efectos encontrados en orden 7 : 29807
+[MAXMIN C++] Efectos encontrados en orden 8 : 3278
+[MAXMIN C++] Efectos encontrados en orden 9 : 250
+[MAXMIN C++] Efectos encontrados en orden 10 : 9
+[MAXMIN C++] Efectos encontrados en orden 11 : 1
+[MAXMIN C++] Convergencia en step 12
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 313380
+[MAXMIN C++] Efectos encontrados en orden 2 : 2202063
+[MAXMIN C++] Efectos encontrados en orden 3 : 7717555
+[MAXMIN C++] Efectos encontrados en orden 4 : 4442040
+[MAXMIN C++] Efectos encontrados en orden 5 : 2233094
+[MAXMIN C++] Efectos encontrados en orden 6 : 1186406
+[MAXMIN C++] Efectos encontrados en orden 7 : 276764
+[MAXMIN C++] Efectos encontrados en orden 8 : 42893
+[MAXMIN C++] Efectos encontrados en orden 9 : 5668
+[MAXMIN C++] Efectos encontrados en orden 10 : 750
+[MAXMIN C++] Efectos encontrados en orden 11 : 70
+[MAXMIN C++] Efectos encontrados en orden 12 : 10
+[MAXMIN C++] Efectos encontrados en orden 13 : 1
+[MAXMIN C++] Convergencia en step 14
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 624244
+[MAXMIN C++] Efectos encontrados en orden 2 : 4638623
+[MAXMIN C++] Efectos encontrados en orden 3 : 23160175
+[MAXMIN C++] Efectos encontrados en orden 4 : 25684405
+[MAXMIN C++] Efectos encontrados en orden 5 : 9304720
+[MAXMIN C++] Efectos encontrados en orden 6 : 7428846
+[MAXMIN C++] Efectos encontrados en orden 7 : 2544245
+[MAXMIN C++] Efectos encontrados en orden 8 : 443765
+[MAXMIN C++] Efectos encontrados en orden 9 : 58067
+[MAXMIN C++] Efectos encontrados en orden 10 : 7681
+[MAXMIN C++] Efectos encontrados en orden 11 : 946
+[MAXMIN C++] Efectos encontrados en orden 12 : 77
+[MAXMIN C++] Efectos encontrados en orden 13 : 5
+[MAXMIN C++] Convergencia en step 14
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 4131
+[MAXMIN C++] Efectos encontrados en orden 2 : 1881
+[MAXMIN C++] Efectos encontrados en orden 3 : 355
+[MAXMIN C++] Efectos encontrados en orden 4 : 31
+[MAXMIN C++] Efectos encontrados en orden 5 : 1
+[MAXMIN C++] Convergencia en step 6
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 17267
+[MAXMIN C++] Efectos encontrados en orden 2 : 20286
+[MAXMIN C++] Efectos encontrados en orden 3 : 4959
+[MAXMIN C++] Efectos encontrados en orden 4 : 1212
+[MAXMIN C++] Efectos encontrados en orden 5 : 144
+[MAXMIN C++] Efectos encontrados en orden 6 : 7
+[MAXMIN C++] Convergencia en step 7
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 38317
+[MAXMIN C++] Efectos encontrados en orden 2 : 98329
+[MAXMIN C++] Efectos encontrados en orden 3 : 34169
+[MAXMIN C++] Efectos encontrados en orden 4 : 9341
+[MAXMIN C++] Efectos encontrados en orden 5 : 999
+[MAXMIN C++] Efectos encontrados en orden 6 : 46
+[MAXMIN C++] Efectos encontrados en orden 7 : 1
+[MAXMIN C++] Convergencia en step 8
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 91753
+[MAXMIN C++] Efectos encontrados en orden 2 : 375215
+[MAXMIN C++] Efectos encontrados en orden 3 : 190183
+[MAXMIN C++] Efectos encontrados en orden 4 : 67320
+[MAXMIN C++] Efectos encontrados en orden 5 : 10725
+[MAXMIN C++] Efectos encontrados en orden 6 : 734
+[MAXMIN C++] Efectos encontrados en orden 7 : 22
+[MAXMIN C++] Convergencia en step 8
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 241823
+[MAXMIN C++] Efectos encontrados en orden 2 : 1588604
+[MAXMIN C++] Efectos encontrados en orden 3 : 1861325
+[MAXMIN C++] Efectos encontrados en orden 4 : 681802
+[MAXMIN C++] Efectos encontrados en orden 5 : 239759
+[MAXMIN C++] Efectos encontrados en orden 6 : 23261
+[MAXMIN C++] Efectos encontrados en orden 7 : 922
+[MAXMIN C++] Efectos encontrados en orden 8 : 15
+[MAXMIN C++] Convergencia en step 9
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 488929
+[MAXMIN C++] Efectos encontrados en orden 2 : 3914081
+[MAXMIN C++] Efectos encontrados en orden 3 : 8993464
+[MAXMIN C++] Efectos encontrados en orden 4 : 3261155
+[MAXMIN C++] Efectos encontrados en orden 5 : 1670174
+[MAXMIN C++] Efectos encontrados en orden 6 : 254618
+[MAXMIN C++] Efectos encontrados en orden 7 : 15103
+[MAXMIN C++] Efectos encontrados en orden 8 : 447
+[MAXMIN C++] Efectos encontrados en orden 9 : 8
+[MAXMIN C++] Convergencia en step 10
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 976934
+[MAXMIN C++] Efectos encontrados en orden 2 : 8662608
+[MAXMIN C++] Efectos encontrados en orden 3 : 34675594
+[MAXMIN C++] Efectos encontrados en orden 4 : 17351445
+[MAXMIN C++] Efectos encontrados en orden 5 : 9858059
+[MAXMIN C++] Efectos encontrados en orden 6 : 2739406
+[MAXMIN C++] Efectos encontrados en orden 7 : 246317
+[MAXMIN C++] Efectos encontrados en orden 8 : 11347
+[MAXMIN C++] Efectos encontrados en orden 9 : 269
+[MAXMIN C++] Efectos encontrados en orden 10 : 3
+[MAXMIN C++] Convergencia en step 11
+[MAXMIN C++] M: 100B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 4803
+[MAXMIN C++] Efectos encontrados en orden 2 : 116
+[MAXMIN C++] Convergencia en step 3
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 36054
+[MAXMIN C++] Efectos encontrados en orden 2 : 4299
+[MAXMIN C++] Efectos encontrados en orden 3 : 1
+[MAXMIN C++] Convergencia en step 4
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 127736
+[MAXMIN C++] Efectos encontrados en orden 2 : 46786
+[MAXMIN C++] Efectos encontrados en orden 3 : 221
+[MAXMIN C++] Convergencia en step 4
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 383938
+[MAXMIN C++] Efectos encontrados en orden 2 : 330946
+[MAXMIN C++] Efectos encontrados en orden 3 : 9054
+[MAXMIN C++] Convergencia en step 4
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 1272202
+[MAXMIN C++] Efectos encontrados en orden 2 : 3000668
+[MAXMIN C++] Efectos encontrados en orden 3 : 349141
+[MAXMIN C++] Efectos encontrados en orden 4 : 352
+[MAXMIN C++] Convergencia en step 5
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 2809311
+[MAXMIN C++] Efectos encontrados en orden 2 : 12894737
+[MAXMIN C++] Efectos encontrados en orden 3 : 2896821
+[MAXMIN C++] Efectos encontrados en orden 4 : 19187
+[MAXMIN C++] Efectos encontrados en orden 5 : 2
+[MAXMIN C++] Convergencia en step 6
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 5829538
+[MAXMIN C++] Efectos encontrados en orden 2 : 48728925
+[MAXMIN C++] Efectos encontrados en orden 3 : 19532841
+[MAXMIN C++] Efectos encontrados en orden 4 : 650551
+[MAXMIN C++] Efectos encontrados en orden 5 : 112
+[MAXMIN C++] Convergencia en step 6
+[MAXMIN C++] M: 250B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 34060
+[MAXMIN C++] Efectos encontrados en orden 2 : 92
+[MAXMIN C++] Convergencia en step 3
+[MAXMIN C++] M: 500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 157466
+[MAXMIN C++] Efectos encontrados en orden 2 : 4918
+[MAXMIN C++] Convergencia en step 3
+[MAXMIN C++] M: 1000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 624751
+[MAXMIN C++] Efectos encontrados en orden 2 : 74084
+[MAXMIN C++] Convergencia en step 3
+[MAXMIN C++] M: 2500B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 3088755
+[MAXMIN C++] Efectos encontrados en orden 2 : 1471179
+[MAXMIN C++] Efectos encontrados en orden 3 : 199
+[MAXMIN C++] Convergencia en step 4
+[MAXMIN C++] M: 5000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 8523315
+[MAXMIN C++] Efectos encontrados en orden 2 : 9936236
+[MAXMIN C++] Efectos encontrados en orden 3 : 34886
+[MAXMIN C++] Convergencia en step 4
+[MAXMIN C++] M: 10000B: 1
+[MAXMIN C++] ORDER-100
+[MAXMIN C++] Efectos encontrados en orden 1 : 20325229
+[MAXMIN C++] Efectos encontrados en orden 2 : 52772094
+[MAXMIN C++] Efectos encontrados en orden 3 : 1394632
+[MAXMIN C++] Convergencia en step 4
+c=0.125  n=100  mean=1.00  min=1  max=1
+c=0.125  n=250  mean=1.00  min=1  max=1
+c=0.125  n=500  mean=1.00  min=1  max=1
+c=0.125  n=1000  mean=2.00  min=2  max=2
+c=0.125  n=2500  mean=2.00  min=2  max=2
+c=0.125  n=5000  mean=2.00  min=2  max=2
+c=0.125  n=10000  mean=3.00  min=3  max=3
+c=0.25  n=100  mean=1.00  min=1  max=1
+c=0.25  n=250  mean=3.00  min=3  max=3
+c=0.25  n=500  mean=5.00  min=5  max=5
+c=0.25  n=1000  mean=2.00  min=2  max=2
+c=0.25  n=2500  mean=5.00  min=5  max=5
+c=0.25  n=5000  mean=4.00  min=4  max=4
+c=0.25  n=10000  mean=6.00  min=6  max=6
+c=0.5  n=100  mean=2.00  min=2  max=2
+c=0.5  n=250  mean=4.00  min=4  max=4
+c=0.5  n=500  mean=5.00  min=5  max=5
+c=0.5  n=1000  mean=6.00  min=6  max=6
+c=0.5  n=2500  mean=9.00  min=9  max=9
+c=0.5  n=5000  mean=9.00  min=9  max=9
+c=0.5  n=10000  mean=9.00  min=9  max=9
+c=1  n=100  mean=7.00  min=7  max=7
+c=1  n=250  mean=14.00  min=14  max=14
+c=1  n=500  mean=14.00  min=14  max=14
+c=1  n=1000  mean=24.00  min=24  max=24
+c=1  n=2500  mean=37.00  min=37  max=37
+c=1  n=5000  mean=76.00  min=76  max=76
+c=1  n=10000  mean=42.00  min=42  max=42
+c=1.125  n=100  mean=12.00  min=12  max=12
+c=1.125  n=250  mean=13.00  min=13  max=13
+c=1.125  n=500  mean=20.00  min=20  max=20
+c=1.125  n=1000  mean=26.00  min=26  max=26
+c=1.125  n=2500  mean=50.00  min=50  max=50
+c=1.125  n=5000  mean=84.00  min=84  max=84
+c=1.125  n=10000  mean=62.00  min=62  max=62
+c=1.25  n=100  mean=12.00  min=12  max=12
+c=1.25  n=250  mean=14.00  min=14  max=14
+c=1.25  n=500  mean=32.00  min=32  max=32
+c=1.25  n=1000  mean=36.00  min=36  max=36
+c=1.25  n=2500  mean=44.00  min=44  max=44
+c=1.25  n=5000  mean=46.00  min=46  max=46
+c=1.25  n=10000  mean=68.00  min=68  max=68
+c=1.5  n=100  mean=10.00  min=10  max=10
+c=1.5  n=250  mean=20.00  min=20  max=20
+c=1.5  n=500  mean=43.00  min=43  max=43
+c=1.5  n=1000  mean=28.00  min=28  max=28
+c=1.5  n=2500  mean=39.00  min=39  max=39
+c=1.5  n=5000  mean=37.00  min=37  max=37
+c=1.5  n=10000  mean=49.00  min=49  max=49
+c=1.75  n=100  mean=9.00  min=9  max=9
+c=1.75  n=250  mean=16.00  min=16  max=16
+c=1.75  n=500  mean=27.00  min=27  max=27
+c=1.75  n=1000  mean=24.00  min=24  max=24
+c=1.75  n=2500  mean=28.00  min=28  max=28
+c=1.75  n=5000  mean=33.00  min=33  max=33
+c=1.75  n=10000  mean=35.00  min=35  max=35
+c=2  n=100  mean=13.00  min=13  max=13
+c=2  n=250  mean=20.00  min=20  max=20
+c=2  n=500  mean=24.00  min=24  max=24
+c=2  n=1000  mean=20.00  min=20  max=20
+c=2  n=2500  mean=37.00  min=37  max=37
+c=2  n=5000  mean=47.00  min=47  max=47
+c=2  n=10000  mean=37.00  min=37  max=37
+c=3  n=100  mean=11.00  min=11  max=11
+c=3  n=250  mean=19.00  min=19  max=19
+c=3  n=500  mean=23.00  min=23  max=23
+c=3  n=1000  mean=29.00  min=29  max=29
+c=3  n=2500  mean=33.00  min=33  max=33
+c=3  n=5000  mean=40.00  min=40  max=40
+c=3  n=10000  mean=49.00  min=49  max=49
+c=4  n=100  mean=15.00  min=15  max=15
+c=4  n=250  mean=14.00  min=14  max=14
+c=4  n=500  mean=17.00  min=17  max=17
+c=4  n=1000  mean=20.00  min=20  max=20
+c=4  n=2500  mean=22.00  min=22  max=22
+c=4  n=5000  mean=23.00  min=23  max=23
+c=4  n=10000  mean=29.00  min=29  max=29
+c=6  n=100  mean=8.00  min=8  max=8
+c=6  n=250  mean=11.00  min=11  max=11
+c=6  n=500  mean=12.00  min=12  max=12
+c=6  n=1000  mean=14.00  min=14  max=14
+c=6  n=2500  mean=13.00  min=13  max=13
+c=6  n=5000  mean=16.00  min=16  max=16
+c=6  n=10000  mean=17.00  min=17  max=17
+c=8  n=100  mean=5.00  min=5  max=5
+c=8  n=250  mean=7.00  min=7  max=7
+c=8  n=500  mean=8.00  min=8  max=8
+c=8  n=1000  mean=10.00  min=10  max=10
+c=8  n=2500  mean=11.00  min=11  max=11
+c=8  n=5000  mean=13.00  min=13  max=13
+c=8  n=10000  mean=13.00  min=13  max=13
+c=10  n=100  mean=5.00  min=5  max=5
+c=10  n=250  mean=6.00  min=6  max=6
+c=10  n=500  mean=7.00  min=7  max=7
+c=10  n=1000  mean=7.00  min=7  max=7
+c=10  n=2500  mean=8.00  min=8  max=8
+c=10  n=5000  mean=9.00  min=9  max=9
+c=10  n=10000  mean=10.00  min=10  max=10
+c=25  n=100  mean=2.00  min=2  max=2
+c=25  n=250  mean=3.00  min=3  max=3
+c=25  n=500  mean=3.00  min=3  max=3
+c=25  n=1000  mean=3.00  min=3  max=3
+c=25  n=2500  mean=4.00  min=4  max=4
+c=25  n=5000  mean=5.00  min=5  max=5
+c=25  n=10000  mean=5.00  min=5  max=5
+c=50  n=250  mean=2.00  min=2  max=2
+c=50  n=500  mean=2.00  min=2  max=2
+c=50  n=1000  mean=2.00  min=2  max=2
+c=50  n=2500  mean=3.00  min=3  max=3
+c=50  n=5000  mean=3.00  min=3  max=3
+c=50  n=10000  mean=3.00  min=3  max=3
+Guardado: sweep_n_order_test_block0.125.png
+Guardado: sweep_n_order_test_block0.25.png
+Guardado: sweep_n_order_test_block0.5.png
+Guardado: sweep_n_order_test_block1.png
+Guardado: sweep_n_order_test_block1.125.png
+Guardado: sweep_n_order_test_block1.25.png
+Guardado: sweep_n_order_test_block1.5.png
+Guardado: sweep_n_order_test_block1.75.png
+Guardado: sweep_n_order_test_block2.png
+Guardado: sweep_n_order_test_block3.png
+Guardado: sweep_n_order_test_block4.png
+Guardado: sweep_n_order_test_block6.png
+Guardado: sweep_n_order_test_block8.png
+Guardado: sweep_n_order_test_block10.png
+Guardado: sweep_n_order_test_block25.png
+Guardado: sweep_n_order_test_block50.png

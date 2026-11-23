@@ -1,0 +1,21 @@
+[MAXMIN C++] M: 200B: 1
+[MAXMIN C++] ORDER-30
+[MAXMIN C++] Efectos encontrados en orden 1 : 551
+[MAXMIN C++] Efectos encontrados en orden 2 : 496
+[MAXMIN C++] Efectos encontrados en orden 3 : 324
+[MAXMIN C++] Efectos encontrados en orden 4 : 168
+[MAXMIN C++] Efectos encontrados en orden 5 : 104
+[MAXMIN C++] Efectos encontrados en orden 6 : 44
+[MAXMIN C++] Efectos encontrados en orden 7 : 15
+[MAXMIN C++] Efectos encontrados en orden 8 : 5
+[MAXMIN C++] Convergencia en step 9
+Traceback (most recent call last):
+  File "/home/criquelme/feCUDA/test2.py", line 236, in <module>
+    results = run_sweep()
+  File "/home/criquelme/feCUDA/test2.py", line 183, in run_sweep
+    m1 = sparse_supercritical_matrix(n, c, seed=seed).reshape(1, n, n).astype(np.float16)
+  File "/home/criquelme/feCUDA/test2.py", line 148, in sparse_supercritical_matrix
+    U = rng.binomial(1, p, size=(n, n))
+  File "numpy/random/_generator.pyx", line 3112, in numpy.random._generator.Generator.binomial
+  File "numpy/random/_common.pyx", line 443, in numpy.random._common.check_constraint
+ValueError: p < 0, p > 1 or p is NaN

@@ -1,0 +1,34 @@
+Traceback (most recent call last):
+  File "/home/criquelme/feCUDA/comparativa/memory_fe.py", line 1, in <module>
+    from comparativa.sparse_generator import sparse_supercritical_block_matrix_julius as generator
+ModuleNotFoundError: No module named 'comparativa'
+Traceback (most recent call last):
+  File "/home/criquelme/feCUDA/comparativa/memory_fe.py", line 1, in <module>
+    from comparativa.sparse_generator import sparse_supercritical_block_matrix_julius as generator
+ModuleNotFoundError: No module named 'comparativa'
+Traceback (most recent call last):
+  File "/home/criquelme/feCUDA/comparativa/memory_fe.py", line 1, in <module>
+    from comparativa.sparse_generator import sparse_supercritical_block_matrix_julius as generator
+ModuleNotFoundError: No module named 'comparativa'
+Traceback (most recent call last):
+  File "/home/criquelme/feCUDA/comparativa/memory_fe.py", line 1, in <module>
+    from comparativa.sparse_generator import sparse_supercritical_block_matrix_julius as generator
+ModuleNotFoundError: No module named 'comparativa'
+Traceback (most recent call last):
+  File "/home/criquelme/feCUDA/comparativa/memory_fe.py", line 1, in <module>
+    from comparativa.sparse_generator import sparse_supercritical_block_matrix_julius as generator
+ModuleNotFoundError: No module named 'comparativa'
+Traceback (most recent call last):
+  File "/home/criquelme/feCUDA/comparativa/memory_fe.py", line 1, in <module>
+    from comparativa.sparse_generator import sparse_supercritical_block_matrix_julius as generator
+ModuleNotFoundError: No module named 'comparativa'
+Traceback (most recent call last):
+  File "/home/criquelme/feCUDA/comparativa/memory_fe.py", line 1, in <module>
+    from comparativa.sparse_generator import sparse_supercritical_block_matrix_julius as generator
+ModuleNotFoundError: No module named 'comparativa'
+Traceback (most recent call last):
+  File "/home/criquelme/feCUDA/comparativa/memory_fe.py", line 1, in <module>
+    from comparativa.sparse_generator import sparse_supercritical_block_matrix_julius as generator
+ModuleNotFoundError: No module named 'comparativa'
+init dim not accepted
+max dim finded for forgethreads: -1

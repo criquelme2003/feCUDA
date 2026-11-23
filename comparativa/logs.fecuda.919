@@ -1,0 +1,55 @@
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188223.551123  304416 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188224.117288  304416 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1200 dim
+Effects were only found up to order 28
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188227.317596  304529 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188227.883417  304529 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 2400 dim
+Error {{function_node __wrapped__Minimum_device_/job:localhost/replica:0/task:0/device:GPU:0}} failed to allocate memory [Op:Minimum] name: 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188239.121178  304637 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188239.709882  304637 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1800 dim
+Error {{function_node __wrapped__Minimum_device_/job:localhost/replica:0/task:0/device:GPU:0}} failed to allocate memory [Op:Minimum] name: 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188250.951114  304735 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188251.519399  304735 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1500 dim
+Error {{function_node __wrapped__Transpose_device_/job:localhost/replica:0/task:0/device:GPU:0}} OOM when allocating tensor with shape[1,1500,1500,1500] and type float on /job:localhost/replica:0/task:0/device:GPU:0 by allocator GPU_0_bfc [Op:Transpose]
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188262.728598  304826 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188263.295732  304826 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1350 dim
+Error {{function_node __wrapped__Max_device_/job:localhost/replica:0/task:0/device:GPU:0}} CUB segmented reduce erroran illegal memory access was encountered [Op:Max] name: 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188264.629895  304888 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188265.195973  304888 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1274 dim
+Effects were only found up to order 25
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188268.318793  304973 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188268.887790  304973 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1312 dim
+Error {{function_node __wrapped__Max_device_/job:localhost/replica:0/task:0/device:GPU:0}} CUB segmented reduce erroran illegal memory access was encountered [Op:Max] name: 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188270.216040  305038 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188270.783827  305038 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1292 dim
+Error {{function_node __wrapped__Max_device_/job:localhost/replica:0/task:0/device:GPU:0}} CUB segmented reduce erroran illegal memory access was encountered [Op:Max] name: 
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188272.104682  305097 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1787188272.668289  305097 port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+testing 1282 dim
+Effects were only found up to order 29
+max dim finded for forgethreads: 1282

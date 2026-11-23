@@ -1,0 +1,8 @@
+Traceback (most recent call last):
+  File "/home/criquelme/feCUDA/test2.py", line 240, in <module>
+    df.groupby(['c', 'n'])['orden']
+  File "/home/criquelme/miniconda3/envs/fecuda/lib/python3.10/site-packages/pandas/core/groupby/generic.py", line 1951, in __getitem__
+    return super().__getitem__(key)
+  File "/home/criquelme/miniconda3/envs/fecuda/lib/python3.10/site-packages/pandas/core/base.py", line 245, in __getitem__
+    raise KeyError(f"Column not found: {key}")
+KeyError: 'Column not found: orden'
