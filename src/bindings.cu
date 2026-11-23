@@ -213,7 +213,8 @@ static DlpackHolder* make_half_holder(__half* d_ptr, int64_t count)
     return new DlpackHolder(managed);
 }
 
-py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order, int kernel)
+py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order, int kernel,
+                        bool return_effects)
 {
     TensorResult<__half> t1(a);
     TensorResult<__half> t2(b);
@@ -253,7 +254,16 @@ py::tuple maxmin_dlpack(py::object a, py::object b, float thr, int order, int ke
         values_list.append(values_arr);
     }
 
-    return py::make_tuple(paths_list, values_list, result.effective_order);
+    if (!return_effects)
+        return py::make_tuple(paths_list, values_list, result.effective_order);
+
+    // effects[s] = nº de efectos encontrados en el orden s+1 (solo órdenes con efectos).
+    const auto& epo = result.effects_per_order;
+    auto effects_arr = py::array_t<int32_t>((ssize_t)epo.size());
+    auto eb = effects_arr.mutable_unchecked<1>();
+    for (ssize_t i = 0; i < (ssize_t)epo.size(); i++) eb(i) = epo[i];
+
+    return py::make_tuple(paths_list, values_list, result.effective_order, effects_arr);
 }
 
 
@@ -280,7 +290,7 @@ PYBIND11_MODULE(forgethreads, m)
 
     m.def("maxmin", &maxmin_dlpack,
           py::arg("a"), py::arg("b"), py::arg("thr"), py::arg("order"),
-          py::arg("kernel") = 4);
+          py::arg("kernel") = 4, py::arg("return_effects") = false);
 
 
 }
